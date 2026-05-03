@@ -18,7 +18,6 @@ import {
   Cat,
   Fish,
   Bird,
-  Bug,
   Turtle,
   Rat,
   X,
@@ -29,6 +28,8 @@ import {
   ChevronRight,
   Sparkles
 } from 'lucide-react';
+
+import ButtonSecondaryDemo from './components/demo';
 
 type Lang = 'EN' | 'TR';
 
@@ -61,7 +62,6 @@ const TR_DICT: Record<string, string> = {
   "Fish": "Balık",
   "Rodent": "Kemirgen",
   "Reptile": "Sürüngen",
-  "Arthropod": "Eklembacaklı",
   
   "Comfort Collars": "Konforlu Tasmalar",
   "Training Treats": "Eğitim Ödülleri",
@@ -101,12 +101,6 @@ const TR_DICT: Record<string, string> = {
   "UVB Lamps": "UVB Lambalar",
   "Thermostats": "Termostatlar",
   "Hygrometers": "Higrometreler",
-
-  "Specialized Diet": "Özel Diyet",
-  "Acrylic Housing": "Akrilik Barınaklar",
-  "Misting Bottles": "Sisleme Şişeleri",
-  "Coconut Fiber": "Hindistan Cevizi Torfu",
-  "Cork Bark": "Mantar Kabuğu",
 
   // Trust Section
   "Why shop with Vivia?": "Neden Vivia'yı seçmelisiniz?",
@@ -167,7 +161,6 @@ const SERVICES = [
   { id: 'fish', title: 'Fish', icon: <Fish className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
   { id: 'rodent', title: 'Rodent', icon: <Rat className="w-6 h-6" />, items: ['Pellet Mix', 'Multi-level Cages', 'Running Wheels', 'Chew Toys', 'Wooden Huts'] },
   { id: 'reptile', title: 'Reptile', icon: <Turtle className="w-6 h-6" />, items: ['Live/Dried Food', 'Glass Terrariums', 'UVB Lamps', 'Thermostats', 'Hygrometers'] },
-  { id: 'arthropod', title: 'Arthropod', icon: <Bug className="w-6 h-6" />, items: ['Specialized Diet', 'Acrylic Housing', 'Misting Bottles', 'Coconut Fiber', 'Cork Bark'] },
 ];
 
 function Header({ cartCount, onOpenCart }: { cartCount: number, onOpenCart: () => void }) {
@@ -193,14 +186,16 @@ function Header({ cartCount, onOpenCart }: { cartCount: number, onOpenCart: () =
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 lg:gap-8">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0 w-[104px] h-[46px]" onClick={(e) => {
+        <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0" onClick={(e) => {
           e.preventDefault();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}>
-          <div className="w-10 h-10 rounded-2xl bg-brand-teal text-white flex items-center justify-center font-bold text-xl leading-none">
-            V
+          <div className="flex items-center justify-center text-brand-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[50px] h-[50px] mt-[1px] mb-[1px] mr-[1px] ml-[-1px] pb-0 pl-0 pr-0">
+              <path d="M5 6l7 12 7-12" />
+            </svg>
           </div>
-          <span className="font-bold text-xl lg:text-2xl tracking-tight text-brand-darker">Vivia</span>
+          <span className="font-bold tracking-tight text-brand-darker text-[40px]">Vivia</span>
         </a>
 
         {/* Search Bar - hidden on small mobile, takes up remaining space otherwise */}
@@ -252,7 +247,7 @@ function Header({ cartCount, onOpenCart }: { cartCount: number, onOpenCart: () =
       {/* Category Nav - Horizontal Scroll on Mobile */}
       <div className="border-t border-gray-100 overflow-x-auto no-scrollbar hidden sm:block">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-6 md:gap-10">
-           {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile', 'Arthropod'].map(cat => (
+           {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(cat => (
              <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-brand-dark hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-colors">
                {t(cat, lang)}
              </a>
@@ -445,7 +440,7 @@ function TrustSection() {
               </div>
               <div>
                 <h4 className="font-bold text-xl mb-1">{t("Wide Ranging Expertise", lang)}</h4>
-                <p className="text-brand-teal-light/70 text-base">{lang === 'TR' ? 'Yaygın evcil hayvanlardan sürüngenlere ve eklembacaklılara kadar özel zorunlu ihtiyaçları stoklarımızda bulunduruyoruz.' : 'From common pets to reptiles and arthropods, we stock specialized essentials.'}</p>
+                <p className="text-brand-teal-light/70 text-base">{lang === 'TR' ? 'Yaygın evcil hayvanlardan sürüngenlere kadar özel zorunlu ihtiyaçları stoklarımızda bulunduruyoruz.' : 'From common pets to reptiles, we stock specialized essentials.'}</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -571,8 +566,10 @@ function Footer() {
     <footer className="bg-white py-12 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-brand-teal text-white flex items-center justify-center font-bold text-sm">
-            V
+          <div className="w-8 h-8 flex items-center justify-center text-brand-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+              <path d="M5 6l7 12 7-12" />
+            </svg>
           </div>
           <span className="font-bold text-lg text-brand-darker tracking-tight">Vivia Pet</span>
         </div>
@@ -635,13 +632,15 @@ function OnboardingModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
           {step === 1 ? (
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-brand-teal-light flex items-center justify-center mx-auto mb-6">
-                <Heart className="w-10 h-10 text-brand-teal" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[50px] h-[50px] text-brand-teal">
+                  <path d="M5 6l7 12 7-12" />
+                </svg>
               </div>
               <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-brand-darker mb-2">{t("Who are we shopping for?", lang)}</h2>
               <p className="text-brand-dark text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
               
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
-                {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile', 'Arthropod'].map(pet => (
+                {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(pet => (
                   <button 
                     key={pet} onClick={() => setSelectedPet(pet)}
                     aria-pressed={selectedPet === pet}
@@ -841,6 +840,7 @@ export default function App() {
         
         <main>
           <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} />
+          <ButtonSecondaryDemo />
           <Services onAddToCart={handleAddToCart} />
           <TrustSection />
           <Contact />
