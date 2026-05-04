@@ -16,10 +16,12 @@
   --color-brand-white: #FCFCFC;
 }
 
-body {
-  background-color: var(--color-brand-white);
-  color: var(--color-brand-darker);
-  font-family: var(--font-sans);
+@layer base {
+  body {
+    background-color: var(--color-brand-white);
+    color: var(--color-brand-darker);
+    font-family: var(--font-sans);
+  }
 }
 
 .mesh-bg {
@@ -27,6 +29,13 @@ body {
     radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(51, 65, 85, 0.04) 0%, transparent 50%);
   background-color: var(--color-brand-white);
+}
+
+.dark .mesh-bg {
+  background:
+    radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(51, 65, 85, 0.04) 0%, transparent 50%);
+  background-color: var(--background);
 }
 
 .glass-panel {
@@ -120,6 +129,12 @@ body {
 }
 
 .dark {
+  --color-brand-teal: #0D9488;
+  --color-brand-teal-dark: #14B8A6;
+  --color-brand-teal-light: #1E293B;
+  --color-brand-dark: #E2E8F0; 
+  --color-brand-darker: #F8FAFC; 
+  --color-brand-white: #0F172A;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
