@@ -21,6 +21,8 @@ import {
   Bird,
   Turtle,
   Rat,
+  Dog,
+  Rabbit,
   X,
   Plus,
   Minus,
@@ -222,7 +224,13 @@ function Header({
   onLogout: () => void
 }) {
   const { lang, setLang } = useLang();
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('vivia_theme');
+      if (stored) return stored === 'dark';
+    }
+    return true; // Force dark-mode by default for the SaaS aesthetic
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
@@ -246,15 +254,17 @@ function Header({
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('vivia_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('vivia_theme', 'light');
     }
   }, [isDark]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
       {/* Top Bar with Language and Promos */}
-      <div className="bg-brand-darker text-white text-xs py-1.5 hidden lg:block">
+      <div className="bg-card border-b border-border text-foreground text-xs py-1.5 hidden lg:block">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center gap-6">
               <a href="#" className="hover:text-brand-teal transition-colors">🔥 {t("Deals", lang)}</a>
@@ -262,11 +272,11 @@ function Header({
               <a href="#contact" className="hover:text-brand-teal transition-colors">{t("Contact Information", lang)}</a>
             </div>
             <div className="flex items-center gap-2">
-               <button onClick={() => setIsDark(!isDark)} className="flex items-center gap-1 px-2 py-0.5 rounded transition-colors hover:bg-white/10" aria-label="Toggle Dark Mode">
+               <button onClick={() => setIsDark(!isDark)} className="flex items-center gap-1 px-2 py-0.5 rounded transition-colors hover:bg-secondary" aria-label="Toggle Dark Mode">
                  {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                </button>
-               <button onClick={() => setLang('TR')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'TR' ? 'bg-white/20' : 'hover:bg-white/10'}`}><span>🇹🇷</span> TR</button>
-               <button onClick={() => setLang('EN')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'EN' ? 'bg-white/20' : 'hover:bg-white/10'}`}><span>🇬🇧</span> EN</button>
+               <button onClick={() => setLang('TR')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'TR' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇹🇷</span> TR</button>
+               <button onClick={() => setLang('EN')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'EN' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇬🇧</span> EN</button>
             </div>
          </div>
       </div>
@@ -279,15 +289,15 @@ function Header({
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}>
           <div className="flex items-center justify-center text-brand-teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[50px] h-[50px] mt-[1px] mb-[1px] mr-[1px] ml-[-1px] pb-0 pl-0 pr-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[40px] h-[40px] mt-[1px] mb-[1px] mr-[1px] ml-[-1px] pb-0 pl-0 pr-0">
               <path d="M5 6l7 12 7-12" />
             </svg>
           </div>
-          <span className="font-bold tracking-tight text-brand-darker text-[40px]">Vivia</span>
+          <span className="font-extrabold tracking-tight text-foreground text-[32px]">Vivia</span>
         </a>
 
         {/* Search Bar - hidden on small mobile, takes up remaining space otherwise */}
-        <div className="hidden sm:flex flex-1 max-w-3xl relative">
+        <div className="hidden sm:flex flex-1 max-w-2xl relative">
            <input 
              type="text" 
              placeholder={t("Search...", lang)}
@@ -295,10 +305,10 @@ function Header({
              onChange={(e) => setSearchQuery(e.target.value)}
              onFocus={() => setIsSearchFocused(true)}
              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-             className="w-full bg-gray-50 border-2 border-brand-teal/20 focus:border-brand-teal focus:bg-white focus:outline-none rounded-full py-3 px-6 pr-12 text-sm transition-all"
+             className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-background outline-none rounded-full py-2.5 px-6 pr-12 text-sm transition-all text-foreground"
            />
-           <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-brand-dark hover:text-brand-teal rounded-full transition-colors">
-              <Search className="w-5 h-5" />
+           <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-brand-teal rounded-full transition-colors">
+              <Search className="w-4 h-4" />
            </button>
 
            <AnimatePresence>
@@ -307,7 +317,7 @@ function Header({
                  initial={{ opacity: 0, y: 10 }}
                  animate={{ opacity: 1, y: 0 }}
                  exit={{ opacity: 0, y: 10 }}
-                 className="absolute top-14 left-0 w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                 className="absolute top-14 left-0 w-full bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50"
                >
                  {searchQuery.length > 0 ? (
                    filteredSuggestions.length > 0 ? (
@@ -318,21 +328,21 @@ function Header({
                              onClick={() => handleSearchSelect(product.name[lang])}
                              className="w-full text-left px-6 py-3 hover:bg-brand-teal-light/30 transition-colors flex flex-col"
                            >
-                             <span className="font-medium text-brand-darker">{product.name[lang]}</span>
-                             <span className="text-xs text-brand-dark">{product.category[lang]}</span>
+                             <span className="font-medium text-foreground">{product.name[lang]}</span>
+                             <span className="text-xs text-muted-foreground">{product.category[lang]}</span>
                            </button>
                          </li>
                        ))}
                      </ul>
                    ) : (
-                     <div className="p-6 text-center text-brand-dark text-sm">
+                     <div className="p-6 text-center text-muted-foreground text-sm">
                        {lang === 'TR' ? 'Sonuç bulunamadı' : 'No results found'}
                      </div>
                    )
                  ) : searchHistory.length > 0 ? (
                    <div className="py-2">
                      <div className="flex items-center justify-between px-6 py-2">
-                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                          {lang === 'TR' ? 'Son Aramalar' : 'Recent Searches'}
                        </span>
                        <button 
@@ -353,9 +363,9 @@ function Header({
                                e.preventDefault();
                                handleSearchSelect(item);
                              }}
-                             className="w-full text-left px-6 py-2 hover:bg-brand-teal-light/30 transition-colors text-brand-darker flex items-center gap-2"
+                             className="w-full text-left px-6 py-2 hover:bg-brand-teal-light/30 transition-colors text-foreground flex items-center gap-2"
                            >
-                             <Clock className="w-4 h-4 text-gray-400" />
+                             <Clock className="w-4 h-4 text-muted-foreground" />
                              {item}
                            </button>
                          </li>
@@ -370,24 +380,24 @@ function Header({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3 lg:gap-5 shrink-0">
-          <div className="lg:hidden flex items-center bg-gray-100 rounded-full p-1 border border-gray-200">
-             <button onClick={() => setIsDark(!isDark)} className="p-1 rounded-full text-gray-500 hover:text-brand-dark transition-colors mr-1" aria-label="Toggle Dark Mode">
+          <div className="lg:hidden flex items-center bg-secondary rounded-full p-1 border border-border">
+             <button onClick={() => setIsDark(!isDark)} className="p-1 rounded-full text-muted-foreground hover:text-muted-foreground transition-colors mr-1" aria-label="Toggle Dark Mode">
                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
              </button>
-             <button onClick={() => setLang('TR')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'TR' ? 'bg-white shadow-sm' : 'text-gray-500'}`}><span>🇹🇷</span> TR</button>
-             <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'EN' ? 'bg-white shadow-sm' : 'text-gray-500'}`}><span>🇬🇧</span> EN</button>
+             <button onClick={() => setLang('TR')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'TR' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}><span>🇹🇷</span> TR</button>
+             <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'EN' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}><span>🇬🇧</span> EN</button>
           </div>
 
           {/* Notifications Bell */}
           <div className="relative hidden md:block">
             <button 
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className={`flex flex-col items-center justify-center gap-1 transition-colors ${isNotificationsOpen ? 'text-brand-teal' : 'text-brand-dark hover:text-brand-teal'}`}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${isNotificationsOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
             >
-               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors relative ${isNotificationsOpen ? 'bg-brand-teal-light' : 'bg-gray-50'}`}>
+               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors relative ${isNotificationsOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
                  <Bell className="w-4 h-4" />
                  {isLoggedIn && (
-                   <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 border border-white"></span>
+                   <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 border border-background"></span>
                  )}
                </div>
                <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Bildirim' : 'Alerts'}</span>
@@ -409,34 +419,34 @@ function Header({
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute top-full right-1/2 translate-x-1/2 pt-2 z-50 min-w-[280px]"
                   >
-                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden flex flex-col p-4 text-left">
-                      <h3 className="font-bold text-sm text-brand-darker mb-3 pb-2 border-b border-gray-100">
+                    <div className="bg-card rounded-xl shadow-xl border border-border overflow-hidden flex flex-col p-4 text-left">
+                      <h3 className="font-bold text-sm text-foreground mb-3 pb-2 border-b border-border">
                         {lang === 'TR' ? 'Bildirimler' : 'Notifications'}
                       </h3>
                       {isLoggedIn ? (
                         <div className="space-y-4">
                            <div className="flex items-start gap-3 text-sm">
-                             <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                             <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
                                <Package className="w-4 h-4" />
                              </div>
                              <div>
-                               <p className="font-semibold text-brand-darker m-0">{lang === 'TR' ? 'Siparişiniz yola çıktı!' : 'Order shipped!'}</p>
-                               <p className="text-gray-500 text-xs m-0">2 {lang === 'TR' ? 'saat önce' : 'hours ago'}</p>
+                               <p className="font-semibold text-foreground m-0">{lang === 'TR' ? 'Siparişiniz yola çıktı!' : 'Order shipped!'}</p>
+                               <p className="text-muted-foreground text-xs m-0">2 {lang === 'TR' ? 'saat önce' : 'hours ago'}</p>
                              </div>
                            </div>
                            <div className="flex items-start gap-3 text-sm">
-                             <div className="w-8 h-8 rounded-full bg-green-50 text-green-500 flex items-center justify-center shrink-0">
+                             <div className="w-8 h-8 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
                                <CheckCircle2 className="w-4 h-4" />
                              </div>
                              <div>
-                               <p className="font-semibold text-brand-darker m-0">{lang === 'TR' ? 'Hoş geldiniz' : 'Welcome aboard'}</p>
-                               <p className="text-gray-500 text-xs m-0">1 {lang === 'TR' ? 'gün önce' : 'day ago'}</p>
+                               <p className="font-semibold text-foreground m-0">{lang === 'TR' ? 'Hoş geldiniz' : 'Welcome aboard'}</p>
+                               <p className="text-muted-foreground text-xs m-0">1 {lang === 'TR' ? 'gün önce' : 'day ago'}</p>
                              </div>
                            </div>
                         </div>
                       ) : (
                         <div className="text-center py-4">
-                          <p className="text-sm text-gray-500">{lang === 'TR' ? 'Bildirimleri görmek için giriş yapın.' : 'Log in to see notifications.'}</p>
+                          <p className="text-sm text-muted-foreground">{lang === 'TR' ? 'Bildirimleri görmek için giriş yapın.' : 'Log in to see notifications.'}</p>
                         </div>
                       )}
                     </div>
@@ -449,7 +459,7 @@ function Header({
           {isLoggedIn ? (
             <button 
               onClick={onLogout}
-              className="hidden md:flex flex-col items-center justify-center gap-1 text-brand-dark hover:text-brand-teal transition-colors"
+              className="hidden md:flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-brand-teal transition-colors"
             >
                <div className="w-8 h-8 rounded-full bg-brand-teal-light text-brand-teal flex items-center justify-center">
                  <LogOut className="w-4 h-4" />
@@ -460,9 +470,9 @@ function Header({
             <div className="hidden md:block relative">
               <button 
                 onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                className={`flex flex-col items-center justify-center gap-1 transition-colors ${isAccountMenuOpen ? 'text-brand-teal' : 'text-brand-dark hover:text-brand-teal'}`}
+                className={`flex flex-col items-center justify-center gap-1 transition-colors ${isAccountMenuOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
               >
-                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isAccountMenuOpen ? 'bg-brand-teal-light' : 'bg-gray-50'}`}>
+                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isAccountMenuOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
                    <User className="w-4 h-4" />
                  </div>
                  <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Hesap' : 'Account'}</span>
@@ -484,13 +494,13 @@ function Header({
                       exit={{ opacity: 0, y: 10 }}
                       className="absolute top-full right-1/2 translate-x-1/2 pt-2 z-50 min-w-[120px]"
                     >
-                      <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+                      <div className="bg-card rounded-xl shadow-xl border border-border overflow-hidden flex flex-col">
                         <button 
                           onClick={() => {
                             setIsAccountMenuOpen(false);
                             onOpenAuth('login');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm font-semibold text-brand-darker hover:bg-brand-teal-light hover:text-brand-teal transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors"
                         >
                           {lang === 'TR' ? 'Giriş Yap' : 'Log in'}
                         </button>
@@ -499,7 +509,7 @@ function Header({
                             setIsAccountMenuOpen(false);
                             onOpenAuth('register');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm font-semibold text-brand-darker hover:bg-brand-teal-light hover:text-brand-teal transition-colors border-t border-gray-50"
+                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors border-t border-border"
                         >
                           {lang === 'TR' ? 'Üye Ol' : 'Sign In'}
                         </button>
@@ -532,10 +542,10 @@ function Header({
       </div>
       
       {/* Category Nav - Horizontal Scroll on Mobile */}
-      <div className="border-t border-gray-100 overflow-x-auto no-scrollbar hidden sm:block">
+      <div className="border-t border-border overflow-x-auto no-scrollbar hidden sm:block">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-6 md:gap-10">
            {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(cat => (
-             <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-brand-dark hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-colors">
+             <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-muted-foreground hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-colors">
                {t(cat, lang)}
              </a>
            ))}
@@ -545,78 +555,75 @@ function Header({
   );
 }
 
-function Hero({ onStartOnboarding }: { onStartOnboarding: () => void }) {
+function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () => void, onStartPetProfile: () => void }) {
   const { lang } = useLang();
 
   return (
-    <section className="pt-36 lg:pt-44 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="grid lg:grid-cols-3 gap-6">
-        
-        {/* Main Slider Area */}
-        <div className="lg:col-span-2 relative z-10 bg-brand-teal-light rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-col justify-center p-8 sm:p-12 min-h-[400px]">
-          <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-r from-brand-teal-light via-brand-teal-light/90 to-transparent z-0" />
-          <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-brand-teal/20 rounded-full blur-3xl" />
-          
-          <div className="relative z-10 max-w-md">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white font-bold text-brand-teal-dark rounded text-xs mb-4 uppercase tracking-wider shadow-sm">
-              %40 İndirim
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-brand-darker leading-[1.1] tracking-tight mb-4">
-              {lang === 'TR' ? 'Seçili Kedi Mamalarında' : 'On Selected Cat Foods'}
-              <br/>
-              <span className="text-brand-teal">{lang === 'TR' ? 'Büyük Kampanya' : 'Big Deals'}</span>
-            </h1>
-            
-            <p className="text-brand-dark mb-8 font-medium">
-              {lang === 'TR' 
-                ? 'Stoklar bitmeden hemen alışverişe başlayın, aynı gün kargo fırsatını kaçırmayın.'
-                : 'Start shopping before stocks run out, do not miss out on same-day delivery.'
-              }
-            </p>
-            
-            <button 
-              onClick={() => {
-                document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="inline-flex items-center justify-center gap-2 bg-brand-teal hover:bg-brand-teal-dark text-white px-8 py-3.5 rounded-full text-base font-semibold transition-all shadow-lg shadow-brand-teal/30"
-            >
-              <span>{t("Shop Now", lang)}</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
+    <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="inline-flex items-center rounded-full border border-brand-teal/20 bg-brand-teal/10 px-4 py-1.5 text-xs font-semibold text-brand-teal mb-6">
+          {lang === 'TR' ? 'Premium Evcil Hayvan Beslenmesi' : 'Premium Pet Nutrition'}
         </div>
-
-        {/* Side Banners */}
-        <div className="flex flex-col gap-6">
-          <div className="flex-1 bg-brand-darker rounded-[24px] p-6 sm:p-8 flex items-center shadow-lg relative overflow-hidden group cursor-pointer">
-             <div className="absolute inset-0 bg-gradient-to-br from-brand-dark to-brand-darker opacity-50" />
-             <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-teal/20 rounded-full blur-2xl group-hover:bg-brand-teal/40 transition-colors" />
-             <div className="relative z-10">
-                <span className="text-brand-teal-light text-xs font-bold uppercase tracking-wider mb-2 block">{t("New Products", lang)}</span>
-                <h3 className="text-2xl font-bold text-white leading-tight">
-                  {lang === 'TR' ? 'Yenilebilir' : 'Edible'}<br/>
-                  <span className="text-brand-teal">{lang === 'TR' ? 'Kemikler' : 'Bones'}</span>
-                </h3>
-             </div>
-          </div>
-          
-          <div className="flex-1 bg-brand-teal-light/50 border border-brand-teal/20 rounded-[24px] p-6 sm:p-8 flex items-center shadow-sm relative overflow-hidden group cursor-pointer">
-             <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 group-hover:scale-110 transition-transform">🐕</div>
-             <div className="relative z-10">
-                <span className="text-brand-teal text-xs font-bold uppercase tracking-wider mb-2 block">Dostunuz İçin</span>
-                <h3 className="text-2xl font-bold text-brand-darker leading-tight mb-3">
-                  {lang === 'TR' ? 'Profilinizi' : 'Personalize Your'}<br/>
-                  <span className="text-brand-teal">{lang === 'TR' ? 'Oluşturun' : 'Profile'}</span>
-                </h3>
-                <button onClick={onStartOnboarding} className="text-sm font-bold text-brand-darker hover:text-brand-teal flex items-center gap-1 transition-colors">
-                  İncele <ArrowRight className="w-4 h-4" />
-                </button>
-             </div>
-          </div>
+        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+          {lang === 'TR' ? 'Dostlarınız için' : 'Nutrition perfected for'}
+          <br/>
+          <span className="text-brand-teal">{lang === 'TR' ? 'mükemmel beslenme.' : 'your best friends.'}</span>
+        </h1>
+        <p className="text-lg text-muted-foreground font-medium mb-8 max-w-2xl mx-auto">
+           {lang === 'TR' ? 'Bilimsel olarak formüle edilmiş, yüksek kaliteli içeriklerle dolu.' : 'Scientifically formulated, packed with high-quality ingredients.'}
+        </p>
+        <div className="flex gap-4 justify-center">
+           <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-8 h-12 bg-brand-teal hover:bg-brand-teal-dark text-white text-base font-semibold transition-colors shadow-lg shadow-brand-teal/20">
+             {t("Shop Now", lang)}
+           </button>
+           <button onClick={onStartPetProfile} className="rounded-full px-8 h-12 border-2 border-brand-teal/50 bg-brand-teal/5 hover:bg-brand-teal/10 text-brand-teal-dark flex items-center justify-center gap-2 text-base font-semibold transition-all shadow-sm">
+             <Heart className="w-5 h-5" />
+             {lang === 'TR' ? 'Dostunuzu Ekleyin' : 'Personalize for your Pet'}
+           </button>
         </div>
-
       </div>
-      
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-[32px]">
+         {/* Large feature - Dogs */}
+         <div className="md:col-span-2 relative rounded-[32px] overflow-hidden min-h-[400px] md:min-h-[500px] border border-border  group bg-card">
+           <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=2000&auto=format&fit=crop" alt="Dog" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+           <div className="absolute bottom-0 left-0 p-8 sm:p-12 w-full">
+              <div className="inline-flex items-center rounded-full bg-[#E27D60]/90 text-white px-3 py-1 text-xs font-semibold mb-4 backdrop-blur-md">
+                {lang === 'TR' ? 'En Çok Değerlendirilen' : 'Top Rated'}
+              </div>
+              <h3 className="text-3xl sm:text-5xl font-bold text-white mb-4 tracking-tight">{lang === 'TR' ? 'Köpek Temel İhtiyaçları' : 'Dog Essentials'}</h3>
+              <p className="text-white/80 max-w-md text-lg">{lang === 'TR' ? 'Aktif yaşam tarzlarını protein açısından zengin, tahılsız formüllerimizle destekleyin.' : 'Fuel their active lifestyle with our protein-rich, grain-free formulas.'}</p>
+           </div>
+         </div>
+         {/* Smaller feature - Cats */}
+         <div className="relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border  group bg-card">
+           <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop" alt="Cat" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+           <div className="absolute bottom-0 left-0 p-8 w-full z-10 text-left">
+              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{lang === 'TR' ? 'Kedilerin Favorileri' : 'Feline Favorites'}</h3>
+              <p className="text-white/80">{lang === 'TR' ? 'Premium balık ve kümes hayvanı karışımları.' : 'Premium fish and poultry blends.'}</p>
+           </div>
+         </div>
+         {/* Smaller feature - Birds */}
+         <div className="relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border  group bg-card">
+           <img src="https://images.unsplash.com/photo-1522858547137-f1dcec554f55?q=80&w=1000&auto=format&fit=crop" alt="Bird" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+           <div className="absolute bottom-0 left-0 p-8 w-full z-10 text-left">
+              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{lang === 'TR' ? 'Kuş Bakımı' : 'Avian Care'}</h3>
+              <p className="text-white/80">{lang === 'TR' ? 'Besin dolu tohum karışımları.' : 'Nutrient-packed seed mixes.'}</p>
+           </div>
+         </div>
+         {/* Stats/Promo */}
+         <div className="md:col-span-2 relative rounded-[32px] overflow-hidden min-h-[250px] border border-border  bg-secondary  p-8 sm:p-12 flex flex-col justify-center items-start">
+           <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-brand-teal/10 rounded-full blur-3xl pointer-events-none" />
+           <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">{lang === 'TR' ? 'Abonelik ile %15 Tasarruf Edin' : 'Save 15% with subscriptions'}</h3>
+           <p className="text-muted-foreground mb-6 max-w-lg text-lg">{lang === 'TR' ? 'Erzaksız kalmayın. Dostunuzun iştahına göre düzenlenmiş otomatik teslimatı ayarlayın.' : 'Never run out of food again. Set up auto-delivery tailored to your companion\'s appetite.'}</p>
+           <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-6 h-10 border border-border  hover:bg-card  text-foreground text-sm font-semibold transition-colors flex items-center">
+             {lang === 'TR' ? 'Daha Fazla Bilgi' : 'Learn More'} <ArrowRight className="w-4 h-4 ml-2" />
+           </button>
+         </div>
+      </div>
     </section>
   );
 }
@@ -640,44 +647,44 @@ function ProductCard({
   const isWishlisted = wishlistItems.includes(productIdentifier);
   
   return (
-    <div className="group bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center text-center relative h-full">
+    <div className="group bg-card rounded-2xl p-4 sm:p-5 border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center text-center relative h-full">
       <button 
         onClick={() => onToggleWishlist(productIdentifier)}
-        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all ${isWishlisted ? 'bg-brand-teal/10 text-brand-teal' : 'bg-white text-gray-400 hover:text-brand-teal hover:bg-brand-teal-light shadow-sm border border-gray-100'}`}
+        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all ${isWishlisted ? 'bg-brand-teal/10 text-brand-teal' : 'bg-background text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/10 shadow-sm border border-border'}`}
         aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
       >
         <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current text-brand-teal' : ''}`} />
       </button>
 
-      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-gray-50 flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal-light/50 transition-colors">
-        <div className="text-gray-300 group-hover:scale-110 group-hover:text-brand-teal-light transition-all duration-500">
+      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-secondary flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal/10 transition-colors">
+        <div className="text-muted-foreground/30 group-hover:scale-110 group-hover:text-brand-teal/50 transition-all duration-500">
           {service.icon}
         </div>
-        <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+        <div className="absolute top-2 left-2 bg-[#E27D60] text-white text-[10px] font-bold px-2 py-0.5 rounded">
           %15
         </div>
       </div>
       
-      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t(service.title, lang as any)}</span>
-      <h3 className="text-sm sm:text-base font-semibold text-brand-darker mb-2 line-clamp-2 h-10 sm:h-12">{t(topItem, lang as any)}</h3>
+      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t(service.title, lang as any)}</span>
+      <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2 h-10 sm:h-12">{t(topItem, lang as any)}</h3>
       
       <div className="flex flex-col items-center gap-1 mb-4 flex-grow">
-        <span className="text-xs text-gray-400 line-through">1.250,00 TL</span>
-        <span className="text-lg sm:text-xl font-bold text-brand-teal-dark">1.062,50 TL</span>
+        <span className="text-xs text-muted-foreground line-through">1.250,00 TL</span>
+        <span className="text-lg sm:text-xl font-bold text-brand-teal">1.062,50 TL</span>
       </div>
 
       <div className="w-full flex flex-col gap-2 mt-auto">
-        <div className="flex items-center justify-between border border-gray-100 rounded-xl overflow-hidden bg-gray-50">
+        <div className="flex items-center justify-between border border-border rounded-xl overflow-hidden bg-background">
           <button 
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-brand-teal hover:bg-gray-100 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary transition-colors"
           >
             <Minus className="w-4 h-4" />
           </button>
-          <span className="font-semibold text-brand-darker">{quantity}</span>
+          <span className="font-semibold text-foreground">{quantity}</span>
           <button 
             onClick={() => setQuantity(quantity + 1)}
-            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-brand-teal hover:bg-gray-100 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -689,7 +696,7 @@ function ProductCard({
             onAddToCart(`${t(service.title, lang as any)} - ${t(topItem, lang as any)}`, quantity);
             setQuantity(1);
           }}
-          className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+          className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
           <ShoppingBag className="w-4 h-4" />
           {lang === 'TR' ? 'Sepete Ekle' : 'Add to Cart'}
@@ -702,26 +709,32 @@ function ProductCard({
 function Services({ 
   onAddToCart, 
   wishlistItems = [], 
-  onToggleWishlist = () => {} 
+  onToggleWishlist = () => {},
+  selectedPetsFilter = []
 }: { 
   onAddToCart: (item: string, quantity?: number) => void,
   wishlistItems?: string[],
-  onToggleWishlist?: (item: string) => void
+  onToggleWishlist?: (item: string) => void,
+  selectedPetsFilter?: string[]
 }) {
   const { lang } = useLang();
 
+  const filteredServices = SERVICES.filter(service => 
+    selectedPetsFilter.length === 0 || selectedPetsFilter.map(p => p.toLowerCase()).includes(service.id.toLowerCase())
+  );
+
   return (
-    <section id="services" className="py-20 bg-gray-50/50 relative">
+    <section id="services" className="py-20 bg-secondary/50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-brand-darker tracking-tight">{t("Complete Care Catalog", lang)}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{t("Complete Care Catalog", lang)}</h2>
             <a href="#" className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-colors">
               {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
             </a>
          </div>
 
          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {SERVICES.map((service) => (
+            {filteredServices.map((service) => (
               <ProductCard 
                 key={service.id} 
                 service={service} 
@@ -772,17 +785,17 @@ function OrderTrackingSection() {
   };
 
   return (
-    <section id="tracking" className="py-20 bg-brand-white relative border-t border-gray-100">
+    <section id="tracking" className="py-20 bg-card relative border-t border-border">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-[2rem] p-8 sm:p-12 shadow-xl border border-gray-100 relative overflow-hidden">
+        <div className="bg-card rounded-[2rem] p-8 sm:p-12 shadow-xl border border-border relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-teal/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           
           <div className="text-center mb-8 relative z-10">
             <div className="w-16 h-16 bg-brand-teal-light text-brand-teal rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Package className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-brand-darker tracking-tight mb-2">{t("Track Your Order", lang as Lang)}</h2>
-            <p className="text-gray-500">{t("Enter your order ID (e.g., VIVIA-123)", lang as Lang)}</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">{t("Track Your Order", lang as Lang)}</h2>
+            <p className="text-muted-foreground">{t("Enter your order ID (e.g., VIVIA-123)", lang as Lang)}</p>
           </div>
 
           <form onSubmit={handleTrack} className="flex flex-col sm:flex-row gap-3 relative z-10 w-full">
@@ -791,7 +804,7 @@ function OrderTrackingSection() {
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="VIVIA-..."
-              className="flex-1 bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 font-mono uppercase transition-colors"
+              className="flex-1 bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 font-mono uppercase transition-colors"
             />
             <button 
               type="submit"
@@ -811,15 +824,15 @@ function OrderTrackingSection() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mt-10 pt-10 border-t border-gray-100 relative z-10"
+                className="mt-10 pt-10 border-t border-border relative z-10"
               >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                    <div>
-                     <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">{t("Order ID", lang as Lang)}</p>
-                     <p className="text-lg font-mono font-bold text-brand-darker uppercase">{orderId}</p>
+                     <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">{t("Order ID", lang as Lang)}</p>
+                     <p className="text-lg font-mono font-bold text-foreground uppercase">{orderId}</p>
                    </div>
                    <div className="md:text-right">
-                     <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">{t("Status:", lang as Lang)}</p>
+                     <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">{t("Status:", lang as Lang)}</p>
                      <div className="inline-flex items-center gap-1.5 bg-brand-teal-light text-brand-teal-dark px-3 py-1 rounded-full text-sm font-bold">
                        {status === 'PROCESSING' && <Package className="w-4 h-4" />}
                        {status === 'SHIPPED' && <Truck className="w-4 h-4" />}
@@ -832,7 +845,7 @@ function OrderTrackingSection() {
                 </div>
 
                 <div className="relative pt-4">
-                  <div className="absolute top-6 left-0 w-full h-1 bg-gray-100 rounded-full" />
+                  <div className="absolute top-6 left-0 w-full h-1 bg-secondary rounded-full" />
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: status === 'PROCESSING' ? '15%' : status === 'SHIPPED' ? '50%' : '100%' }}
@@ -841,16 +854,16 @@ function OrderTrackingSection() {
                   
                   <div className="flex justify-between relative z-10">
                     <div className="flex flex-col items-center gap-2">
-                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'PROCESSING' || status === 'SHIPPED' || status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-gray-200 border-white'}`} />
-                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'PROCESSING' || status === 'SHIPPED' || status === 'DELIVERED' ? 'text-brand-darker' : 'text-gray-400'}`}>{t("Processing", lang as Lang)}</span>
+                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'PROCESSING' || status === 'SHIPPED' || status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-muted border-background'}`} />
+                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'PROCESSING' || status === 'SHIPPED' || status === 'DELIVERED' ? 'text-foreground' : 'text-muted-foreground'}`}>{t("Processing", lang as Lang)}</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
-                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'SHIPPED' || status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-gray-200 border-white'}`} />
-                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'SHIPPED' || status === 'DELIVERED' ? 'text-brand-darker' : 'text-gray-400'}`}>{t("Shipped", lang as Lang)}</span>
+                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'SHIPPED' || status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-muted border-background'}`} />
+                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'SHIPPED' || status === 'DELIVERED' ? 'text-foreground' : 'text-muted-foreground'}`}>{t("Shipped", lang as Lang)}</span>
                     </div>
                     <div className="flex flex-col items-center gap-2 text-right">
-                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-gray-200 border-white'}`} />
-                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'DELIVERED' ? 'text-brand-darker' : 'text-gray-400'}`}>{t("Delivered", lang as Lang)}</span>
+                       <div className={`w-5 h-5 rounded-full border-4 flex shrink-0 ${status === 'DELIVERED' ? 'bg-brand-teal border-brand-teal-light' : 'bg-muted border-background'}`} />
+                       <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'DELIVERED' ? 'text-foreground' : 'text-muted-foreground'}`}>{t("Delivered", lang as Lang)}</span>
                     </div>
                   </div>
                 </div>
@@ -867,40 +880,40 @@ function TrustSection() {
   const { lang } = useLang();
 
   return (
-    <section id="about" className="py-24 bg-brand-darker text-white">
+    <section id="about" className="py-24 bg-primary text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-16 items-center">
         <div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">{t("Why shop with Vivia?", lang)}</h2>
-          <p className="text-brand-teal-light/80 text-lg mb-8 leading-relaxed">
+          <p className="text-primary-foreground/80 text-lg mb-8 leading-relaxed">
             {lang === 'TR' ? 'Sadece evcil hayvanlarınızın esenliğine odaklanan bir pazar yeriyiz. İster bir köpeğe bakıyor olun, ister özel bir teraryum kuruyor olun, tam olarak ihtiyacınız olan ürünleri sunuyoruz.' : 'We are a dedicated marketplace, focused entirely on the well-being of your pets. Whether you are caring for a dog or setting up a specialized terrarium, we provide the exact products you need.'}
           </p>
           
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-brand-teal-light" />
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
                 <h4 className="font-bold text-xl mb-1">{t("Fast & Accessible", lang)}</h4>
-                <p className="text-brand-teal-light/70 text-base">{lang === 'TR' ? 'Acil ihtiyaçlarınıza hızlı ve güvenilir bir şekilde yardımcı olmaya hazırız.' : 'Ready to assist your immediate needs quickly and reliably.'}</p>
+                <p className="text-primary-foreground/70 text-base">{lang === 'TR' ? 'Acil ihtiyaçlarınıza hızlı ve güvenilir bir şekilde yardımcı olmaya hazırız.' : 'Ready to assist your immediate needs quickly and reliably.'}</p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                <Heart className="w-6 h-6 text-brand-teal-light" />
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <Heart className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <h4 className="font-bold text-xl mb-1">{t("Wide Ranging Expertise", lang)}</h4>
-                <p className="text-brand-teal-light/70 text-base">{lang === 'TR' ? 'Yaygın evcil hayvanlardan sürüngenlere kadar özel zorunlu ihtiyaçları stoklarımızda bulunduruyoruz.' : 'From common pets to reptiles, we stock specialized essentials.'}</p>
+                <p className="text-primary-foreground/70 text-base">{lang === 'TR' ? 'Yaygın evcil hayvanlardan sürüngenlere kadar özel zorunlu ihtiyaçları stoklarımızda bulunduruyoruz.' : 'From common pets to reptiles, we stock specialized essentials.'}</p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                <MessageCircle className="w-6 h-6 text-brand-teal-light" />
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <MessageCircle className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <h4 className="font-bold text-xl mb-1">{t("Direct Communication", lang)}</h4>
-                <p className="text-brand-teal-light/70 text-base">{lang === 'TR' ? 'Karmaşık prosedürler yok. Bize sadece WhatsApp\'tan yazın ve sorularınızı yanıtlayalım.' : 'No complex procedures. Just message us on WhatsApp and get your questions answered.'}</p>
+                <p className="text-primary-foreground/70 text-base">{lang === 'TR' ? 'Karmaşık prosedürler yok. Bize sadece WhatsApp\'tan yazın ve sorularınızı yanıtlayalım.' : 'No complex procedures. Just message us on WhatsApp and get your questions answered.'}</p>
               </div>
             </div>
           </div>
@@ -910,16 +923,16 @@ function TrustSection() {
            <div className="aspect-square max-w-md mx-auto relative rounded-[40px] overflow-hidden bg-brand-dark grid place-items-center">
              <div className="absolute inset-0 bg-gradient-to-br from-brand-teal/20 to-transparent" />
              <div className="text-center p-8 z-10 relative">
-                <div className="w-20 h-20 rounded-full bg-brand-teal/20 mx-auto flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-brand-teal-light" />
+                <div className="w-20 h-20 rounded-full bg-primary-foreground/10 mx-auto flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-primary-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">{t("Always Online", lang)}</h3>
-                <p className="text-brand-teal-light/70 text-sm mb-6 max-w-xs mx-auto">
+                <h3 className="text-2xl font-bold mb-2 text-white">{t("Always Online", lang)}</h3>
+                <p className="text-white/70 text-sm mb-6 max-w-xs mx-auto">
                   {lang === 'TR' ? 'Yüksek kaliteli ürünler her an elinizin altında.' : 'High-quality supplies always at your fingertips.'}
                 </p>
                 <a 
                   href="#services" 
-                  className="inline-flex items-center gap-2 bg-white text-brand-darker px-6 py-3 rounded-full text-sm font-semibold hover:bg-brand-teal-light transition-colors"
+                  className="inline-flex items-center gap-2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold hover:bg-brand-teal/20 hover:text-brand-teal transition-colors"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{t("Shop Now", lang)}</span>
@@ -942,10 +955,10 @@ function Contact() {
   }
 
   return (
-    <section id="contact" className="py-24 bg-brand-white">
+    <section id="contact" className="py-24 bg-card">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl md:text-5xl font-bold text-brand-darker tracking-tight mb-6">{t("Ready to order?", lang)}</h2>
-        <p className="text-brand-dark text-lg mb-12">
+        <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-6">{t("Ready to order?", lang)}</h2>
+        <p className="text-muted-foreground text-lg mb-12">
           {lang === 'TR' ? 'Stok durumunu onaylamak, tavsiye istemek veya sipariş vermek için doğrudan bizimle iletişime geçin. Yardımcı olmak için buradayız.' : 'Contact us directly to confirm stock, ask for recommendations, or place an order. We are here to help.'}
         </p>
 
@@ -961,26 +974,26 @@ function Contact() {
           </a>
           <a 
             href={`tel:${CONTACT.phone}`} 
-            className="flex items-center justify-center gap-3 bg-brand-darker hover:bg-brand-dark text-white px-8 py-4 rounded-full text-lg font-semibold transition-all"
+            className="flex items-center justify-center gap-3 bg-primary hover:bg-brand-dark text-white px-8 py-4 rounded-full text-lg font-semibold transition-all"
           >
             <Phone className="w-6 h-6" />
             <span>{t("Call directly", lang)}</span>
           </a>
         </div>
 
-        <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm max-w-xl mx-auto text-left">
-           <h3 className="font-bold text-brand-darker mb-6 flex items-center gap-2">
+        <div className="bg-card rounded-[32px] p-8 border border-border shadow-sm max-w-xl mx-auto text-left">
+           <h3 className="font-bold text-foreground mb-6 flex items-center gap-2">
              <MessageCircle className="w-5 h-5 text-brand-teal" />
              {t("Contact Information", lang)}
            </h3>
            
            <div className="space-y-4">
              <div className="flex gap-3 items-center">
-               <div className="w-8 text-brand-dark shrink-0" aria-hidden="true">✉️</div>
+               <div className="w-8 text-muted-foreground shrink-0" aria-hidden="true">✉️</div>
                <button 
                   onClick={handleCopyEmail}
                   aria-label="Copy email address"
-                  className="text-brand-dark text-base hover:text-brand-teal transition-colors flex items-center gap-2"
+                  className="text-muted-foreground text-base hover:text-brand-teal transition-colors flex items-center gap-2"
                >
                  {CONTACT.email}
                  {copied && <span className="text-sm font-semibold text-brand-teal bg-brand-teal-light px-3 py-1 rounded-full">{t("Copied!", lang)}</span>}
@@ -997,42 +1010,42 @@ function Footer() {
   const { lang } = useLang();
 
   return (
-    <footer className="bg-white py-12 border-t border-gray-100">
+    <footer className="bg-card py-12 border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-gray-100">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center text-brand-teal">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
                 <path d="M5 6l7 12 7-12" />
               </svg>
             </div>
-            <span className="font-bold text-lg text-brand-darker tracking-tight">Vivia Pet</span>
+            <span className="font-bold text-lg text-foreground tracking-tight">Vivia Pet</span>
           </div>
           
           <div className="flex gap-4">
-            <a href="#" aria-label="Visit our Instagram" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-brand-dark hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Instagram" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
               <Instagram className="w-5 h-5" />
             </a>
-            <a href="#" aria-label="Visit our X (Twitter)" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-brand-dark hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our X (Twitter)" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
-            <a href="#" aria-label="Visit our Facebook" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-brand-dark hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Facebook" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
               <Facebook className="w-5 h-5" />
             </a>
-            <a href="#" aria-label="Visit our Youtube" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-brand-dark hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Youtube" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
               <Youtube className="w-5 h-5" />
             </a>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mt-8">
-          <p className="text-sm text-brand-dark text-center md:text-left">
+          <p className="text-sm text-muted-foreground text-center md:text-left">
             &copy; {new Date().getFullYear()} Vivia Marketplace. {lang === 'TR' ? 'Tüm hakları saklıdır.' : 'All rights reserved.'}
           </p>
 
-          <div className="flex gap-6 text-sm text-brand-dark">
+          <div className="flex gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-brand-teal transition-colors">{t("Terms", lang)}</a>
             <a href="#" className="hover:text-brand-teal transition-colors">{t("Privacy", lang)}</a>
           </div>
@@ -1042,11 +1055,177 @@ function Footer() {
   );
 }
 
+// Personalization Modal
+function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const { lang, setLang } = useLang();
+  const [petType, setPetType] = useState('Dog');
+  const [petName, setPetName] = useState('');
+  const [petAge, setPetAge] = useState('');
+  const [petBreed, setPetBreed] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaved(true);
+    setTimeout(() => {
+      setIsSaved(false);
+      onClose();
+    }, 2000);
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-darker/60 backdrop-blur-sm"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-card rounded-[32px] p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="absolute top-6 left-6 flex bg-secondary/80 rounded-full p-1 z-10">
+             <button 
+                onClick={() => setLang('TR')}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'TR' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
+             >
+               <span>🇹🇷</span> TR
+             </button>
+             <button 
+                onClick={() => setLang('EN')}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'EN' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
+             >
+               <span>🇬🇧</span> EN
+             </button>
+          </div>
+
+          <button aria-label="Close" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10 text-muted-foreground hover:text-foreground">
+            <X className="w-6 h-6" />
+          </button>
+
+          {!isSaved ? (
+            <div className="mt-12">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center mx-auto mb-4">
+                  <Heart className="w-8 h-8 fill-current" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                  {lang === 'TR' ? 'Dostunuzu Tanıyın' : 'Tell us about your pet'}
+                </h2>
+                <p className="text-muted-foreground">
+                  {lang === 'TR' ? 'Özel öneriler ve beslenme planı için profil oluşturun.' : 'Create a profile for customized recommendations and nutrition plans.'}
+                </p>
+              </div>
+
+              <form onSubmit={handleSave} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-3">
+                    {lang === 'TR' ? 'Evcil Hayvan Türü' : 'Pet Type'}
+                  </label>
+                  <div className="flex bg-secondary p-1 rounded-xl w-full">
+                    {['Dog', 'Cat', 'Bird', 'Rabbit'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setPetType(type)}
+                        className={`flex-1 py-3 text-sm font-semibold transition-all rounded-lg flex items-center justify-center gap-2 ${petType === type ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary-dark'}`}
+                      >
+                        {type === 'Dog' && <Dog className="w-4 h-4" />}
+                        {type === 'Cat' && <Cat className="w-4 h-4" />}
+                        {type === 'Bird' && <Bird className="w-4 h-4" />}
+                        {type === 'Rabbit' && <Rabbit className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{t(type, lang)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1">
+                      {lang === 'TR' ? 'Evcil Hayvanın Adı' : 'Pet Name'}
+                    </label>
+                    <input 
+                      required
+                      type="text" 
+                      value={petName}
+                      onChange={(e) => setPetName(e.target.value)}
+                      placeholder={lang === 'TR' ? 'Örn: Tarçın' : 'e.g. Max'}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1">
+                      {lang === 'TR' ? 'Yaşı' : 'Age'}
+                    </label>
+                    <input 
+                      required
+                      type="number" 
+                      value={petAge}
+                      onChange={(e) => setPetAge(e.target.value)}
+                      placeholder={lang === 'TR' ? 'Yıl olarak' : 'In years'}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
+                    />
+                  </div>
+                </div>
+
+                {petType !== 'Bird' && petType !== 'Rabbit' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1">
+                      {lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}
+                    </label>
+                    <input 
+                      type="text" 
+                      value={petBreed}
+                      onChange={(e) => setPetBreed(e.target.value)}
+                      placeholder={petType === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
+                    />
+                  </div>
+                )}
+
+                <button 
+                  type="submit"
+                  className="w-full bg-brand-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-brand-teal-dark transition-colors shadow-lg shadow-brand-teal/20"
+                >
+                  {lang === 'TR' ? 'Profili Kaydet' : 'Save Profile'}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="text-center py-12 mt-8">
+               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
+                 <CheckCircle2 className="w-10 h-10 text-green-500" />
+               </div>
+               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+                 {lang === 'TR' ? `${petName || 'Evcil hayvan'} eklendi!` : `${petName || 'Pet'} has been added!`}
+               </h2>
+               <p className="text-muted-foreground text-lg">
+                 {lang === 'TR' ? 'Mağaza deneyiminiz güncelleniyor...' : 'Personalizing your store experience...'}
+               </p>
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // Interactivity Modals
-function OnboardingModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: { isOpen: boolean, onClose: () => void, selectedPets: string[], onSelectionChange: (pets: string[]) => void }) {
   const { lang, setLang } = useLang();
   const [step, setStep] = useState(1);
-  const [selectedPet, setSelectedPet] = useState<string | null>(null);
+
+  const togglePet = (pet: string) => {
+    if (selectedPets.includes(pet)) {
+      onSelectionChange(selectedPets.filter(p => p !== pet));
+    } else {
+      onSelectionChange([...selectedPets, pet]);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -1058,30 +1237,30 @@ function OnboardingModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
       >
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative"
+          className="bg-card rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative"
           role="dialog"
           aria-modal="true"
           aria-labelledby="onboarding-title"
         >
-          <div className="absolute top-6 left-6 flex bg-gray-100/80 rounded-full p-1 z-10">
+          <div className="absolute top-6 left-6 flex bg-secondary/80 rounded-full p-1 z-10">
              <button 
                 onClick={() => setLang('TR')}
                 aria-pressed={lang === 'TR'}
-                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'TR' ? 'bg-white shadow-sm text-brand-darker' : 'text-gray-500 hover:text-brand-dark'}`}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'TR' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
              >
                <span>🇹🇷</span> TR
              </button>
              <button 
                 onClick={() => setLang('EN')}
                 aria-pressed={lang === 'EN'}
-                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'EN' ? 'bg-white shadow-sm text-brand-darker' : 'text-gray-500 hover:text-brand-dark'}`}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'EN' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
              >
                <span>🇬🇧</span> EN
              </button>
           </div>
 
-          <button aria-label="Close setup modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors z-10">
-            <X className="w-6 h-6 text-brand-dark" />
+          <button aria-label="Close setup modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10">
+            <X className="w-6 h-6 text-muted-foreground" />
           </button>
 
           {step === 1 ? (
@@ -1091,17 +1270,17 @@ function OnboardingModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                   <path d="M5 6l7 12 7-12" />
                 </svg>
               </div>
-              <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-brand-darker mb-2">{t("Who are we shopping for?", lang)}</h2>
-              <p className="text-brand-dark text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
+              <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{t("Who are we shopping for?", lang)}</h2>
+              <p className="text-muted-foreground text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
               
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
                 {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(pet => (
                   <button 
-                    key={pet} onClick={() => setSelectedPet(pet)}
-                    aria-pressed={selectedPet === pet}
+                    key={pet} onClick={() => togglePet(pet)}
+                    aria-pressed={selectedPets.includes(pet)}
                     aria-label={`Select ${t(pet, lang)}`}
                     className={`w-[46%] sm:w-[30%] p-3 sm:p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2
-                      ${selectedPet === pet ? 'border-brand-teal bg-brand-teal-light/30 text-brand-teal-dark shadow-sm' : 'border-gray-100 hover:border-brand-teal/30 hover:bg-gray-50 text-brand-dark'}
+                      ${selectedPets.includes(pet) ? 'border-brand-teal bg-brand-teal-light/30 text-brand-teal-dark shadow-sm' : 'border-border hover:border-brand-teal/30 hover:bg-secondary text-muted-foreground'}
                     `}
                   >
                     <span className="text-3xl sm:text-4xl" aria-hidden="true">{
@@ -1114,21 +1293,21 @@ function OnboardingModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
 
               <button 
                 onClick={() => setStep(2)}
-                disabled={!selectedPet}
-                className="w-full bg-brand-darker disabled:opacity-50 text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
+                disabled={selectedPets.length === 0}
+                className="w-full bg-primary disabled:opacity-50 text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
               >
                 {t("Continue", lang)} <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           ) : (
             <div className="text-center py-6">
-               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6 text-4xl">
+               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6 text-4xl">
                  🎉
                </div>
-               <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-brand-darker mb-4">{t("Profile Created!", lang)}</h2>
-               <p className="text-brand-dark text-base mb-10 leading-relaxed">
+               <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{t("Profile Created!", lang)}</h2>
+               <p className="text-muted-foreground text-base mb-10 leading-relaxed">
                  {t("Your shopping experience is now tailored for your ", lang)} 
-                 <span className="font-bold text-brand-teal">{t(selectedPet!, lang)}</span>. 
+                 <span className="font-bold text-brand-teal">{selectedPets.map(p => t(p, lang)).join(', ')}</span>. 
                  <br/>
                  {t("Smart subscriptions are enabled.", lang)}
                </p>
@@ -1159,20 +1338,20 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
       >
         <motion.div 
           initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col"
+          className="bg-card w-full max-w-md h-full shadow-2xl flex flex-col"
         >
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
-            <h2 id="cart-title" className="text-2xl font-bold text-brand-darker flex items-center gap-3">
+          <div className="p-6 border-b border-border flex justify-between items-center bg-card">
+            <h2 id="cart-title" className="text-2xl font-bold text-foreground flex items-center gap-3">
               {t("For Your Companion", lang)} <span className="bg-brand-teal px-3 py-1 rounded-full text-white text-sm">{cartItems.length}</span>
             </h2>
-            <button aria-label="Close cart" onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-              <X className="w-6 h-6 text-brand-dark" />
+            <button aria-label="Close cart" onClick={onClose} className="p-2 rounded-full hover:bg-secondary transition-colors">
+              <X className="w-6 h-6 text-muted-foreground" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 bg-white">
+          <div className="flex-1 overflow-y-auto p-6 bg-card">
             {cartItems.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-brand-dark text-center">
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center">
                 <ShoppingBag className="w-16 h-16 mb-4 opacity-20" />
                 <p className="text-lg">{lang === 'TR' ? 'Dostunuzun sepeti boş.' : 'Your companion\'s basket is empty.'}</p>
                 <button onClick={onClose} className="mt-4 text-brand-teal text-lg font-medium hover:underline p-2">{t("Continue shopping", lang)}</button>
@@ -1180,9 +1359,9 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
             ) : (
               <ul className="space-y-4">
                 {cartItems.map((item, idx) => (
-                  <li key={idx} className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                    <span className="font-medium text-brand-darker text-base">{item}</span>
-                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(idx)} className="text-brand-dark hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
+                  <li key={idx} className="flex justify-between items-center bg-secondary p-4 rounded-2xl border border-border">
+                    <span className="font-medium text-foreground text-base">{item}</span>
+                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(idx)} className="text-muted-foreground hover:text-red-500 transition-colors p-2 rounded-full hover:bg-destructive/10">
                       <Minus className="w-5 h-5" />
                     </button>
                   </li>
@@ -1192,15 +1371,15 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
           </div>
 
           {cartItems.length > 0 && (
-            <div className="p-6 border-t border-gray-100 bg-brand-white">
+            <div className="p-6 border-t border-border bg-card">
               <div className="flex justify-between mb-6 text-base">
-                 <span className="text-brand-dark">{t("Estimated total via WhatsApp", lang)}</span>
-                 <span className="font-bold text-brand-darker">{t("Confirm with Store", lang)}</span>
+                 <span className="text-muted-foreground">{t("Estimated total via WhatsApp", lang)}</span>
+                 <span className="font-bold text-foreground">{t("Confirm with Store", lang)}</span>
               </div>
               <button 
                 onClick={onCheckout}
                 aria-label={t("Checkout Securely", lang)}
-                className="w-full bg-brand-darker text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-colors flex items-center justify-center gap-3 shadow-lg"
+                className="w-full bg-primary text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-colors flex items-center justify-center gap-3 shadow-lg"
               >
                 <Lock className="w-5 h-5" /> {t("Checkout Securely", lang)}
               </button>
@@ -1225,7 +1404,7 @@ function CheckoutSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
       >
         <motion.div 
           initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden"
+          className="bg-card rounded-[32px] p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden"
         >
           {/* Confetti / Success Visuals */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50">
@@ -1238,14 +1417,14 @@ function CheckoutSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
           
-          <h2 className="text-2xl font-bold text-brand-darker mb-2 relative z-10">{t("Order Received!", lang)}</h2>
-          <p className="text-brand-dark text-sm mb-8 relative z-10">
+          <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">{t("Order Received!", lang)}</h2>
+          <p className="text-muted-foreground text-sm mb-8 relative z-10">
             {lang === 'TR' ? 'Tebrikler! Dostunuz buna bayılacak. Teslimatı onaylamak için kısa süre içinde WhatsApp\'tan iletişime geçeceğiz.' : 'Great job! Your companion will love this. We\'ll send a WhatsApp message shortly to confirm delivery.'}
           </p>
           
           <button 
              onClick={onClose}
-             className="w-full bg-brand-white border border-gray-200 text-brand-darker rounded-full py-4 font-semibold hover:border-brand-teal hover:text-brand-teal transition-colors relative z-10"
+             className="w-full bg-card border border-border text-foreground rounded-full py-4 font-semibold hover:border-brand-teal hover:text-brand-teal transition-colors relative z-10"
           >
             {t("Back to Catalog", lang)}
           </button>
@@ -1309,19 +1488,19 @@ function AuthModal({
         <motion.div 
           onClick={e => e.stopPropagation()}
           initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative my-auto"
+          className="bg-card rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative my-auto"
         >
-          <button aria-label="Close auth modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors z-10">
-            <X className="w-6 h-6 text-brand-dark" />
+          <button aria-label="Close auth modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10">
+            <X className="w-6 h-6 text-muted-foreground" />
           </button>
 
           {success && currentMode === 'register' ? (
             <div className="text-center py-8">
-              <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h2 className="text-2xl font-bold text-brand-darker mb-2">{t("Account created successfully!", lang)}</h2>
-              <p className="text-gray-500 mb-6">{lang === 'TR' ? 'Artık giriş yapabilirsiniz.' : 'You can now log in.'}</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{t("Account created successfully!", lang)}</h2>
+              <p className="text-muted-foreground mb-6">{lang === 'TR' ? 'Artık giriş yapabilirsiniz.' : 'You can now log in.'}</p>
               <button 
                 onClick={() => setCurrentMode('login')}
                 className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-3.5 rounded-xl transition-colors"
@@ -1335,26 +1514,26 @@ function AuthModal({
                 <div className="w-16 h-16 bg-brand-teal-light text-brand-teal rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <User className="w-8 h-8" />
                 </div>
-                <h2 className="text-2xl font-bold text-brand-darker">
+                <h2 className="text-2xl font-bold text-foreground">
                   {currentMode === 'login' ? t("Login", lang) : t("Sign Up", lang)}
                 </h2>
-                <p className="text-gray-500 mt-2">
+                <p className="text-muted-foreground mt-2">
                   {currentMode === 'login' 
                     ? t("Sign in to your account", lang) 
                     : t("Create a new account", lang)}
                 </p>
               </div>
 
-              <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
+              <div className="flex bg-secondary p-1 rounded-xl mb-6">
                 <button 
                   onClick={() => setCurrentMode('login')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'login' ? 'bg-white shadow-sm text-brand-darker' : 'text-gray-500'}`}
+                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'login' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
                 >
                   {t("Login", lang)}
                 </button>
                 <button 
                   onClick={() => setCurrentMode('register')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'register' ? 'bg-white shadow-sm text-brand-darker' : 'text-gray-500'}`}
+                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'register' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
                 >
                   {t("Sign Up", lang)}
                 </button>
@@ -1393,24 +1572,24 @@ function AuthModal({
                 {currentMode === 'register' && (
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold text-brand-darker mb-1.5">{t("First Name", lang)}</label>
+                      <label className="block text-sm font-semibold text-foreground mb-1.5">{t("First Name", lang)}</label>
                       <input 
                         type="text" 
                         required
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
                         placeholder={lang === 'TR' ? 'Ad' : 'Name'}
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold text-brand-darker mb-1.5">{t("Last Name", lang)}</label>
+                      <label className="block text-sm font-semibold text-foreground mb-1.5">{t("Last Name", lang)}</label>
                       <input 
                         type="text" 
                         required
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
                         placeholder={lang === 'TR' ? 'Soyad' : 'Surname'}
                       />
                     </div>
@@ -1418,46 +1597,46 @@ function AuthModal({
                 )}
 
                 <div>
-                  <label className="block text-sm font-semibold text-brand-darker mb-1.5">{t("E-Mail", lang)}</label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t("E-Mail", lang)}</label>
                   <input 
                     type="email" 
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                    className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
                     placeholder={lang === 'TR' ? 'E-Posta' : 'E-Mail'}
                   />
                 </div>
 
                 {currentMode === 'register' && (
                   <div>
-                    <label className="block text-sm font-semibold text-brand-darker mb-1.5">{t("Phone Number", lang)}</label>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">{t("Phone Number", lang)}</label>
                     <input 
                       type="tel" 
                       required
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
                       placeholder="05XX XXX XX XX"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-semibold text-brand-darker mb-1.5">{t("Password", lang)}</label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t("Password", lang)}</label>
                   <div className="relative">
                     <input 
                       type={showPassword ? "text" : "password"} 
                       required
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-brand-teal focus:bg-white focus:outline-none rounded-xl py-3 px-4 pr-12 transition-colors"
+                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-colors"
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-teal transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-teal transition-colors"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -1473,9 +1652,9 @@ function AuthModal({
                         id="remember"
                         checked={remember}
                         onChange={e => setRemember(e.target.checked)}
-                        className="w-4 h-4 text-brand-teal focus:ring-brand-teal border-gray-300 rounded cursor-pointer"
+                        className="w-4 h-4 text-brand-teal focus:ring-brand-teal border-border rounded cursor-pointer"
                       />
-                      <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer select-none">
+                      <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
                         {t("Remember Me", lang)}
                       </label>
                     </div>
@@ -1493,7 +1672,7 @@ function AuthModal({
                           alert(lang === 'TR' ? 'Lütfen önce e-posta adresinizi girin.' : 'Please enter your email address first.');
                         }
                       }}
-                      className="text-sm font-semibold text-brand-teal hover:text-brand-dark transition-colors"
+                      className="text-sm font-semibold text-brand-teal hover:text-muted-foreground transition-colors"
                     >
                       {lang === 'TR' ? 'Şifremi Unuttum' : 'Forgot Password?'}
                     </button>
@@ -1501,7 +1680,7 @@ function AuthModal({
                 )}
 
                 {currentMode === 'register' && (
-                  <div className="space-y-3 pt-2 text-sm text-gray-600">
+                  <div className="space-y-3 pt-2 text-sm text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <input 
                         type="checkbox" 
@@ -1509,7 +1688,7 @@ function AuthModal({
                         required
                         checked={agreedPrivacy}
                         onChange={e => setAgreedPrivacy(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-brand-teal focus:ring-brand-teal border-gray-300 rounded cursor-pointer shrink-0"
+                        className="mt-1 w-4 h-4 text-brand-teal focus:ring-brand-teal border-border rounded cursor-pointer shrink-0"
                       />
                       <label htmlFor="agreedPrivacy" className="cursor-pointer select-none leading-tight">
                         {t("I have read and agree to the KVKK Privacy Policy.", lang)}
@@ -1521,7 +1700,7 @@ function AuthModal({
                         id="agreedMarketing"
                         checked={agreedMarketing}
                         onChange={e => setAgreedMarketing(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-brand-teal focus:ring-brand-teal border-gray-300 rounded cursor-pointer shrink-0"
+                        className="mt-1 w-4 h-4 text-brand-teal focus:ring-brand-teal border-border rounded cursor-pointer shrink-0"
                       />
                       <label htmlFor="agreedMarketing" className="cursor-pointer select-none leading-tight">
                         {t("I want to receive marketing emails and SMS about discounts and new products.", lang)}
@@ -1547,10 +1726,21 @@ function AuthModal({
   );
 }
 
+const PetCollageIcon = ({ className }: { className?: string }) => (
+  <div className={`grid grid-cols-2 gap-0.5 ${className}`}>
+    <Dog className="w-full h-full" strokeWidth={2.5} />
+    <Cat className="w-full h-full" strokeWidth={2.5} />
+    <Bird className="w-full h-full" strokeWidth={2.5} />
+    <Rabbit className="w-full h-full" strokeWidth={2.5} />
+  </div>
+);
+
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [wishlistItems, setWishlistItems] = useState<string[]>([]);
@@ -1657,9 +1847,18 @@ export default function App() {
           onLogout={handleLogout}
         />
         
+        {/* Floating Category Filter Button */}
+        <button
+          onClick={() => setIsOnboardingOpen(true)}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-brand-teal p-2 sm:p-3 rounded-r-2xl text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-brand-teal-dark hover:pl-4 transition-all group overflow-hidden"
+          aria-label="Filter categories"
+        >
+          <PetCollageIcon className="w-9 h-9 sm:w-11 sm:h-11 group-hover:scale-110 transition-transform" />
+        </button>
+        
         <main>
-          <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} />
-          <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} />
+          <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} />
+          <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} selectedPetsFilter={selectedPetsFilter} />
           <OrderTrackingSection />
           <TrustSection />
           <Contact />
@@ -1668,7 +1867,8 @@ export default function App() {
         <Footer />
 
         {/* Modals */}
-        <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} />
+        <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} />
+        <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />
         <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onCheckout={handleCheckout} />
         <CheckoutSuccessModal isOpen={isSuccessOpen} onClose={handleCloseSuccess} />
         <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} />
