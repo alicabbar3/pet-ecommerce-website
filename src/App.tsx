@@ -38,9 +38,10 @@ import {
   User,
   LogOut,
   Bell,
-  CheckCircle2,
   Eye,
-  EyeOff
+  EyeOff,
+  Trash2,
+  Camera
 } from 'lucide-react';
 
 type Lang = 'EN' | 'TR';
@@ -70,8 +71,8 @@ const TR_DICT: Record<string, string> = {
   "Complete Care Catalog": "Kapsamlı Bakım Kataloğu",
   "Dog": "Köpek",
   "Cat": "Kedi",
-  "Bird": "Kuş",
-  "Fish": "Balık",
+  "Avian": "Kuş",
+  "Aquatic": "Balık",
   "Rodent": "Kemirgen",
   "Reptile": "Sürüngen",
   
@@ -193,8 +194,8 @@ const WA_LINK = `https://wa.me/905365264966`;
 const SERVICES = [
   { id: 'dog', title: 'Dog', icon: <Bone className="w-6 h-6" />, items: ['Premium Nutrition', 'Comfort Collars', 'Training Treats', 'Orthopedic Beds', 'Interactive Toys', 'Healthcare'] },
   { id: 'cat', title: 'Cat', icon: <Cat className="w-6 h-6" />, items: ['Grain-Free Diet', 'Odorless Litter', 'Cozy Beds', 'Scratching Posts', 'Feather Toys', 'Malt Pastes', 'Water Fountains'] },
-  { id: 'bird', title: 'Bird', icon: <Bird className="w-6 h-6" />, items: ['Seed Mixes', 'Spacious Cages', 'Natural Perches', 'Smart Feeders', 'Bell Swings', 'Baths'] },
-  { id: 'fish', title: 'Fish', icon: <Fish className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
+  { id: 'avian', title: 'Avian', icon: <Bird className="w-6 h-6" />, items: ['Seed Mixes', 'Spacious Cages', 'Natural Perches', 'Smart Feeders', 'Bell Swings', 'Baths'] },
+  { id: 'aquatic', title: 'Aquatic', icon: <Fish className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
   { id: 'rodent', title: 'Rodent', icon: <Rat className="w-6 h-6" />, items: ['Pellet Mix', 'Multi-level Cages', 'Running Wheels', 'Chew Toys', 'Wooden Huts'] },
   { id: 'reptile', title: 'Reptile', icon: <Turtle className="w-6 h-6" />, items: ['Live/Dried Food', 'Glass Terrariums', 'UVB Lamps', 'Thermostats', 'Hygrometers'] },
 ];
@@ -204,7 +205,7 @@ const MOCK_PRODUCTS = [
   { id: 2, name: { EN: "Glass Terrarium 40 Gallon", TR: "Cam Teraryum 40 Galon" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
   { id: 3, name: { EN: "Automatic Cat Feeder", TR: "Otomatik Kedi Besleyici" }, category: { EN: "Cats", TR: "Kediler" } },
   { id: 4, name: { EN: "UVB Lamp 10.0", TR: "UVB Lamba 10.0" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
-  { id: 5, name: { EN: "Aquarium Filter Pro", TR: "Akvaryum Filtresi Pro" }, category: { EN: "Fish", TR: "Balıklar" } },
+  { id: 5, name: { EN: "Aquarium Filter Pro", TR: "Akvaryum Filtresi Pro" }, category: { EN: "Aquatic", TR: "Balıklar" } },
   { id: 6, name: { EN: "Interactive Laser Toy", TR: "İnteraktif Lazer Oyuncak" }, category: { EN: "Cats", TR: "Kediler" } },
   { id: 7, name: { EN: "Orthopedic Dog Bed", TR: "Ortopedik Köpek Yatağı" }, category: { EN: "Dogs", TR: "Köpekler" } },
   { id: 8, name: { EN: "Thermostat Controller", TR: "Termostat Kontrol Cihazı" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
@@ -267,16 +268,18 @@ function Header({
       <div className="bg-card border-b border-border text-foreground text-xs py-1.5 hidden lg:block">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-brand-teal transition-colors">🔥 {t("Deals", lang)}</a>
-              <a href="#" className="hover:text-brand-teal transition-colors">✨ {t("New Products", lang)}</a>
-              <a href="#contact" className="hover:text-brand-teal transition-colors">{t("Contact Information", lang)}</a>
+              <a href="#" className="hover:text-brand-teal transition-all duration-300">🔥 {t("Deals", lang)}</a>
+              <a href="#" className="hover:text-brand-teal transition-all duration-300">✨ {t("New Products", lang)}</a>
+              <a href="#contact" className="hover:text-brand-teal transition-all duration-300">{t("Contact Information", lang)}</a>
             </div>
             <div className="flex items-center gap-2">
-               <button onClick={() => setIsDark(!isDark)} className="flex items-center gap-1 px-2 py-0.5 rounded transition-colors hover:bg-secondary" aria-label="Toggle Dark Mode">
-                 {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-               </button>
-               <button onClick={() => setLang('TR')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'TR' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇹🇷</span> TR</button>
-               <button onClick={() => setLang('EN')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${lang === 'EN' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇬🇧</span> EN</button>
+               <Tooltip text={lang === 'TR' ? 'Temayı Değiştir' : 'Toggle Theme'} position="bottom">
+                 <button onClick={() => setIsDark(!isDark)} className="flex items-center gap-1 px-2 py-0.5 rounded transition-all duration-300 hover:bg-secondary" aria-label="Toggle Dark Mode">
+                   {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                 </button>
+               </Tooltip>
+               <button onClick={() => setLang('TR')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-all duration-300 ${lang === 'TR' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇹🇷</span> TR</button>
+               <button onClick={() => setLang('EN')} className={`flex items-center gap-1 px-2 py-0.5 rounded transition-all duration-300 ${lang === 'EN' ? 'bg-secondary font-bold' : 'hover:bg-secondary/50'}`}><span>🇬🇧</span> EN</button>
             </div>
          </div>
       </div>
@@ -288,12 +291,8 @@ function Header({
           e.preventDefault();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}>
-          <div className="flex items-center justify-center text-brand-teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[40px] h-[40px] mt-[1px] mb-[1px] mr-[1px] ml-[-1px] pb-0 pl-0 pr-0">
-              <path d="M5 6l7 12 7-12" />
-            </svg>
-          </div>
-          <span className="font-extrabold tracking-tight text-foreground text-[32px]">Vivia</span>
+          <img src="/logo.png" alt="Vivia Logo" className="w-[72px] h-[72px] -mb-1.5 object-contain rounded-xl drop-shadow-md hover:scale-105 transition-transform duration-300" />
+          <span className="font-extrabold tracking-tight text-foreground text-[32px] -ml-2.5 pl-0.5 pt-0.5 mb-1.5">Vivia</span>
         </a>
 
         {/* Search Bar - hidden on small mobile, takes up remaining space otherwise */}
@@ -307,7 +306,7 @@ function Header({
              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
              className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-background outline-none rounded-full py-2.5 px-6 pr-12 text-sm transition-all text-foreground"
            />
-           <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-brand-teal rounded-full transition-colors">
+           <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-brand-teal rounded-full transition-all duration-300">
               <Search className="w-4 h-4" />
            </button>
 
@@ -326,7 +325,7 @@ function Header({
                          <li key={product.id}>
                            <button 
                              onClick={() => handleSearchSelect(product.name[lang])}
-                             className="w-full text-left px-6 py-3 hover:bg-brand-teal-light/30 transition-colors flex flex-col"
+                             className="w-full text-left px-6 py-3 hover:bg-brand-teal-light/30 transition-all duration-300 flex flex-col"
                            >
                              <span className="font-medium text-foreground">{product.name[lang]}</span>
                              <span className="text-xs text-muted-foreground">{product.category[lang]}</span>
@@ -350,7 +349,7 @@ function Header({
                            e.preventDefault();
                            setSearchHistory([]);
                          }}
-                         className="text-xs font-semibold text-brand-teal hover:text-brand-teal-dark transition-colors"
+                         className="text-xs font-semibold text-brand-teal hover:text-brand-teal-dark transition-all duration-300"
                        >
                          {lang === 'TR' ? 'Temizle' : 'Clear History'}
                        </button>
@@ -363,45 +362,51 @@ function Header({
                                e.preventDefault();
                                handleSearchSelect(item);
                              }}
-                             className="w-full text-left px-6 py-2 hover:bg-brand-teal-light/30 transition-colors text-foreground flex items-center gap-2"
+                             className="w-full text-left px-6 py-2 hover:bg-brand-teal-light/30 transition-all duration-300 text-foreground flex items-center gap-2"
                            >
                              <Clock className="w-4 h-4 text-muted-foreground" />
                              {item}
                            </button>
                          </li>
                        ))}
-                     </ul>
-                   </div>
-                 ) : null}
-               </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
+                      </ul>
+                    </div>
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
+         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 lg:gap-5 shrink-0">
-          <div className="lg:hidden flex items-center bg-secondary rounded-full p-1 border border-border">
-             <button onClick={() => setIsDark(!isDark)} className="p-1 rounded-full text-muted-foreground hover:text-muted-foreground transition-colors mr-1" aria-label="Toggle Dark Mode">
+         {/* Action Buttons */}
+         <div className="flex items-center gap-3 lg:gap-5 shrink-0">
+           <div className="lg:hidden flex items-center bg-secondary rounded-full p-1 border border-border">
+             <button onClick={() => setIsDark(!isDark)} className="p-1 rounded-full text-muted-foreground hover:text-foreground active:scale-90 transition-all duration-200 hover:rotate-12 mr-1" aria-label="Toggle Dark Mode">
                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
              </button>
-             <button onClick={() => setLang('TR')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'TR' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}><span>🇹🇷</span> TR</button>
-             <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${lang === 'EN' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}><span>🇬🇧</span> EN</button>
+             <button onClick={() => setLang('TR')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'TR' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇹🇷</span> TR</button>
+             <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'EN' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇬🇧</span> EN</button>
           </div>
 
           {/* Notifications Bell */}
           <div className="relative hidden md:block">
-            <button 
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className={`flex flex-col items-center justify-center gap-1 transition-colors ${isNotificationsOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
-            >
-               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors relative ${isNotificationsOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
-                 <Bell className="w-4 h-4" />
-                 {isLoggedIn && (
-                   <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 border border-background"></span>
-                 )}
-               </div>
-               <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Bildirim' : 'Alerts'}</span>
-            </button>
+            <Tooltip text={lang === 'TR' ? 'Bildirimleri Görüntüle' : 'View Notifications'} position="bottom">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className={`group flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isNotificationsOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
+              >
+                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-active:scale-95 relative ${isNotificationsOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
+                   <Bell className="w-4 h-4 group-hover:rotate-[15deg] transition-transform duration-300" />
+                   {isLoggedIn && (
+                     <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 border border-background"></span>
+                   )}
+                 </div>
+                 <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Bildirim' : 'Alerts'}</span>
+              </button>
+            </Tooltip>
+
+
+
+
 
             <AnimatePresence>
               {isNotificationsOpen && (
@@ -457,26 +462,30 @@ function Header({
           </div>
 
           {isLoggedIn ? (
-            <button 
-              onClick={onLogout}
-              className="hidden md:flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-brand-teal transition-colors"
-            >
-               <div className="w-8 h-8 rounded-full bg-brand-teal-light text-brand-teal flex items-center justify-center">
-                 <LogOut className="w-4 h-4" />
-               </div>
-               <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Çıkış' : 'Logout'}</span>
-            </button>
+            <Tooltip text={lang === 'TR' ? 'Hesaptan Çıkış Yap' : 'Log out of your account'} position="bottom">
+              <button 
+                onClick={onLogout}
+                className="hidden md:flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-brand-teal transition-all duration-300"
+              >
+                 <div className="w-8 h-8 rounded-full bg-brand-teal-light text-brand-teal flex items-center justify-center">
+                   <LogOut className="w-4 h-4" />
+                 </div>
+                 <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Çıkış' : 'Logout'}</span>
+              </button>
+            </Tooltip>
           ) : (
             <div className="hidden md:block relative">
-              <button 
-                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                className={`flex flex-col items-center justify-center gap-1 transition-colors ${isAccountMenuOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
-              >
-                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isAccountMenuOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
-                   <User className="w-4 h-4" />
-                 </div>
-                 <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Hesap' : 'Account'}</span>
-              </button>
+              <Tooltip text={lang === 'TR' ? 'Hesabınızı Yönetin' : 'Manage your account'} position="bottom">
+                <button 
+                  onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                  className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isAccountMenuOpen ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
+                >
+                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isAccountMenuOpen ? 'bg-brand-teal-light' : 'bg-secondary'}`}>
+                     <User className="w-4 h-4" />
+                   </div>
+                   <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Hesap' : 'Account'}</span>
+                </button>
+              </Tooltip>
 
               <AnimatePresence>
                 {isAccountMenuOpen && (
@@ -500,7 +509,7 @@ function Header({
                             setIsAccountMenuOpen(false);
                             onOpenAuth('login');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300"
                         >
                           {lang === 'TR' ? 'Giriş Yap' : 'Log in'}
                         </button>
@@ -509,7 +518,7 @@ function Header({
                             setIsAccountMenuOpen(false);
                             onOpenAuth('register');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors border-t border-border"
+                          className="w-full text-left px-4 py-3 text-sm font-semibold text-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300 border-t border-border"
                         >
                           {lang === 'TR' ? 'Üye Ol' : 'Sign In'}
                         </button>
@@ -521,31 +530,34 @@ function Header({
             </div>
           )}
 
-          <button 
-            onClick={onOpenCart}
-            aria-label={`Open Cart with ${cartCount} items`}
-            className="flex items-center gap-2 relative bg-brand-teal hover:bg-brand-teal-dark text-white pl-4 pr-5 py-2.5 rounded-full transition-colors shadow-lg shadow-brand-teal/20"
-          >
-            <ShoppingBag className="w-5 h-5 p-0.5" />
-            <span className="font-bold text-sm tracking-wide">{t("Cart", lang)}</span>
-            {cartCount > 0 && (
-              <motion.span 
-                initial={{ scale: 0 }} 
-                animate={{ scale: 1 }} 
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold"
-              >
-                {cartCount}
-              </motion.span>
-            )}
-          </button>
+          {/* Cart Button */}
+          <Tooltip text={lang === 'TR' ? 'Sepetinizi Görüntüleyin' : 'View your shopping cart'} position="bottom">
+            <button 
+              onClick={onOpenCart}
+              aria-label={`Open Cart with ${cartCount} items`}
+              className="flex items-center gap-2 relative bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white pl-4 pr-5 py-2.5 rounded-full transition-all duration-300 shadow-lg shadow-brand-teal/20"
+            >
+              <ShoppingBag className="w-5 h-5 p-0.5" />
+              <span className="font-bold text-sm tracking-wide">{t("Cart", lang)}</span>
+              {cartCount > 0 && (
+                <motion.span 
+                  initial={{ scale: 0 }} 
+                  animate={{ scale: 1 }} 
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
       
       {/* Category Nav - Horizontal Scroll on Mobile */}
       <div className="border-t border-border overflow-x-auto no-scrollbar hidden sm:block">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-6 md:gap-10">
-           {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(cat => (
-             <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-muted-foreground hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-colors">
+           {['Dog', 'Cat', 'Avian', 'Aquatic', 'Rodent', 'Reptile'].map(cat => (
+             <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-muted-foreground hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-all duration-300">
                {t(cat, lang)}
              </a>
            ))}
@@ -561,9 +573,6 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
   return (
     <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center rounded-full border border-brand-teal/20 bg-brand-teal/10 px-4 py-1.5 text-xs font-semibold text-brand-teal mb-6">
-          {lang === 'TR' ? 'Premium Evcil Hayvan Beslenmesi' : 'Premium Pet Nutrition'}
-        </div>
         <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
           {lang === 'TR' ? 'Dostlarınız için' : 'Nutrition perfected for'}
           <br/>
@@ -573,13 +582,17 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
            {lang === 'TR' ? 'Bilimsel olarak formüle edilmiş, yüksek kaliteli içeriklerle dolu.' : 'Scientifically formulated, packed with high-quality ingredients.'}
         </p>
         <div className="flex gap-4 justify-center">
-           <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-8 h-12 bg-brand-teal hover:bg-brand-teal-dark text-white text-base font-semibold transition-colors shadow-lg shadow-brand-teal/20">
-             {t("Shop Now", lang)}
-           </button>
-           <button onClick={onStartPetProfile} className="rounded-full px-8 h-12 border-2 border-brand-teal/50 bg-brand-teal/5 hover:bg-brand-teal/10 text-brand-teal-dark flex items-center justify-center gap-2 text-base font-semibold transition-all shadow-sm">
-             <Heart className="w-5 h-5" />
-             {lang === 'TR' ? 'Dostunuzu Ekleyin' : 'Personalize for your Pet'}
-           </button>
+           <Tooltip text={lang === 'TR' ? 'Hemen ürünlere göz atın' : 'Browse products immediately'}>
+             <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-8 h-12 bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white text-base font-semibold transition-all duration-300 shadow-lg shadow-brand-teal/20">
+               {t("Shop Now", lang)}
+             </button>
+           </Tooltip>
+           <Tooltip text={lang === 'TR' ? 'Hayvanınız için mağazayı kişiselleştirin' : 'Tailor your store experience'}>
+             <button onClick={onStartPetProfile} className="rounded-full px-8 h-12 border-2 border-brand-teal/50 bg-brand-teal/5 hover:bg-brand-teal/10 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-brand-teal-dark flex items-center justify-center gap-2 text-base font-semibold transition-all duration-300 shadow-sm">
+               <Heart className="w-5 h-5 transition-transform group-hover:scale-110" />
+               {lang === 'TR' ? 'Dostunuzu Ekleyin' : 'Personalize for your Pet'}
+             </button>
+           </Tooltip>
         </div>
       </div>
 
@@ -607,7 +620,7 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
          </div>
          {/* Smaller feature - Birds */}
          <div className="relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border  group bg-card">
-           <img src="https://images.unsplash.com/photo-1522858547137-f1dcec554f55?q=80&w=1000&auto=format&fit=crop" alt="Bird" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+           <img src="https://images.unsplash.com/photo-1522858547137-f1dcec554f55?q=80&w=1000&auto=format&fit=crop" alt="Avian" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
            <div className="absolute bottom-0 left-0 p-8 w-full z-10 text-left">
               <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{lang === 'TR' ? 'Kuş Bakımı' : 'Avian Care'}</h3>
@@ -619,7 +632,7 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-brand-teal/10 rounded-full blur-3xl pointer-events-none" />
            <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">{lang === 'TR' ? 'Abonelik ile %15 Tasarruf Edin' : 'Save 15% with subscriptions'}</h3>
            <p className="text-muted-foreground mb-6 max-w-lg text-lg">{lang === 'TR' ? 'Erzaksız kalmayın. Dostunuzun iştahına göre düzenlenmiş otomatik teslimatı ayarlayın.' : 'Never run out of food again. Set up auto-delivery tailored to your companion\'s appetite.'}</p>
-           <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-6 h-10 border border-border  hover:bg-card  text-foreground text-sm font-semibold transition-colors flex items-center">
+           <button onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }} className="rounded-full px-6 h-10 border border-border hover:bg-card hover:shadow-sm hover:-translate-y-0.5 active:scale-95 text-foreground text-sm font-semibold transition-all duration-300 flex items-center">
              {lang === 'TR' ? 'Daha Fazla Bilgi' : 'Learn More'} <ArrowRight className="w-4 h-4 ml-2" />
            </button>
          </div>
@@ -656,7 +669,7 @@ function ProductCard({
         <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current text-brand-teal' : ''}`} />
       </button>
 
-      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-secondary flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal/10 transition-colors">
+      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-secondary flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal/10 transition-all duration-300">
         <div className="text-muted-foreground/30 group-hover:scale-110 group-hover:text-brand-teal/50 transition-all duration-500">
           {service.icon}
         </div>
@@ -677,14 +690,14 @@ function ProductCard({
         <div className="flex items-center justify-between border border-border rounded-xl overflow-hidden bg-background">
           <button 
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
           >
             <Minus className="w-4 h-4" />
           </button>
           <span className="font-semibold text-foreground">{quantity}</span>
           <button 
             onClick={() => setQuantity(quantity + 1)}
-            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -696,7 +709,7 @@ function ProductCard({
             onAddToCart(`${t(service.title, lang as any)} - ${t(topItem, lang as any)}`, quantity);
             setQuantity(1);
           }}
-          className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
+          className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all duration-300 shadow-sm"
         >
           <ShoppingBag className="w-4 h-4" />
           {lang === 'TR' ? 'Sepete Ekle' : 'Add to Cart'}
@@ -728,7 +741,7 @@ function Services({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{t("Complete Care Catalog", lang)}</h2>
-            <a href="#" className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-colors">
+            <a href="#" className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300">
               {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
             </a>
          </div>
@@ -747,7 +760,7 @@ function Services({
          </div>
          
          <div className="mt-8 text-center sm:hidden">
-            <a href="#" className="inline-flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-colors py-2 px-4 border text-center border-brand-teal rounded-full w-full justify-center">
+            <a href="#" className="inline-flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300 py-2 px-4 border text-center border-brand-teal rounded-full w-full justify-center">
               {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
             </a>
          </div>
@@ -804,12 +817,12 @@ function OrderTrackingSection() {
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="VIVIA-..."
-              className="flex-1 bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 font-mono uppercase transition-colors"
+              className="flex-1 bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 font-mono uppercase transition-all duration-300"
             />
             <button 
               type="submit"
               disabled={status === 'LOADING'}
-              className="bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-70"
+              className="bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-70"
             >
               {status === 'LOADING' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
               {t("Track Order", lang as Lang)}
@@ -932,7 +945,7 @@ function TrustSection() {
                 </p>
                 <a 
                   href="#services" 
-                  className="inline-flex items-center gap-2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold hover:bg-brand-teal/20 hover:text-brand-teal transition-colors"
+                  className="inline-flex items-center gap-2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold hover:bg-brand-teal/20 hover:text-brand-teal transition-all duration-300"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{t("Shop Now", lang)}</span>
@@ -993,7 +1006,7 @@ function Contact() {
                <button 
                   onClick={handleCopyEmail}
                   aria-label="Copy email address"
-                  className="text-muted-foreground text-base hover:text-brand-teal transition-colors flex items-center gap-2"
+                  className="text-muted-foreground text-base hover:text-brand-teal transition-all duration-300 flex items-center gap-2"
                >
                  {CONTACT.email}
                  {copied && <span className="text-sm font-semibold text-brand-teal bg-brand-teal-light px-3 py-1 rounded-full">{t("Copied!", lang)}</span>}
@@ -1014,27 +1027,23 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center text-brand-teal">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                <path d="M5 6l7 12 7-12" />
-              </svg>
-            </div>
+            <img src="/logo.png" alt="Vivia Logo" className="w-8 h-8 object-contain rounded-md" />
             <span className="font-bold text-lg text-foreground tracking-tight">Vivia Pet</span>
           </div>
           
           <div className="flex gap-4">
-            <a href="#" aria-label="Visit our Instagram" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Instagram" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300">
               <Instagram className="w-5 h-5" />
             </a>
-            <a href="#" aria-label="Visit our X (Twitter)" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our X (Twitter)" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
-            <a href="#" aria-label="Visit our Facebook" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Facebook" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300">
               <Facebook className="w-5 h-5" />
             </a>
-            <a href="#" aria-label="Visit our Youtube" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-colors">
+            <a href="#" aria-label="Visit our Youtube" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-brand-teal-light hover:text-brand-teal transition-all duration-300">
               <Youtube className="w-5 h-5" />
             </a>
           </div>
@@ -1046,8 +1055,8 @@ function Footer() {
           </p>
 
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-brand-teal transition-colors">{t("Terms", lang)}</a>
-            <a href="#" className="hover:text-brand-teal transition-colors">{t("Privacy", lang)}</a>
+            <a href="#" className="hover:text-brand-teal transition-all duration-300">{t("Terms", lang)}</a>
+            <a href="#" className="hover:text-brand-teal transition-all duration-300">{t("Privacy", lang)}</a>
           </div>
         </div>
       </div>
@@ -1055,13 +1064,24 @@ function Footer() {
   );
 }
 
+interface PetProfileData {
+  id: string;
+  type: string;
+  name: string;
+  age: string;
+  breed: string;
+  gender: string;
+  healthInfo: string;
+  photo: string | null;
+}
+
 // Personalization Modal
 function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const { lang, setLang } = useLang();
-  const [petType, setPetType] = useState('Dog');
-  const [petName, setPetName] = useState('');
-  const [petAge, setPetAge] = useState('');
-  const [petBreed, setPetBreed] = useState('');
+  
+  const [pets, setPets] = useState<PetProfileData[]>([
+    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }
+  ]);
   const [isSaved, setIsSaved] = useState(false);
 
   if (!isOpen) return null;
@@ -1075,6 +1095,18 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
     }, 2000);
   };
 
+  const addPet = () => {
+    setPets([...pets, { id: Date.now().toString(), type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }]);
+  };
+
+  const removePet = (id: string) => {
+    setPets(pets.filter(p => p.id !== id));
+  };
+
+  const updatePet = (id: string, field: keyof PetProfileData, value: string) => {
+    setPets(pets.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
   return (
     <AnimatePresence>
       <motion.div 
@@ -1083,129 +1115,170 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
       >
         <motion.div 
           initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="bg-card rounded-[32px] p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden"
+          className="bg-card flex flex-col rounded-[32px] overflow-hidden max-w-2xl w-full max-h-[90vh] shadow-2xl relative"
           role="dialog"
           aria-modal="true"
         >
-          <div className="absolute top-6 left-6 flex bg-secondary/80 rounded-full p-1 z-10">
-             <button 
-                onClick={() => setLang('TR')}
-                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'TR' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
-             >
-               <span>🇹🇷</span> TR
-             </button>
-             <button 
-                onClick={() => setLang('EN')}
-                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'EN' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
-             >
-               <span>🇬🇧</span> EN
-             </button>
+          {/* Header */}
+          <div className="flex-shrink-0 p-6 sm:p-8 pb-4 border-b border-border/50 bg-card relative z-10">
+            <div className="absolute top-6 left-6 flex bg-secondary/80 rounded-full p-1 z-10">
+               <button onClick={() => setLang('TR')} className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'TR' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}>
+                 <span>🇹🇷</span> TR
+               </button>
+               <button onClick={() => setLang('EN')} className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full transition-all ${lang === 'EN' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}>
+                 <span>🇬🇧</span> EN
+               </button>
+            </div>
+            <button aria-label="Close" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary active:scale-90 transition-all duration-300 z-10 text-muted-foreground hover:text-foreground hover:rotate-90">
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="text-center mt-12 pb-2">
+              <div className="w-16 h-16 rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 fill-current" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                {lang === 'TR' ? 'Dostlarınızı Tanıyın' : 'Tell us about your pets'}
+              </h2>
+              <p className="text-muted-foreground">
+                {lang === 'TR' ? 'Özel öneriler için profil oluşturun.' : 'Create profiles for customized recommendations.'}
+              </p>
+            </div>
           </div>
 
-          <button aria-label="Close" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10 text-muted-foreground hover:text-foreground">
-            <X className="w-6 h-6" />
-          </button>
-
-          {!isSaved ? (
-            <div className="mt-12">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-8 h-8 fill-current" />
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                  {lang === 'TR' ? 'Dostunuzu Tanıyın' : 'Tell us about your pet'}
-                </h2>
-                <p className="text-muted-foreground">
-                  {lang === 'TR' ? 'Özel öneriler ve beslenme planı için profil oluşturun.' : 'Create a profile for customized recommendations and nutrition plans.'}
-                </p>
-              </div>
-
-              <form onSubmit={handleSave} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-3">
-                    {lang === 'TR' ? 'Evcil Hayvan Türü' : 'Pet Type'}
-                  </label>
-                  <div className="flex bg-secondary p-1 rounded-xl w-full">
-                    {['Dog', 'Cat', 'Bird', 'Rabbit'].map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setPetType(type)}
-                        className={`flex-1 py-3 text-sm font-semibold transition-all rounded-lg flex items-center justify-center gap-2 ${petType === type ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-secondary-dark'}`}
-                      >
-                        {type === 'Dog' && <Dog className="w-4 h-4" />}
-                        {type === 'Cat' && <Cat className="w-4 h-4" />}
-                        {type === 'Bird' && <Bird className="w-4 h-4" />}
-                        {type === 'Rabbit' && <Rabbit className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{t(type, lang)}</span>
+          {/* Form Body */}
+          <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-8 custom-scrollbar">
+            {!isSaved ? (
+              <form id="pet-registration-form" onSubmit={handleSave} className="space-y-8">
+                {pets.map((pet, index) => (
+                  <div key={pet.id} className="p-5 sm:p-6 rounded-2xl border border-border/60 bg-secondary/30 relative space-y-6">
+                    {pets.length > 1 && (
+                      <button type="button" onClick={() => removePet(pet.id)} className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+                        <Trash2 className="w-5 h-5" />
                       </button>
-                    ))}
-                  </div>
-                </div>
+                    )}
+                    
+                    <div className="flex items-center gap-4">
+                      {/* Photo Upload Simulation */}
+                      <button type="button" className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-brand-teal hover:bg-brand-teal/5 transition-colors text-muted-foreground hover:text-brand-teal">
+                        <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <span className="text-[10px] sm:text-xs font-medium px-1 text-center leading-none">{lang === 'TR' ? 'Fotoğraf' : 'Add Photo'}</span>
+                      </button>
+                      <div>
+                        <h3 className="font-bold text-lg sm:text-xl">{lang === 'TR' ? `Evcil Hayvan #${index + 1}` : `Pet #${index + 1}`}</h3>
+                        <p className="text-sm text-muted-foreground">{pet.name || (lang === 'TR' ? 'İsimsiz' : 'Unnamed')}</p>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-1">
-                      {lang === 'TR' ? 'Evcil Hayvanın Adı' : 'Pet Name'}
-                    </label>
-                    <input 
-                      required
-                      type="text" 
-                      value={petName}
-                      onChange={(e) => setPetName(e.target.value)}
-                      placeholder={lang === 'TR' ? 'Örn: Tarçın' : 'e.g. Max'}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-1">
-                      {lang === 'TR' ? 'Yaşı' : 'Age'}
-                    </label>
-                    <input 
-                      required
-                      type="number" 
-                      value={petAge}
-                      onChange={(e) => setPetAge(e.target.value)}
-                      placeholder={lang === 'TR' ? 'Yıl olarak' : 'In years'}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
-                    />
-                  </div>
-                </div>
+                    {/* Pet Type */}
+                    <div className="space-y-3">
+                      <label className="block text-sm font-semibold text-foreground">
+                        {lang === 'TR' ? 'Türü' : 'Species'}
+                      </label>
+                      <div className="grid grid-cols-3 sm:flex bg-secondary p-1 gap-1 sm:gap-0 rounded-xl w-full">
+                        {['Dog', 'Cat', 'Avian', 'Rabbit', 'Aquatic', 'Reptile'].map((type) => (
+                          <button
+                            key={type} type="button"
+                            onClick={() => updatePet(pet.id, 'type', type)}
+                            className={`sm:flex-1 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition-all rounded-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-w-[70px] ${pet.type === type ? 'bg-card text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-secondary-dark'}`}
+                          >
+                            {type === 'Dog' && <Dog className="w-4 h-4" />}
+                            {type === 'Cat' && <Cat className="w-4 h-4" />}
+                            {type === 'Avian' && <Bird className="w-4 h-4" />}
+                            {type === 'Rabbit' && <Rabbit className="w-4 h-4" />}
+                            {type === 'Aquatic' && <Fish className="w-4 h-4" />}
+                            {type === 'Reptile' && <Turtle className="w-4 h-4" />}
+                            <span className="block sm:inline max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 sm:px-0 truncate">{t(type, lang)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                {petType !== 'Bird' && petType !== 'Rabbit' && (
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-1">
-                      {lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}
-                    </label>
-                    <input 
-                      type="text" 
-                      value={petBreed}
-                      onChange={(e) => setPetBreed(e.target.value)}
-                      placeholder={petType === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Adı' : 'Name'}</label>
+                        <input required type="text" value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder={lang === 'TR' ? 'Örn: Tarçın' : 'e.g. Max'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Yaşı' : 'Age'}</label>
+                        <input required type="number" value={pet.age} onChange={(e) => updatePet(pet.id, 'age', e.target.value)} placeholder={lang === 'TR' ? 'Yıl olarak' : 'In years'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Cinsiyeti' : 'Gender'}</label>
+                        <div className="flex gap-2">
+                          {['Male', 'Female'].map(g => (
+                            <button
+                              key={g} type="button"
+                              onClick={() => updatePet(pet.id, 'gender', g)}
+                              className={`flex-1 py-3 px-4 rounded-xl border font-medium text-sm transition-all ${pet.gender === g ? 'bg-brand-teal/10 border-brand-teal text-brand-teal-dark font-semibold' : 'bg-card border-border text-muted-foreground hover:border-brand-teal/50'}`}
+                            >
+                              {lang === 'TR' ? (g === 'Male' ? 'Erkek' : 'Dişi') : g}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {pet.type !== 'Avian' && pet.type !== 'Rabbit' && pet.type !== 'Aquatic' && pet.type !== 'Reptile' ? (
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}</label>
+                          <input type="text" value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder={pet.type === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Sağlık Notları (İsteğe bağlı)' : 'Health Notes (Optional)'}</label>
+                          <input type="text" value={pet.healthInfo} onChange={(e) => updatePet(pet.id, 'healthInfo', e.target.value)} placeholder={lang === 'TR' ? 'Alerjiler vb.' : 'Allergies, etc.'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* If they had breed, still show health notes below */}
+                    {(pet.type === 'Dog' || pet.type === 'Cat') && (
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Sağlık Notları (İsteğe bağlı)' : 'Health Notes (Optional)'}</label>
+                        <input type="text" value={pet.healthInfo} onChange={(e) => updatePet(pet.id, 'healthInfo', e.target.value)} placeholder={lang === 'TR' ? 'Belirli diyet veya alerjiler...' : 'Specific diets or allergies...'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                      </div>
+                    )}
+
                   </div>
-                )}
+                ))}
 
                 <button 
-                  type="submit"
-                  className="w-full bg-brand-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-brand-teal-dark transition-colors shadow-lg shadow-brand-teal/20"
+                  type="button" 
+                  onClick={addPet}
+                  className="w-full py-4 border-2 border-dashed border-border rounded-xl font-semibold text-muted-foreground hover:text-brand-teal hover:border-brand-teal hover:bg-brand-teal/5 transition-all flex items-center justify-center gap-2"
                 >
-                  {lang === 'TR' ? 'Profili Kaydet' : 'Save Profile'}
+                  <Plus className="w-5 h-5" />
+                  {lang === 'TR' ? 'Başka Bir Evcil Hayvan Ekle' : 'Add Another Pet'}
                 </button>
               </form>
-            </div>
-          ) : (
-            <div className="text-center py-12 mt-8">
-               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
-                 <CheckCircle2 className="w-10 h-10 text-green-500" />
-               </div>
-               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-                 {lang === 'TR' ? `${petName || 'Evcil hayvan'} eklendi!` : `${petName || 'Pet'} has been added!`}
-               </h2>
-               <p className="text-muted-foreground text-lg">
-                 {lang === 'TR' ? 'Mağaza deneyiminiz güncelleniyor...' : 'Personalizing your store experience...'}
-               </p>
+            ) : (
+              <div className="text-center py-12 mt-4 flex flex-col items-center justify-center h-full">
+                 <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
+                   <CheckCircle2 className="w-10 h-10 text-green-500" />
+                 </div>
+                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+                   {lang === 'TR' ? `${pets.length} profil eklendi!` : `${pets.length} profiles added!`}
+                 </h2>
+                 <p className="text-muted-foreground text-lg">
+                   {lang === 'TR' ? 'Mağaza deneyiminiz güncelleniyor...' : 'Personalizing your store experience...'}
+                 </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          {!isSaved && (
+            <div className="flex-shrink-0 p-6 sm:p-8 pt-4 border-t border-border/50 bg-card">
+              <button 
+                type="submit"
+                form="pet-registration-form"
+                className="w-full bg-brand-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-brand-teal-dark hover:-translate-y-0.5 active:scale-95 transition-all duration-300 shadow-lg shadow-brand-teal/20 hover:shadow-brand-teal/40 flex items-center justify-center gap-2"
+              >
+                {lang === 'TR' ? 'Tüm Profilleri Kaydet' : 'Save All Profiles'}
+              </button>
             </div>
           )}
         </motion.div>
@@ -1259,32 +1332,30 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
              </button>
           </div>
 
-          <button aria-label="Close setup modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10">
+          <button aria-label="Close setup modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary hover:rotate-90 active:scale-90 transition-all duration-300 z-10">
             <X className="w-6 h-6 text-muted-foreground" />
           </button>
 
           {step === 1 ? (
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-brand-teal-light flex items-center justify-center mx-auto mb-6">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[50px] h-[50px] text-brand-teal">
-                  <path d="M5 6l7 12 7-12" />
-                </svg>
+              <div className="flex justify-center mx-auto mb-6">
+                <img src="/logo.png" alt="Vivia Logo" className="w-[128px] h-[128px] mt-[11px] -mb-[14px] object-contain rounded-xl drop-shadow-md" />
               </div>
               <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{t("Who are we shopping for?", lang)}</h2>
               <p className="text-muted-foreground text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
               
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
-                {['Dog', 'Cat', 'Bird', 'Fish', 'Rodent', 'Reptile'].map(pet => (
+                {['Dog', 'Cat', 'Avian', 'Aquatic', 'Rodent', 'Reptile'].map(pet => (
                   <button 
                     key={pet} onClick={() => togglePet(pet)}
                     aria-pressed={selectedPets.includes(pet)}
                     aria-label={`Select ${t(pet, lang)}`}
-                    className={`w-[46%] sm:w-[30%] p-3 sm:p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2
-                      ${selectedPets.includes(pet) ? 'border-brand-teal bg-brand-teal-light/30 text-brand-teal-dark shadow-sm' : 'border-border hover:border-brand-teal/30 hover:bg-secondary text-muted-foreground'}
+                    className={`w-[46%] sm:w-[30%] p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-2 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] active:scale-[0.98] active:translate-y-0 active:shadow-sm
+                      ${selectedPets.includes(pet) ? 'border-brand-teal bg-brand-teal/5 text-brand-teal-dark shadow-[0_0_20px_rgba(45,212,191,0.25)] ring-1 ring-brand-teal/30 scale-[1.02]' : 'border-border hover:border-brand-teal/30 hover:bg-secondary/50 text-muted-foreground'}
                     `}
                   >
                     <span className="text-3xl sm:text-4xl" aria-hidden="true">{
-                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Bird' ? '🦜' : pet === 'Fish' ? '🐠' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
+                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Aquatic' ? '🐠' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
                     }</span>
                     <span className="font-semibold text-xs sm:text-sm text-center leading-tight break-words w-[90px]">{t(pet, lang)}</span>
                   </button>
@@ -1294,7 +1365,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
               <button 
                 onClick={() => setStep(2)}
                 disabled={selectedPets.length === 0}
-                className="w-full bg-primary disabled:opacity-50 text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-primary disabled:opacity-50 text-white rounded-full py-4 font-semibold text-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-brand-dark hover:shadow-[0_8px_24px_rgba(45,212,191,0.3)] hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] active:shadow-md flex items-center justify-center gap-2"
               >
                 {t("Continue", lang)} <ArrowRight className="w-5 h-5" />
               </button>
@@ -1313,7 +1384,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
                </p>
                <button 
                   onClick={onClose}
-                  className="w-full bg-brand-teal text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-teal-dark transition-colors"
+                  className="w-full bg-brand-teal text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-300"
                >
                  {t("Start Shopping", lang)}
                </button>
@@ -1344,7 +1415,7 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
             <h2 id="cart-title" className="text-2xl font-bold text-foreground flex items-center gap-3">
               {t("For Your Companion", lang)} <span className="bg-brand-teal px-3 py-1 rounded-full text-white text-sm">{cartItems.length}</span>
             </h2>
-            <button aria-label="Close cart" onClick={onClose} className="p-2 rounded-full hover:bg-secondary transition-colors">
+            <button aria-label="Close cart" onClick={onClose} className="p-2 rounded-full hover:bg-secondary active:scale-95 transition-all duration-300">
               <X className="w-6 h-6 text-muted-foreground" />
             </button>
           </div>
@@ -1361,7 +1432,7 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
                 {cartItems.map((item, idx) => (
                   <li key={idx} className="flex justify-between items-center bg-secondary p-4 rounded-2xl border border-border">
                     <span className="font-medium text-foreground text-base">{item}</span>
-                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(idx)} className="text-muted-foreground hover:text-red-500 transition-colors p-2 rounded-full hover:bg-destructive/10">
+                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(idx)} className="text-muted-foreground hover:text-red-500 transition-all duration-300 p-2 rounded-full hover:bg-destructive/10 hover:rotate-12 active:scale-90">
                       <Minus className="w-5 h-5" />
                     </button>
                   </li>
@@ -1379,7 +1450,7 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
               <button 
                 onClick={onCheckout}
                 aria-label={t("Checkout Securely", lang)}
-                className="w-full bg-primary text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-colors flex items-center justify-center gap-3 shadow-lg"
+                className="w-full bg-primary text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
               >
                 <Lock className="w-5 h-5" /> {t("Checkout Securely", lang)}
               </button>
@@ -1424,7 +1495,7 @@ function CheckoutSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
           
           <button 
              onClick={onClose}
-             className="w-full bg-card border border-border text-foreground rounded-full py-4 font-semibold hover:border-brand-teal hover:text-brand-teal transition-colors relative z-10"
+             className="w-full bg-card border border-border text-foreground rounded-full py-4 font-semibold hover:border-brand-teal hover:text-brand-teal transition-all duration-300 relative z-10"
           >
             {t("Back to Catalog", lang)}
           </button>
@@ -1490,7 +1561,7 @@ function AuthModal({
           initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
           className="bg-card rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative my-auto"
         >
-          <button aria-label="Close auth modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors z-10">
+          <button aria-label="Close auth modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary hover:rotate-90 active:scale-90 transition-all duration-300 z-10">
             <X className="w-6 h-6 text-muted-foreground" />
           </button>
 
@@ -1503,7 +1574,7 @@ function AuthModal({
               <p className="text-muted-foreground mb-6">{lang === 'TR' ? 'Artık giriş yapabilirsiniz.' : 'You can now log in.'}</p>
               <button 
                 onClick={() => setCurrentMode('login')}
-                className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-3.5 rounded-xl transition-colors"
+                className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl transition-all duration-300"
               >
                 {t("Login", lang)}
               </button>
@@ -1578,7 +1649,7 @@ function AuthModal({
                         required
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
                         placeholder={lang === 'TR' ? 'Ad' : 'Name'}
                       />
                     </div>
@@ -1589,7 +1660,7 @@ function AuthModal({
                         required
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
                         placeholder={lang === 'TR' ? 'Soyad' : 'Surname'}
                       />
                     </div>
@@ -1603,7 +1674,7 @@ function AuthModal({
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                    className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
                     placeholder={lang === 'TR' ? 'E-Posta' : 'E-Mail'}
                   />
                 </div>
@@ -1616,7 +1687,7 @@ function AuthModal({
                       required
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-colors"
+                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
                       placeholder="05XX XXX XX XX"
                     />
                   </div>
@@ -1630,13 +1701,13 @@ function AuthModal({
                       required
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-colors"
+                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-all duration-300"
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-teal transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-teal transition-all duration-300"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -1672,7 +1743,7 @@ function AuthModal({
                           alert(lang === 'TR' ? 'Lütfen önce e-posta adresinizi girin.' : 'Please enter your email address first.');
                         }
                       }}
-                      className="text-sm font-semibold text-brand-teal hover:text-muted-foreground transition-colors"
+                      className="text-sm font-semibold text-brand-teal hover:text-muted-foreground transition-all duration-300"
                     >
                       {lang === 'TR' ? 'Şifremi Unuttum' : 'Forgot Password?'}
                     </button>
@@ -1712,7 +1783,7 @@ function AuthModal({
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-3.5 rounded-xl transition-colors mt-2 text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl transition-all duration-300 mt-2 text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                   {currentMode === 'login' ? t("Login", lang) : t("Create Account", lang)}
@@ -1734,6 +1805,32 @@ const PetCollageIcon = ({ className }: { className?: string }) => (
     <Rabbit className="w-full h-full" strokeWidth={2.5} />
   </div>
 );
+
+function Tooltip({ children, text, position = 'top' }: { children: React.ReactNode, text: string, position?: 'top' | 'right' | 'bottom' | 'left' }) {
+  const positionClasses = {
+    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+    left: "right-full top-1/2 -translate-y-1/2 mr-2",
+    right: "left-full top-1/2 -translate-y-1/2 ml-2"
+  };
+
+  const arrowClasses = {
+    top: "top-full left-1/2 -translate-x-1/2 border-x-[5px] border-x-transparent border-t-[6px] border-t-foreground",
+    bottom: "bottom-full left-1/2 -translate-x-1/2 border-x-[5px] border-x-transparent border-b-[6px] border-b-foreground",
+    left: "left-full top-1/2 -translate-y-1/2 border-y-[5px] border-y-transparent border-l-[6px] border-l-foreground",
+    right: "right-full top-1/2 -translate-y-1/2 border-y-[5px] border-y-transparent border-r-[6px] border-r-foreground"
+  };
+
+  return (
+    <div className="relative group/tooltip inline-block">
+      {children}
+      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 pointer-events-none whitespace-nowrap z-50 shadow-xl`}>
+        {text}
+        <div className={`absolute ${arrowClasses[position]}`}></div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -1848,13 +1945,17 @@ export default function App() {
         />
         
         {/* Floating Category Filter Button */}
-        <button
-          onClick={() => setIsOnboardingOpen(true)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-brand-teal p-2 sm:p-3 rounded-r-2xl text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-brand-teal-dark hover:pl-4 transition-all group overflow-hidden"
-          aria-label="Filter categories"
-        >
-          <PetCollageIcon className="w-9 h-9 sm:w-11 sm:h-11 group-hover:scale-110 transition-transform" />
-        </button>
+        <div className="fixed left-0 top-1/2 -translate-y-1/2 z-40">
+          <Tooltip text={lang === 'TR' ? 'Kategorileri Filtrele' : 'Filter Categories'} position="right">
+            <button
+              onClick={() => setIsOnboardingOpen(true)}
+              className="bg-brand-teal p-2 sm:p-3 rounded-r-2xl text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-brand-teal-dark hover:pl-4 active:scale-95 transition-all duration-300 group overflow-hidden"
+              aria-label="Filter categories"
+            >
+              <PetCollageIcon className="w-9 h-9 sm:w-11 sm:h-11 group-hover:scale-110 transition-transform" />
+            </button>
+          </Tooltip>
+        </div>
         
         <main>
           <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} />
