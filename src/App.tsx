@@ -29,6 +29,7 @@ import {
   CreditCard,
   Lock,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Moon,
   Sun,
@@ -41,8 +42,21 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Camera
+  Camera,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Bookmark
 } from 'lucide-react';
+
+const BubblesIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="16" r="3" />
+    <circle cx="9" cy="10" r="2" />
+    <circle cx="15" cy="7" r="1.5" />
+    <circle cx="13" cy="4" r="1" />
+  </svg>
+);
 
 type Lang = 'EN' | 'TR';
 
@@ -72,7 +86,7 @@ const TR_DICT: Record<string, string> = {
   "Dog": "Köpek",
   "Cat": "Kedi",
   "Avian": "Kuş",
-  "Aquatic": "Balık",
+  "Aquatic": "Sucul",
   "Rodent": "Kemirgen",
   "Reptile": "Sürüngen",
   
@@ -195,7 +209,7 @@ const SERVICES = [
   { id: 'dog', title: 'Dog', icon: <Bone className="w-6 h-6" />, items: ['Premium Nutrition', 'Comfort Collars', 'Training Treats', 'Orthopedic Beds', 'Interactive Toys', 'Healthcare'] },
   { id: 'cat', title: 'Cat', icon: <Cat className="w-6 h-6" />, items: ['Grain-Free Diet', 'Odorless Litter', 'Cozy Beds', 'Scratching Posts', 'Feather Toys', 'Malt Pastes', 'Water Fountains'] },
   { id: 'avian', title: 'Avian', icon: <Bird className="w-6 h-6" />, items: ['Seed Mixes', 'Spacious Cages', 'Natural Perches', 'Smart Feeders', 'Bell Swings', 'Baths'] },
-  { id: 'aquatic', title: 'Aquatic', icon: <Fish className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
+  { id: 'aquatic', title: 'Aquatic', icon: <BubblesIcon className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
   { id: 'rodent', title: 'Rodent', icon: <Rat className="w-6 h-6" />, items: ['Pellet Mix', 'Multi-level Cages', 'Running Wheels', 'Chew Toys', 'Wooden Huts'] },
   { id: 'reptile', title: 'Reptile', icon: <Turtle className="w-6 h-6" />, items: ['Live/Dried Food', 'Glass Terrariums', 'UVB Lamps', 'Thermostats', 'Hygrometers'] },
 ];
@@ -205,7 +219,7 @@ const MOCK_PRODUCTS = [
   { id: 2, name: { EN: "Glass Terrarium 40 Gallon", TR: "Cam Teraryum 40 Galon" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
   { id: 3, name: { EN: "Automatic Cat Feeder", TR: "Otomatik Kedi Besleyici" }, category: { EN: "Cats", TR: "Kediler" } },
   { id: 4, name: { EN: "UVB Lamp 10.0", TR: "UVB Lamba 10.0" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
-  { id: 5, name: { EN: "Aquarium Filter Pro", TR: "Akvaryum Filtresi Pro" }, category: { EN: "Aquatic", TR: "Balıklar" } },
+  { id: 5, name: { EN: "Aquarium Filter Pro", TR: "Akvaryum Filtresi Pro" }, category: { EN: "Aquatic", TR: "Sucul Canlılar" } },
   { id: 6, name: { EN: "Interactive Laser Toy", TR: "İnteraktif Lazer Oyuncak" }, category: { EN: "Cats", TR: "Kediler" } },
   { id: 7, name: { EN: "Orthopedic Dog Bed", TR: "Ortopedik Köpek Yatağı" }, category: { EN: "Dogs", TR: "Köpekler" } },
   { id: 8, name: { EN: "Thermostat Controller", TR: "Termostat Kontrol Cihazı" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
@@ -214,12 +228,14 @@ const MOCK_PRODUCTS = [
 function Header({ 
   cartCount, 
   onOpenCart,
+  onOpenFolders,
   isLoggedIn,
   onOpenAuth,
   onLogout
 }: { 
   cartCount: number, 
   onOpenCart: () => void,
+  onOpenFolders: () => void,
   isLoggedIn: boolean,
   onOpenAuth: (mode: 'login' | 'register') => void,
   onLogout: () => void
@@ -385,6 +401,21 @@ function Header({
              </button>
              <button onClick={() => setLang('TR')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'TR' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇹🇷</span> TR</button>
              <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'EN' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇬🇧</span> EN</button>
+          </div>
+
+          {/* Folders Button */}
+          <div className="relative hidden md:block">
+            <Tooltip text={lang === 'TR' ? 'Klasörlerim' : 'My Folders'} position="bottom">
+              <button 
+                onClick={onOpenFolders}
+                className={`group flex flex-col items-center justify-center gap-1 transition-all duration-300 text-muted-foreground hover:text-brand-teal`}
+              >
+                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-active:scale-95 relative bg-secondary`}>
+                   <Folder className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                 </div>
+                 <span className="text-[10px] font-bold uppercase tracking-wider">{lang === 'TR' ? 'Klasör' : 'Folders'}</span>
+              </button>
+            </Tooltip>
           </div>
 
           {/* Notifications Bell */}
@@ -641,22 +672,24 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
   );
 }
 
-function ProductCard({ 
+const ProductCard: React.FC<{ 
+  service: any, 
+  lang: string, 
+  onAddToCart: (item: string, quantity?: number, price?: number) => void, 
+  wishlistItems: string[], 
+  onToggleWishlist: (item: string) => void 
+}> = ({ 
   service, 
   lang, 
   onAddToCart, 
   wishlistItems, 
   onToggleWishlist 
-}: { 
-  service: any, 
-  lang: string, 
-  onAddToCart: (item: string, quantity: number) => void, 
-  wishlistItems: string[], 
-  onToggleWishlist: (item: string) => void 
-}) {
+}) => {
   const [quantity, setQuantity] = useState(1);
   const topItem = service.items[0];
   const productIdentifier = `${t(service.title, 'EN')} - ${t(topItem, 'EN')}`;
+  const basePrice = getBasePriceFromName(productIdentifier);
+  const discountedPrice = getPriceFromName(productIdentifier);
   const isWishlisted = wishlistItems.includes(productIdentifier);
   
   return (
@@ -682,8 +715,8 @@ function ProductCard({
       <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2 h-10 sm:h-12">{t(topItem, lang as any)}</h3>
       
       <div className="flex flex-col items-center gap-1 mb-4 flex-grow">
-        <span className="text-xs text-muted-foreground line-through">1.250,00 TL</span>
-        <span className="text-lg sm:text-xl font-bold text-brand-teal">1.062,50 TL</span>
+        <span className="text-xs text-muted-foreground line-through">₺{basePrice.toFixed(2)}</span>
+        <span className="text-lg sm:text-xl font-bold text-brand-teal">₺{discountedPrice.toFixed(2)}</span>
       </div>
 
       <div className="w-full flex flex-col gap-2 mt-auto">
@@ -706,7 +739,7 @@ function ProductCard({
         <button 
           aria-label={`Add ${t(topItem, lang as any)} to cart`}
           onClick={() => {
-            onAddToCart(`${t(service.title, lang as any)} - ${t(topItem, lang as any)}`, quantity);
+            onAddToCart(`${t(service.title, lang as any)} - ${t(topItem, lang as any)}`, quantity, discountedPrice);
             setQuantity(1);
           }}
           className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all duration-300 shadow-sm"
@@ -1075,6 +1108,302 @@ interface PetProfileData {
   photo: string | null;
 }
 
+interface SavedFolder {
+  id: string;
+  name: string;
+  items: string[];
+}
+
+function FoldersModal({ 
+  isOpen, 
+  onClose, 
+  folders, 
+  setFolders, 
+  onAddToCart 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  folders: SavedFolder[]; 
+  setFolders: React.Dispatch<React.SetStateAction<SavedFolder[]>>;
+  onAddToCart: (item: string, quantity?: number, price?: number) => void;
+}) {
+  const { lang, setLang } = useLang();
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editFolderName, setEditFolderName] = useState('');
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleCreateFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+    if (folders.length >= 10) return;
+    
+    setFolders([...folders, { id: Date.now().toString(), name: newFolderName, items: [] }]);
+    setNewFolderName('');
+    setIsCreating(false);
+  };
+
+  const handleRenameFolder = (id: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFolderName.trim()) return;
+    setFolders(folders.map(f => f.id === id ? { ...f, name: editFolderName } : f));
+    setEditingFolderId(null);
+  };
+
+  const handleDeleteFolder = (id: string) => {
+    setFolders(folders.filter(f => f.id !== id));
+    if (activeFolderId === id) setActiveFolderId(null);
+  };
+
+  const handleRemoveProduct = (folderId: string, itemName: string) => {
+    setFolders(folders.map(f => 
+      f.id === folderId ? { ...f, items: f.items.filter(i => i !== itemName) } : f
+    ));
+  };
+
+  const handleAddProduct = (itemName: string) => {
+    if (!activeFolderId) return;
+    setFolders(folders.map(f => 
+      f.id === activeFolderId ? { ...f, items: [...f.items, itemName] } : f
+    ));
+  };
+
+  // Build a list of possible products to add. 
+  // We map MOCK_PRODUCTS to strings that look like the ones generated by ProductCard
+  const allPossibleProducts = SERVICES.flatMap(s => s.items.map(i => `${t(s.title, lang as any)} - ${t(i, lang as any)}`));
+
+  const activeFolder = folders.find(f => f.id === activeFolderId);
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-darker/60 backdrop-blur-sm"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-card flex flex-col rounded-[32px] overflow-hidden max-w-3xl w-full h-[85vh] shadow-2xl relative"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 p-6 sm:p-8 pb-4 border-b border-border/50 bg-card relative z-10 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 flex items-center gap-2">
+                <Bookmark className="w-6 h-6 sm:w-8 sm:h-8 text-brand-teal" />
+                {lang === 'TR' ? 'Klasörlerim' : 'My Folders'}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {lang === 'TR' ? 'Sık aldığınız ürünleri kaydedin ve hızlıca sepete ekleyin.' : 'Save frequently purchased products and quickly add them to your cart.'}
+              </p>
+            </div>
+            <button aria-label="Close" onClick={onClose} className="p-2 rounded-full hover:bg-secondary active:scale-90 transition-all duration-300 z-10 text-muted-foreground hover:text-foreground hover:rotate-90">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="flex-1 flex overflow-hidden">
+            {/* Sidebar - Folder List */}
+            <div className="w-[35%] sm:w-64 border-r border-border/50 flex flex-col bg-secondary/20">
+              <div className="p-3 sm:p-4 flex flex-col gap-2 overflow-y-auto custom-scrollbar flex-1">
+                {folders.map(folder => (
+                  <div key={folder.id} className="group relative">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        setActiveFolderId(folder.id);
+                        setIsAddingProduct(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setActiveFolderId(folder.id);
+                          setIsAddingProduct(false);
+                        }
+                      }}
+                      className={`w-full text-left px-2 sm:px-3 py-2 sm:py-3 rounded-xl flex flex-col gap-1 transition-all cursor-pointer ${activeFolderId === folder.id ? 'bg-brand-teal/10 text-brand-teal ring-1 ring-brand-teal/30 shadow-sm' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-xs sm:text-sm truncate pr-2 sm:pr-6">{folder.name}</span>
+                        {/* Only show delete if they hover to avoid misclicks, or on active */}
+                        {(activeFolderId === folder.id) && (
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
+                             className="absolute right-1 sm:right-2 top-2 sm:top-3 p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                           >
+                             <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                           </button>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-medium opacity-70">
+                        {folder.items.length} {lang === 'TR' ? 'ürün' : 'items'}
+                      </span>
+                    </div>
+                    {activeFolderId === folder.id && editingFolderId !== folder.id && (
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setEditingFolderId(folder.id);
+                           setEditFolderName(folder.name);
+                         }}
+                         className="absolute right-6 sm:right-10 top-2 sm:top-3 p-1 rounded-md text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/10 transition-colors"
+                       >
+                         {/* We can use another icon for edit, text for now or simple styling */}
+                         <div className="w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center font-bold text-[10px] sm:text-xs">✎</div>
+                       </button>
+                    )}
+
+                    {editingFolderId === folder.id && (
+                      <form onSubmit={(e) => handleRenameFolder(folder.id, e)} className="absolute inset-0 bg-card rounded-xl shadow-md border border-brand-teal/30 p-1 sm:p-2 flex items-center z-10">
+                        <input
+                          autoFocus
+                          value={editFolderName}
+                          onChange={(e) => setEditFolderName(e.target.value)}
+                          className="flex-1 bg-transparent text-xs sm:text-sm font-semibold text-foreground outline-none px-1 sm:px-2 w-full"
+                        />
+                      </form>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 sm:p-4 border-t border-border/50">
+                {isCreating ? (
+                  <form onSubmit={handleCreateFolder} className="flex flex-col gap-2">
+                    <input
+                      autoFocus
+                      placeholder={lang === 'TR' ? "Ad..." : "Name..."}
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 rounded-lg border border-border bg-card text-xs sm:text-sm focus:outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-all"
+                    />
+                    <div className="flex gap-1 sm:gap-2">
+                      <button type="button" onClick={() => setIsCreating(false)} className="flex-1 py-1 sm:py-2 text-[10px] sm:text-xs font-semibold rounded-lg bg-secondary text-muted-foreground hover:text-foreground">
+                        {lang === 'TR' ? 'İptal' : 'Cancel'}
+                      </button>
+                      <button type="submit" disabled={!newFolderName.trim()} className="flex-1 py-1 sm:py-2 text-[10px] sm:text-xs font-semibold rounded-lg bg-brand-teal text-white hover:bg-brand-teal-dark disabled:opacity-50">
+                        {lang === 'TR' ? 'Kaydet' : 'Save'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button 
+                    onClick={() => setIsCreating(true)}
+                    disabled={folders.length >= 10}
+                    className="w-full py-2 sm:py-3 rounded-xl border border-dashed border-border flex items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-sm font-semibold text-muted-foreground hover:text-brand-teal hover:border-brand-teal hover:bg-brand-teal/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed px-1"
+                  >
+                    <FolderPlus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">{lang === 'TR' ? 'Yeni Klasör' : 'New Folder'}</span>
+                  </button>
+                )}
+                {folders.length >= 10 && (
+                  <p className="text-[9px] sm:text-[10px] text-center text-muted-foreground mt-2">
+                    {lang === 'TR' ? 'Maksimum 10 klasör ekleyebilirsiniz.' : 'You can add a maximum of 10 folders.'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Main Content - Folder Details */}
+            <div className="flex-1 flex flex-col bg-background relative">
+              {activeFolder ? (
+                <>
+                  <div className="p-6 pb-2 flex items-center justify-between border-b border-border/30">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                      <FolderOpen className="w-5 h-5 text-brand-teal/70" />
+                      {activeFolder.name}
+                    </h3>
+                    <button 
+                      onClick={() => setIsAddingProduct(true)}
+                      className="text-sm font-bold bg-secondary hover:bg-brand-teal/10 text-foreground hover:text-brand-teal px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {lang === 'TR' ? 'Ürün Ekle' : 'Add Products'}
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    {isAddingProduct ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-bold text-lg">{lang === 'TR' ? 'Katalogdan Seç' : 'Select from Catalog'}</h4>
+                          <button onClick={() => setIsAddingProduct(false)} className="text-sm text-muted-foreground hover:text-foreground underline">
+                            {lang === 'TR' ? 'Geri Dön' : 'Back'}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {allPossibleProducts.map((p, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleAddProduct(p)}
+                              disabled={activeFolder.items.includes(p)}
+                              className="text-left p-3 rounded-xl border border-border hover:border-brand-teal disabled:opacity-50 disabled:hover:border-border transition-colors flex justify-between items-center group"
+                            >
+                              <span className="text-sm font-medium line-clamp-2 pr-2">{p}</span>
+                              {!activeFolder.items.includes(p) && <Plus className="w-4 h-4 text-brand-teal opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {activeFolder.items.length === 0 ? (
+                          <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
+                            <FolderOpen className="w-16 h-16 mb-4 text-muted-foreground" />
+                            <p className="text-lg font-semibold">{lang === 'TR' ? 'Bu klasör boş.' : 'This folder is empty.'}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{lang === 'TR' ? 'Kaydetmek istediğiniz ürünleri ekleyin.' : 'Add products you want to save.'}</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {activeFolder.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-border bg-card group hover:shadow-sm transition-all hover:border-brand-teal/30">
+                                <span className="font-medium text-sm sm:text-base">{item}</span>
+                                <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={() => handleRemoveProduct(activeFolder.id, item)}
+                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    aria-label="Remove item"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      const price = getPriceFromName(item);
+                                      onAddToCart(item, 1, price);
+                                    }}
+                                    className="px-4 py-2 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs sm:text-sm font-bold rounded-lg transition-colors shadow-sm"
+                                  >
+                                    {lang === 'TR' ? 'Sepete Ekle' : 'Add to Cart'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-50 p-6">
+                  <Bookmark className="w-16 h-16 mb-4 text-muted-foreground" />
+                  <p className="text-lg font-semibold">{lang === 'TR' ? 'Klasör Seçin' : 'Select a Folder'}</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                    {lang === 'TR' ? 'Görüntülemek için soldan bir klasör seçin veya yeni bir tane oluşturun.' : 'Select a folder from the left or create a new one to view items.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // Personalization Modal
 function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const { lang, setLang } = useLang();
@@ -1176,7 +1505,7 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                         {lang === 'TR' ? 'Türü' : 'Species'}
                       </label>
                       <div className="grid grid-cols-3 sm:flex bg-secondary p-1 gap-1 sm:gap-0 rounded-xl w-full">
-                        {['Dog', 'Cat', 'Avian', 'Rabbit', 'Aquatic', 'Reptile'].map((type) => (
+                        {['Dog', 'Cat', 'Avian', 'Rodent', 'Aquatic', 'Reptile'].map((type) => (
                           <button
                             key={type} type="button"
                             onClick={() => updatePet(pet.id, 'type', type)}
@@ -1185,8 +1514,8 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                             {type === 'Dog' && <Dog className="w-4 h-4" />}
                             {type === 'Cat' && <Cat className="w-4 h-4" />}
                             {type === 'Avian' && <Bird className="w-4 h-4" />}
-                            {type === 'Rabbit' && <Rabbit className="w-4 h-4" />}
-                            {type === 'Aquatic' && <Fish className="w-4 h-4" />}
+                            {type === 'Rodent' && <Rat className="w-4 h-4" />}
+                            {type === 'Aquatic' && <BubblesIcon className="w-4 h-4" />}
                             {type === 'Reptile' && <Turtle className="w-4 h-4" />}
                             <span className="block sm:inline max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 sm:px-0 truncate">{t(type, lang)}</span>
                           </button>
@@ -1221,7 +1550,7 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                         </div>
                       </div>
                       
-                      {pet.type !== 'Avian' && pet.type !== 'Rabbit' && pet.type !== 'Aquatic' && pet.type !== 'Reptile' ? (
+                      {pet.type !== 'Avian' && pet.type !== 'Rodent' && pet.type !== 'Aquatic' && pet.type !== 'Reptile' ? (
                         <div className="space-y-1">
                           <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}</label>
                           <input type="text" value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder={pet.type === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
@@ -1355,7 +1684,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
                     `}
                   >
                     <span className="text-3xl sm:text-4xl" aria-hidden="true">{
-                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Aquatic' ? '🐠' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
+                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Aquatic' ? '🫧' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
                     }</span>
                     <span className="font-semibold text-xs sm:text-sm text-center leading-tight break-words w-[90px]">{t(pet, lang)}</span>
                   </button>
@@ -1396,10 +1725,36 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
   );
 }
 
-function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { isOpen: boolean, onClose: () => void, cartItems: string[], onRemoveItem: (idx: number) => void, onCheckout: () => void }) {
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+function CartModal({ 
+  isOpen, 
+  onClose, 
+  cartItems, 
+  onRemoveItem, 
+  onUpdateQuantity,
+  onClearCart,
+  onCheckout 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  cartItems: CartItem[], 
+  onRemoveItem: (id: string) => void, 
+  onUpdateQuantity: (id: string, quantity: number) => void,
+  onClearCart: () => void,
+  onCheckout: () => void 
+}) {
   const { lang } = useLang();
 
   if (!isOpen) return null;
+
+  const totalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <AnimatePresence>
@@ -1407,13 +1762,14 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex justify-end bg-brand-darker/40 backdrop-blur-sm"
       >
+        <div className="absolute inset-0" onClick={onClose} aria-label="Close modal overlay" />
         <motion.div 
           initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className="bg-card w-full max-w-md h-full shadow-2xl flex flex-col"
+          className="bg-card w-full max-w-md h-full shadow-2xl flex flex-col relative z-10"
         >
           <div className="p-6 border-b border-border flex justify-between items-center bg-card">
             <h2 id="cart-title" className="text-2xl font-bold text-foreground flex items-center gap-3">
-              {t("For Your Companion", lang)} <span className="bg-brand-teal px-3 py-1 rounded-full text-white text-sm">{cartItems.length}</span>
+              {t("For Your Companion", lang)} <span className="bg-brand-teal px-3 py-1 rounded-full text-white text-sm">{totalCount}</span>
             </h2>
             <button aria-label="Close cart" onClick={onClose} className="p-2 rounded-full hover:bg-secondary active:scale-95 transition-all duration-300">
               <X className="w-6 h-6 text-muted-foreground" />
@@ -1429,11 +1785,23 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
               </div>
             ) : (
               <ul className="space-y-4">
-                {cartItems.map((item, idx) => (
-                  <li key={idx} className="flex justify-between items-center bg-secondary p-4 rounded-2xl border border-border">
-                    <span className="font-medium text-foreground text-base">{item}</span>
-                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(idx)} className="text-muted-foreground hover:text-red-500 transition-all duration-300 p-2 rounded-full hover:bg-destructive/10 hover:rotate-12 active:scale-90">
-                      <Minus className="w-5 h-5" />
+                {cartItems.map((item) => (
+                  <li key={item.id} className="flex justify-between items-center bg-secondary p-4 rounded-2xl border border-border gap-4">
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-foreground text-sm sm:text-base block truncate" title={item.name}>{item.name}</span>
+                      <span className="text-sm font-semibold text-brand-teal">₺{item.price.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="p-1 rounded bg-card text-muted-foreground hover:text-foreground border border-border flex items-center justify-center w-7 h-7 font-bold text-lg active:scale-95 transition-all">
+                          -
+                       </button>
+                       <span className="font-semibold text-sm w-4 text-center">{item.quantity}</span>
+                       <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="p-1 rounded bg-card text-muted-foreground hover:text-foreground border border-border flex items-center justify-center w-7 h-7 font-bold text-lg active:scale-95 transition-all">
+                          +
+                       </button>
+                    </div>
+                    <button aria-label={`Remove from cart`} onClick={() => onRemoveItem(item.id)} className="text-muted-foreground hover:text-red-500 transition-all duration-300 p-2 rounded-full hover:bg-destructive/10 hover:rotate-12 active:scale-90 flex-shrink-0">
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </li>
                 ))}
@@ -1443,16 +1811,22 @@ function CartModal({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }: { i
 
           {cartItems.length > 0 && (
             <div className="p-6 border-t border-border bg-card">
-              <div className="flex justify-between mb-6 text-base">
-                 <span className="text-muted-foreground">{t("Estimated total via WhatsApp", lang)}</span>
-                 <span className="font-bold text-foreground">{t("Confirm with Store", lang)}</span>
+              <div className="flex justify-between items-center mb-4 text-base">
+                 <span className="text-muted-foreground">{lang === 'TR' ? 'Toplam' : 'Total'}</span>
+                 <span className="font-bold text-foreground text-2xl">₺{totalPrice.toFixed(2)}</span>
               </div>
               <button 
                 onClick={onCheckout}
-                aria-label={t("Checkout Securely", lang)}
-                className="w-full bg-primary text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
+                aria-label={lang === 'TR' ? "Güvenli Ödeme Yap" : "Secure Checkout"}
+                className="w-full bg-primary text-white rounded-full py-4 text-lg font-semibold hover:bg-brand-dark transition-all duration-300 flex items-center justify-center gap-3 shadow-lg mb-3"
               >
-                <Lock className="w-5 h-5" /> {t("Checkout Securely", lang)}
+                <Lock className="w-5 h-5" /> {lang === 'TR' ? "Güvenli Ödeme Yap" : "Secure Checkout"}
+              </button>
+              <button 
+                onClick={onClearCart}
+                className="w-full text-muted-foreground hover:text-red-500 hover:bg-red-50/50 py-3 rounded-xl transition-all font-medium text-sm text-center"
+              >
+                {lang === 'TR' ? 'Sepeti Temizle' : 'Clear Cart'}
               </button>
             </div>
           )}
@@ -1488,9 +1862,9 @@ function CheckoutSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
           
-          <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">{t("Order Received!", lang)}</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">{lang === 'TR' ? 'Sipariş Alındı!' : 'Order Received!'}</h2>
           <p className="text-muted-foreground text-sm mb-8 relative z-10">
-            {lang === 'TR' ? 'Tebrikler! Dostunuz buna bayılacak. Teslimatı onaylamak için kısa süre içinde WhatsApp\'tan iletişime geçeceğiz.' : 'Great job! Your companion will love this. We\'ll send a WhatsApp message shortly to confirm delivery.'}
+            {lang === 'TR' ? 'Tebrikler! Siparişiniz başarıyla oluşturuldu. Dostunuz buna bayılacak! Kargo detayları e-posta adresinize gönderildi.' : 'Great job! Your order has been placed successfully. Your companion will love this! Shipping details have been sent to your email.'}
           </p>
           
           <button 
@@ -1831,19 +2205,387 @@ function Tooltip({ children, text, position = 'top' }: { children: React.ReactNo
     </div>
   );
 }
+const TR_CITIES = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+].sort((a, b) => a.localeCompare(b, 'tr'));
+
+const getDistrictsForCity = (city: string) => {
+  if (city === "İstanbul") return ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"];
+  if (city === "Ankara") return ["Akyurt", "Altındağ", "Ayaş", "Bala", "Beypazarı", "Çamlıdere", "Çankaya", "Çubuk", "Elmadağ", "Etimesgut", "Evren", "Gölbaşı", "Güdül", "Haymana", "Kahramankazan", "Kalecik", "Keçiören", "Kızılcahamam", "Mamak", "Nallıhan", "Polatlı", "Pursaklar", "Sincan", "Şereflikoçhisar", "Yenimahalle"];
+  if (city === "İzmir") return ["Aliağa", "Balçova", "Bayındır", "Bayraklı", "Bergama", "Beydağ", "Bornova", "Buca", "Çeşme", "Çiğli", "Dikili", "Foça", "Gaziemir", "Güzelbahçe", "Karabağlar", "Karaburun", "Karşıyaka", "Kemalpaşa", "Kınık", "Kiraz", "Konak", "Menderes", "Menemen", "Narlıdere", "Ödemiş", "Seferihisar", "Selçuk", "Tire", "Torbalı", "Urla"];
+  return [`${city} Merkez`, `${city} İlçesi 1`, `${city} İlçesi 2`];
+};
+
+function CheckoutModal({
+  isOpen,
+  onClose,
+  onProcessPayment,
+  totalPrice,
+  onOpenLogin
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onProcessPayment: () => void;
+  totalPrice: number;
+  onOpenLogin: () => void;
+}) {
+  const { lang } = useLang();
+  
+  const [city, setCity] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
+  const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('vivia_logged_in') === 'true' : false;
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCity('');
+      setPromoCode('');
+      setIsPromoApplied(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onProcessPayment();
+  };
+
+  const districts = city ? getDistrictsForCity(city) : [];
+
+  const subtotal = totalPrice;
+  const isEligibleForLargeOrderDiscount = subtotal > 1500;
+  const largeOrderDiscount = isEligibleForLargeOrderDiscount ? subtotal * 0.15 : 0;
+  const promoDiscount = isPromoApplied ? subtotal * 0.10 : 0; // dummy 10% promo
+  
+  const totalDiscount = largeOrderDiscount + promoDiscount;
+  const finalTotal = Math.max(0, subtotal - totalDiscount);
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[110] flex justify-center items-center py-4 sm:py-8 backdrop-blur-sm bg-brand-darker/80 px-4"
+      >
+        <div className="absolute inset-0 z-0" onClick={onClose} aria-label="Close modal overlay" />
+        
+        <motion.div 
+          initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: "100%", opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-card w-full max-w-4xl max-h-full overflow-y-auto rounded-3xl shadow-2xl flex flex-col relative z-10"
+        >
+          {/* Watermark Logo */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center justify-center z-[-1] overflow-hidden"
+            style={{ 
+              backgroundImage: 'url(/logo.png)', 
+              backgroundPosition: 'center', 
+              backgroundRepeat: 'repeat', 
+              backgroundSize: '300px auto' 
+            }}
+          />
+
+          <div className="flex justify-between items-center p-6 border-b border-border sticky top-0 bg-card/95 backdrop-blur z-20">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
+                {lang === 'TR' ? 'Güvenli Ödeme' : 'Secure Checkout'}
+              </h2>
+              <p className="text-muted-foreground text-sm font-medium">
+                {lang === 'TR' ? 'Tüm alanların doldurulması zorunludur.' : 'All fields are required.'}
+              </p>
+            </div>
+            <button aria-label="Close checkout" onClick={onClose} className="p-2 rounded-full bg-secondary hover:bg-secondary-dark active:scale-95 text-foreground transition-all duration-300 shadow-sm border border-border">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
+            {!isLoggedIn && (
+              <div className="mb-6 p-4 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">
+                  {lang === 'TR' ? 'Zaten bir hesabınız var mı?' : 'Already have an account?'}
+                </span>
+                <button 
+                  onClick={onOpenLogin}
+                  className="text-sm font-bold text-brand-teal hover:text-brand-teal-dark active:scale-95 transition-all"
+                >
+                  {lang === 'TR' ? 'Giriş Yap' : 'Log In'}
+                </button>
+              </div>
+            )}
+
+            <form id="checkout-form" onSubmit={handleSubmit} className="flex flex-col gap-8 relative z-10">
+              
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
+                  {lang === 'TR' ? 'İletişim Bilgileri' : 'Contact Information'}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="email">
+                      {lang === 'TR' ? 'E-posta Adresi' : 'Email Address'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input 
+                      id="email" type="email" required placeholder="ornek@mail.com"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="phone">
+                      {lang === 'TR' ? 'Telefon Numarası' : 'Phone Number'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input 
+                      id="phone" type="tel" required pattern="^\+90[0-9]{10}$" placeholder="+905551234567"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="marketing" className="w-4 h-4 text-brand-teal rounded border-gray-300 focus:ring-brand-teal" />
+                  <label htmlFor="marketing" className="text-sm text-foreground cursor-pointer">
+                    {lang === 'TR' ? 'Haberler ve özel fırsatlardan haberdar olmak istiyorum.' : 'Keep me informed about news and special offers.'}
+                  </label>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
+                  {lang === 'TR' ? 'Teslimat Adresi' : 'Delivery Address'}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="firstName">
+                      {lang === 'TR' ? 'Ad' : 'First Name'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input id="firstName" type="text" required className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="lastName">
+                      {lang === 'TR' ? 'Soyad' : 'Last Name'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input id="lastName" type="text" required className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="address">
+                      {lang === 'TR' ? 'Açık Adres' : 'Full Address'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <textarea id="address" required rows={2} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all resize-none" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="aptdetails">
+                      {lang === 'TR' ? 'Apartman / Daire / Bina Bilgisi' : 'Apartment / Flat / Office / Building details'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input id="aptdetails" type="text" required className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="city">
+                      {lang === 'TR' ? 'İl' : 'City'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <div className="relative">
+                      <select id="city" required value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all">
+                        <option value="" disabled>{lang === 'TR' ? 'Seçiniz' : 'Select City'}</option>
+                        {TR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="district">
+                      {lang === 'TR' ? 'İlçe' : 'District'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <div className="relative">
+                      <select id="district" required disabled={!city} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all disabled:opacity-50">
+                        <option value="" disabled>{lang === 'TR' ? 'Seçiniz' : 'Select District'}</option>
+                        {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Notes */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
+                  {lang === 'TR' ? 'Sipariş Notu' : 'Order Notes'}
+                </h3>
+                <textarea 
+                  rows={2} 
+                  placeholder={lang === 'TR' ? 'Teslimat ile ilgili özel notlarınızı buraya ekleyebilirsiniz...' : 'Special notes about your order or delivery...'}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all resize-none" 
+                />
+              </div>
+
+              {/* Payment Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
+                  {lang === 'TR' ? 'Ödeme Bilgileri' : 'Payment Information'}
+                </h3>
+                
+                <div className="space-y-4 bg-background p-4 sm:p-5 rounded-2xl border border-border shadow-inner">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="cardName">
+                      {lang === 'TR' ? 'Kart Üzerindeki İsim' : 'Cardholder Name'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <input id="cardName" type="text" required placeholder="John Doe" className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="cardNumber">
+                      {lang === 'TR' ? 'Kredi Kartı Numarası' : 'Credit Card Number'} <span className="text-brand-teal">*</span>
+                    </label>
+                    <div className="relative">
+                      <input id="cardNumber" type="text" required pattern="\d{16}" maxLength={16} placeholder="0000 0000 0000 0000" className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono tracking-widest" />
+                      <CreditCard className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="expiry">
+                        {lang === 'TR' ? 'Son Kullanma Tarihi' : 'Expiry Date'} <span className="text-brand-teal">*</span>
+                      </label>
+                      <input id="expiry" type="text" required pattern="(0[1-9]|1[0-2])\/?([0-9]{2})" maxLength={5} placeholder="MM/YY" className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="cvv">
+                        CVV <span className="text-brand-teal">*</span>
+                      </label>
+                      <input id="cvv" type="text" required pattern="\d{3,4}" maxLength={4} placeholder="123" className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          <div className="border-t border-border bg-card p-6 sm:p-8">
+            {/* Promo Code */}
+            <div className="flex gap-2 mb-6">
+              <input 
+                type="text" 
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder={lang === 'TR' ? 'İndirim Kodu' : 'Promo Code'}
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
+              />
+              <button 
+                type="button"
+                onClick={() => {
+                  if (promoCode) setIsPromoApplied(true);
+                }}
+                className="bg-secondary text-foreground font-semibold px-6 py-3 rounded-xl hover:bg-secondary-dark active:scale-95 transition-all"
+              >
+                {lang === 'TR' ? 'Uygula' : 'Apply'}
+              </button>
+            </div>
+
+            {/* Price Summary */}
+            <div className="space-y-2 mb-6 text-sm sm:text-base">
+              <div className="flex justify-between items-center text-muted-foreground">
+                <span>{lang === 'TR' ? 'Ara Toplam' : 'Subtotal'}</span>
+                <span>₺{subtotal.toFixed(2)}</span>
+              </div>
+              
+              {isEligibleForLargeOrderDiscount && (
+                <div className="flex justify-between items-center text-brand-teal font-medium">
+                  <span>{lang === 'TR' ? 'Büyük Sipariş İndirimi (15%)' : 'Volume Discount (15%)'}</span>
+                  <span>-₺{largeOrderDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              
+              {isPromoApplied && (
+                <div className="flex justify-between items-center text-brand-teal font-medium">
+                  <span>{lang === 'TR' ? 'Promosyon İndirimi' : 'Promo Discount'}</span>
+                  <span>-₺{promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center text-xl font-bold text-foreground pt-4 border-t border-border mt-2">
+                <span>{lang === 'TR' ? 'Ödenecek Tutar' : 'Total to Pay'}</span>
+                <span>₺{finalTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <button 
+              form="checkout-form"
+              type="submit"
+              className="w-full bg-brand-teal text-white rounded-xl py-4 text-lg font-bold hover:bg-brand-teal-dark active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
+            >
+              <Lock className="w-5 h-5" /> {lang === 'TR' ? "Siparişi Tamamla" : "Complete Order"}
+            </button>
+          </div>
+
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export const getBasePriceFromName = (name: string) => {
+  let englishName = name;
+  
+  for (const s of SERVICES) {
+    const enTitle = s.title;
+    const trTitle = TR_DICT[s.title] || s.title;
+    
+    for (const item of s.items) {
+      const enItem = item;
+      const trItem = TR_DICT[item] || item;
+      
+      const enStr = `${enTitle} - ${enItem}`;
+      const trStr = `${trTitle} - ${trItem}`;
+      
+      if (name === enStr || name === trStr) {
+        englishName = enStr;
+        break;
+      }
+    }
+  }
+
+  // Deterministic mock base price using the English string
+  const hash = englishName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return Math.round(((hash % 100) + 10.99) * 100) / 100;
+};
+
+export const getPriceFromName = (name: string) => {
+  const basePrice = getBasePriceFromName(name);
+  return Math.round(basePrice * 0.85 * 100) / 100; // 15% discount applied everywhere
+};
 
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
+  const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
-  const [cartItems, setCartItems] = useState<string[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vivia_cart');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch(e) {}
+      }
+    }
+    return [];
+  });
   const [wishlistItems, setWishlistItems] = useState<string[]>([]);
+  const [folders, setFolders] = useState<SavedFolder[]>([]);
   const [lang, setLang] = useState<Lang>('TR');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const cartTotalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   useEffect(() => {
     // Check if user chose to be remembered
@@ -1854,6 +2596,10 @@ export default function App() {
       if (email) setUserEmail(email);
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('vivia_cart', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const handleLogin = (remember: boolean, email: string) => {
     setIsLoggedIn(true);
@@ -1877,19 +2623,37 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAddToCart = (item: string, quantity = 1) => {
+  const handleAddToCart = (itemName: string, quantity = 1, price?: number) => {
+    const finalPrice = price !== undefined ? price : getPriceFromName(itemName);
     setCartItems(prev => {
-      const newItems = [...prev];
-      for (let i = 0; i < quantity; i++) {
-        newItems.push(item);
+      const existing = prev.find(p => p.name === itemName);
+      if (existing) {
+        return prev.map(p => p.name === itemName ? { ...p, quantity: p.quantity + quantity } : p);
+      } else {
+        return [...prev, { 
+          id: Date.now().toString() + Math.random().toString(), 
+          name: itemName, 
+          price: finalPrice, 
+          quantity 
+        }];
       }
-      return newItems;
     });
-    setIsCartOpen(true);
+    
+    // Show toast
+    setToastMessage(`${itemName} ` + (lang === 'TR' ? 'sepete eklendi.' : 'added to cart.'));
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleRemoveItem = (index: number) => {
-    setCartItems(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveItem = (id: string) => {
+    setCartItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const handleUpdateQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      handleRemoveItem(id);
+      return;
+    }
+    setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
 
   const handleToggleWishlist = (item: string) => {
@@ -1900,7 +2664,13 @@ export default function App() {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleProcessPayment = () => {
+    setIsCheckoutOpen(false);
     setIsSuccessOpen(true);
+    setCartItems([]);
     
     // Send email notification for checkout
     const email = localStorage.getItem('vivia_user_email') || 'customer@example.com';
@@ -1937,8 +2707,9 @@ export default function App() {
     <LangContext.Provider value={{ lang, setLang }}>
       <div className="min-h-screen mesh-bg selection:bg-brand-teal-light selection:text-brand-teal-dark overflow-x-hidden pt-20">
         <Header 
-          cartCount={cartItems.length} 
+          cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)} 
           onOpenCart={() => setIsCartOpen(true)} 
+          onOpenFolders={() => setIsFoldersModalOpen(true)}
           isLoggedIn={isLoggedIn}
           onOpenAuth={setAuthMode}
           onLogout={handleLogout}
@@ -1968,11 +2739,30 @@ export default function App() {
         <Footer />
 
         {/* Modals */}
+        <FoldersModal isOpen={isFoldersModalOpen} onClose={() => setIsFoldersModalOpen(false)} folders={folders} setFolders={setFolders} onAddToCart={handleAddToCart} />
         <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} />
         <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />
-        <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onCheckout={handleCheckout} />
+        <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} onClearCart={() => setCartItems([])} onCheckout={handleCheckout} />
+        <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onProcessPayment={handleProcessPayment} totalPrice={cartTotalPrice} onOpenLogin={() => { setIsCheckoutOpen(false); setAuthMode('login'); }} />
         <CheckoutSuccessModal isOpen={isSuccessOpen} onClose={handleCloseSuccess} />
         <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} />
+
+        {/* Global Toast */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="fixed bottom-6 right-6 z-[200] bg-brand-teal text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-medium text-sm pr-2">{toastMessage}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </LangContext.Provider>
   );
