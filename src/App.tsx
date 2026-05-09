@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import turkeyData from './turkeyData';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Phone, 
@@ -1882,15 +1883,18 @@ function CheckoutSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
 function AuthModal({ 
   mode, 
   onClose,
-  onLogin
+  onLogin,
+  onChangeMode
 }: { 
-  mode: 'login' | 'register' | null, 
+  mode: 'login' | 'register' | 'forgot-password' | 'reset-password' | null, 
   onClose: () => void,
-  onLogin: (remember: boolean, email: string) => void
+  onLogin: (remember: boolean, email: string) => void,
+  onChangeMode?: (mode: 'login' | 'register' | 'forgot-password' | 'reset-password' | null) => void
 }) {
   const { lang } = useLang();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -1900,9 +1904,10 @@ function AuthModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetTokenError, setResetTokenError] = useState('');
   
   // Internal switch state if they want to swap mode within modal
-  const [currentMode, setCurrentMode] = useState<'login' | 'register'>('login');
+  const [currentMode, setCurrentMode] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
 
   useEffect(() => {
     if (mode) {
@@ -1947,7 +1952,45 @@ function AuthModal({
               <h2 className="text-2xl font-bold text-foreground mb-2">{t("Account created successfully!", lang)}</h2>
               <p className="text-muted-foreground mb-6">{lang === 'TR' ? 'Artık giriş yapabilirsiniz.' : 'You can now log in.'}</p>
               <button 
-                onClick={() => setCurrentMode('login')}
+                onClick={() => { setSuccess(false); setCurrentMode('login'); }}
+                className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl transition-all duration-300"
+              >
+                {t("Login", lang)}
+              </button>
+            </div>
+          ) : success && currentMode === 'forgot-password' ? (
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-brand-teal/10 text-brand-teal rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{lang === 'TR' ? "E-posta Gönderildi!" : "Email Sent!"}</h2>
+              <p className="text-muted-foreground mb-6">
+                {lang === 'TR' 
+                  ? "Şifre sıfırlama bağlantısını e-posta adresinize gönderdik. Lütfen gelen kutunuzu kontrol edin." 
+                  : "We've sent a password reset link to your email. Please check your inbox."}
+              </p>
+              <button 
+                onClick={() => { setSuccess(false); setCurrentMode('reset-password'); }}
+                className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white font-bold py-3.5 rounded-xl transition-all mb-4"
+              >
+                {lang === 'TR' ? "Simüle Et: Bağlantıya Tıklandı" : "Simulate: Link Clicked"}
+              </button>
+              <button 
+                onClick={() => { setSuccess(false); setCurrentMode('login'); }}
+                className="w-full text-muted-foreground font-semibold hover:text-brand-teal transition-all"
+              >
+                {lang === 'TR' ? "Giriş Ekranına Dön" : "Back to Login"}
+              </button>
+            </div>
+          ) : success && currentMode === 'reset-password' ? (
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{lang === 'TR' ? "Şifre Güncellendi" : "Password Updated"}</h2>
+              <p className="text-muted-foreground mb-6">{lang === 'TR' ? 'Yeni şifrenizle giriş yapabilirsiniz.' : 'You can now log in with your new password.'}</p>
+              <button 
+                onClick={() => { setSuccess(false); setCurrentMode('login'); }}
                 className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl transition-all duration-300"
               >
                 {t("Login", lang)}
@@ -1960,29 +2003,35 @@ function AuthModal({
                   <User className="w-8 h-8" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  {currentMode === 'login' ? t("Login", lang) : t("Sign Up", lang)}
+                  {currentMode === 'login' ? t("Login", lang) :
+                   currentMode === 'register' ? t("Sign Up", lang) :
+                   currentMode === 'forgot-password' ? (lang === 'TR' ? "Şifremi Unuttum" : "Forgot Password") :
+                   (lang === 'TR' ? "Yeni Şifre Belirle" : "Reset Password")}
                 </h2>
                 <p className="text-muted-foreground mt-2">
-                  {currentMode === 'login' 
-                    ? t("Sign in to your account", lang) 
-                    : t("Create a new account", lang)}
+                  {currentMode === 'login' ? t("Sign in to your account", lang) : 
+                   currentMode === 'register' ? t("Create a new account", lang) :
+                   currentMode === 'forgot-password' ? (lang === 'TR' ? "E-posta adresinizi girin, sıfırlama bağlantısı gönderelim" : "Enter your email and we'll send a reset link") :
+                   (lang === 'TR' ? "Lütfen yeni şifrenizi oluşturun" : "Please create your new password")}
                 </p>
               </div>
 
-              <div className="flex bg-secondary p-1 rounded-xl mb-6">
-                <button 
-                  onClick={() => setCurrentMode('login')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'login' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                >
-                  {t("Login", lang)}
-                </button>
-                <button 
-                  onClick={() => setCurrentMode('register')}
-                  className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'register' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                >
-                  {t("Sign Up", lang)}
-                </button>
-              </div>
+              {(currentMode === 'login' || currentMode === 'register') && (
+                <div className="flex bg-secondary p-1 rounded-xl mb-6">
+                  <button 
+                    onClick={() => setCurrentMode('login')}
+                    className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'login' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  >
+                    {t("Login", lang)}
+                  </button>
+                  <button 
+                    onClick={() => setCurrentMode('register')}
+                    className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${currentMode === 'register' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  >
+                    {t("Sign Up", lang)}
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -1994,7 +2043,7 @@ function AuthModal({
                       onLogin(remember, email);
                       onClose();
                     }
-                  } else {
+                  } else if (currentMode === 'register') {
                     if (email && password && firstName && lastName && agreedPrivacy) {
                       setSuccess(true);
                       fetch('/api/email', {
@@ -2009,6 +2058,23 @@ function AuthModal({
                       
                       // Also automatically log in after short delay, but for now wait for user to click
                       localStorage.setItem('vivia_user_email', email);
+                    }
+                  } else if (currentMode === 'forgot-password') {
+                    if (email) {
+                      fetch('/api/email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ to: email, type: 'PASSWORD_RESET' })
+                      }).catch(console.error);
+                      setSuccess(true);
+                      setResetTokenError(''); // Clear any previous errors
+                    }
+                  } else if (currentMode === 'reset-password') {
+                    if (password && confirmPassword && (password === confirmPassword)) {
+                      setSuccess(true);
+                      // In a real app we'd update the db here.
+                    } else if (password !== confirmPassword) {
+                      setResetTokenError(lang === 'TR' ? 'Şifreler eşleşmiyor.' : 'Passwords do not match.');
                     }
                   }
                 }, 1000); // Simulate network
@@ -2041,17 +2107,19 @@ function AuthModal({
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t("E-Mail", lang)}</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
-                    placeholder={lang === 'TR' ? 'E-Posta' : 'E-Mail'}
-                  />
-                </div>
+                {currentMode !== 'reset-password' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">{t("E-Mail", lang)}</label>
+                    <input 
+                      type="email" 
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 transition-all duration-300"
+                      placeholder={lang === 'TR' ? 'E-Posta' : 'E-Mail'}
+                    />
+                  </div>
+                )}
 
                 {currentMode === 'register' && (
                   <div>
@@ -2067,27 +2135,46 @@ function AuthModal({
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t("Password", lang)}</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      required
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-all duration-300"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-teal transition-all duration-300"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                {(currentMode === 'login' || currentMode === 'register' || currentMode === 'reset-password') && (
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">{currentMode === 'reset-password' ? (lang === 'TR' ? "Yeni Şifre" : "New Password") : t("Password", lang)}</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-all duration-300"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand-teal transition-all duration-300"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {currentMode === 'reset-password' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">{lang === 'TR' ? "Şifreyi Onayla" : "Confirm Password"}</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border focus:border-brand-teal focus:bg-card focus:outline-none rounded-xl py-3 px-4 pr-12 transition-all duration-300"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    {resetTokenError && <p className="text-sm font-semibold text-red-500 mt-2">{resetTokenError}</p>}
+                  </div>
+                )}
                 
                 {currentMode === 'login' && (
                   <div className="flex items-center justify-between pt-2 pb-2">
@@ -2105,19 +2192,8 @@ function AuthModal({
                     </div>
                     <button 
                       type="button" 
-                      onClick={() => {
-                        if (email) {
-                          fetch('/api/email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ to: email, type: 'PASSWORD_RESET' })
-                          }).catch(console.error);
-                          alert(lang === 'TR' ? 'Şifre sıfırlama e-postası gönderildi.' : 'Password reset email sent.');
-                        } else {
-                          alert(lang === 'TR' ? 'Lütfen önce e-posta adresinizi girin.' : 'Please enter your email address first.');
-                        }
-                      }}
-                      className="text-sm font-semibold text-brand-teal hover:text-muted-foreground transition-all duration-300"
+                      onClick={() => setCurrentMode('forgot-password')}
+                      className="text-sm font-semibold text-brand-teal hover:text-brand-teal-dark transition-all duration-300"
                     >
                       {lang === 'TR' ? 'Şifremi Unuttum' : 'Forgot Password?'}
                     </button>
@@ -2157,11 +2233,26 @@ function AuthModal({
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl transition-all duration-300 mt-2 text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-3.5 rounded-xl mt-2 flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                  {currentMode === 'login' ? t("Login", lang) : t("Create Account", lang)}
+                  {currentMode === 'login' ? t("Login", lang) :
+                   currentMode === 'register' ? t("Create Account", lang) :
+                   currentMode === 'forgot-password' ? (lang === 'TR' ? "Sıfırlama Bağlantısı Gönder" : "Send Reset Link") :
+                   (lang === 'TR' ? "Şifreyi Sıfırla" : "Reset Password")}
                 </button>
+                
+                {currentMode === 'forgot-password' && (
+                  <div className="text-center mt-4">
+                    <button 
+                      type="button" 
+                      onClick={() => setCurrentMode('login')}
+                      className="text-sm font-semibold text-muted-foreground hover:text-brand-teal transition-all duration-300"
+                    >
+                      {lang === 'TR' ? 'Giriş ekranına dön' : 'Cancel, back to login'}
+                    </button>
+                  </div>
+                )}
               </form>
             </>
           )}
@@ -2205,15 +2296,10 @@ function Tooltip({ children, text, position = 'top' }: { children: React.ReactNo
     </div>
   );
 }
-const TR_CITIES = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
-].sort((a, b) => a.localeCompare(b, 'tr'));
+const TR_CITIES = Object.keys(turkeyData).sort((a, b) => a.localeCompare(b, 'tr'));
 
 const getDistrictsForCity = (city: string) => {
-  if (city === "İstanbul") return ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"];
-  if (city === "Ankara") return ["Akyurt", "Altındağ", "Ayaş", "Bala", "Beypazarı", "Çamlıdere", "Çankaya", "Çubuk", "Elmadağ", "Etimesgut", "Evren", "Gölbaşı", "Güdül", "Haymana", "Kahramankazan", "Kalecik", "Keçiören", "Kızılcahamam", "Mamak", "Nallıhan", "Polatlı", "Pursaklar", "Sincan", "Şereflikoçhisar", "Yenimahalle"];
-  if (city === "İzmir") return ["Aliağa", "Balçova", "Bayındır", "Bayraklı", "Bergama", "Beydağ", "Bornova", "Buca", "Çeşme", "Çiğli", "Dikili", "Foça", "Gaziemir", "Güzelbahçe", "Karabağlar", "Karaburun", "Karşıyaka", "Kemalpaşa", "Kınık", "Kiraz", "Konak", "Menderes", "Menemen", "Narlıdere", "Ödemiş", "Seferihisar", "Selçuk", "Tire", "Torbalı", "Urla"];
-  return [`${city} Merkez`, `${city} İlçesi 1`, `${city} İlçesi 2`];
+  return (turkeyData as Record<string, string[]>)[city] || [];
 };
 
 function CheckoutModal({
@@ -2232,6 +2318,8 @@ function CheckoutModal({
   const { lang } = useLang();
   
   const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
+  const [phone, setPhone] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isPromoApplied, setIsPromoApplied] = useState(false);
   const isLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('vivia_logged_in') === 'true' : false;
@@ -2239,6 +2327,8 @@ function CheckoutModal({
   useEffect(() => {
     if (!isOpen) {
       setCity('');
+      setDistrict('');
+      setPhone('');
       setPromoCode('');
       setIsPromoApplied(false);
     }
@@ -2327,7 +2417,7 @@ function CheckoutModal({
                       {lang === 'TR' ? 'E-posta Adresi' : 'Email Address'} <span className="text-brand-teal">*</span>
                     </label>
                     <input 
-                      id="email" type="email" required placeholder="ornek@mail.com"
+                      id="email" type="email" required
                       className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all"
                     />
                   </div>
@@ -2335,10 +2425,22 @@ function CheckoutModal({
                     <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="phone">
                       {lang === 'TR' ? 'Telefon Numarası' : 'Phone Number'} <span className="text-brand-teal">*</span>
                     </label>
-                    <input 
-                      id="phone" type="tel" required pattern="^\+90[0-9]{10}$" placeholder="+905551234567"
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all"
-                    />
+                    <div className="relative flex items-center bg-background border border-border rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-brand-teal focus-within:border-transparent transition-all">
+                      <span className="text-muted-foreground mr-2 select-none border-r border-border pr-2 font-medium">+90</span>
+                      <input 
+                        id="phone" 
+                        type="tel" 
+                        required 
+                        pattern="5[0-9]{9}" 
+                        value={phone}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/\D/g, '');
+                          if (val.startsWith('0')) val = val.substring(1);
+                          setPhone(val.substring(0, 10));
+                        }}
+                        className="w-full bg-transparent text-foreground focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
@@ -2385,7 +2487,7 @@ function CheckoutModal({
                       {lang === 'TR' ? 'İl' : 'City'} <span className="text-brand-teal">*</span>
                     </label>
                     <div className="relative">
-                      <select id="city" required value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all">
+                      <select id="city" required value={city} onChange={(e) => { setCity(e.target.value); setDistrict(''); }} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all">
                         <option value="" disabled>{lang === 'TR' ? 'Seçiniz' : 'Select City'}</option>
                         {TR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -2397,7 +2499,7 @@ function CheckoutModal({
                       {lang === 'TR' ? 'İlçe' : 'District'} <span className="text-brand-teal">*</span>
                     </label>
                     <div className="relative">
-                      <select id="district" required disabled={!city} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all disabled:opacity-50">
+                      <select id="district" required value={district} onChange={(e) => setDistrict(e.target.value)} disabled={!city} className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all disabled:opacity-50">
                         <option value="" disabled>{lang === 'TR' ? 'Seçiniz' : 'Select District'}</option>
                         {districts.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
@@ -2414,7 +2516,6 @@ function CheckoutModal({
                 </h3>
                 <textarea 
                   rows={2} 
-                  placeholder={lang === 'TR' ? 'Teslimat ile ilgili özel notlarınızı buraya ekleyebilirsiniz...' : 'Special notes about your order or delivery...'}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all resize-none" 
                 />
               </div>
@@ -2430,7 +2531,7 @@ function CheckoutModal({
                     <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="cardName">
                       {lang === 'TR' ? 'Kart Üzerindeki İsim' : 'Cardholder Name'} <span className="text-brand-teal">*</span>
                     </label>
-                    <input id="cardName" type="text" required placeholder="John Doe" className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
+                    <input id="cardName" type="text" required className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all" />
                   </div>
 
                   <div>
@@ -2438,7 +2539,7 @@ function CheckoutModal({
                       {lang === 'TR' ? 'Kredi Kartı Numarası' : 'Credit Card Number'} <span className="text-brand-teal">*</span>
                     </label>
                     <div className="relative">
-                      <input id="cardNumber" type="text" required pattern="\d{16}" maxLength={16} placeholder="0000 0000 0000 0000" className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono tracking-widest" />
+                      <input id="cardNumber" type="text" required pattern="\d{16}" maxLength={16} className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono tracking-widest" />
                       <CreditCard className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
@@ -2448,7 +2549,7 @@ function CheckoutModal({
                       <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="expiry">
                         {lang === 'TR' ? 'Son Kullanma Tarihi' : 'Expiry Date'} <span className="text-brand-teal">*</span>
                       </label>
-                      <input id="expiry" type="text" required pattern="(0[1-9]|1[0-2])\/?([0-9]{2})" maxLength={5} placeholder="MM/YY" className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono" />
+                      <input id="expiry" type="text" required pattern="(0[1-9]|1[0-2])\/?([0-9]{2})" maxLength={5} placeholder={lang === 'TR' ? 'AA/YY' : 'MM/YY'} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1.5" htmlFor="cvv">
@@ -2470,7 +2571,7 @@ function CheckoutModal({
                 type="text" 
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                placeholder={lang === 'TR' ? 'İndirim Kodu' : 'Promo Code'}
+                aria-label={lang === 'TR' ? 'İndirim Kodu' : 'Promo Code'}
                 className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
               />
               <button 
@@ -2565,7 +2666,7 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
-  const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password' | 'reset-password' | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('vivia_cart');
@@ -2745,7 +2846,7 @@ export default function App() {
         <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} onClearCart={() => setCartItems([])} onCheckout={handleCheckout} />
         <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onProcessPayment={handleProcessPayment} totalPrice={cartTotalPrice} onOpenLogin={() => { setIsCheckoutOpen(false); setAuthMode('login'); }} />
         <CheckoutSuccessModal isOpen={isSuccessOpen} onClose={handleCloseSuccess} />
-        <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} />
+        <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} onChangeMode={setAuthMode} />
 
         {/* Global Toast */}
         <AnimatePresence>
