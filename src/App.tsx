@@ -1,5 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import turkeyData from './turkeyData';
+import { CATEGORIES } from './categories';
+import CategoryPage from './CategoryPage';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Phone, 
@@ -47,7 +49,8 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
-  Bookmark
+  Bookmark,
+  Menu
 } from 'lucide-react';
 
 const BubblesIcon = ({ className }: { className?: string }) => (
@@ -62,7 +65,7 @@ const BubblesIcon = ({ className }: { className?: string }) => (
 type Lang = 'EN' | 'TR';
 
 const LangContext = createContext<{ lang: Lang, setLang: (l: Lang) => void }>({ lang: 'TR', setLang: () => {} });
-const useLang = () => useContext(LangContext);
+export const useLang = () => useContext(LangContext);
 
 const TR_DICT: Record<string, string> = {
   // Header / Navigation
@@ -130,6 +133,81 @@ const TR_DICT: Record<string, string> = {
   "Thermostats": "Termostatlar",
   "Hygrometers": "Higrometreler",
 
+  // Flavors / Ingredients
+  "Chicken": "Tavuk",
+  "Salmon": "Somon",
+  "Lamb": "Kuzu",
+  "Beef": "Sığır Eti",
+  "Turkey": "Hindi",
+  "Ocean Fish": "Okyanus Balığı",
+  "Vegetable": "Sebze",
+  "Rabbit": "Tavşan",
+  "Mixed Seeds": "Karışık Tohumlar",
+  "Fruit": "Meyve",
+  "Honey": "Bal",
+  "Nut": "Fındık/Fıstık",
+  "Eucalyptus": "Okaliptüs",
+  "Algae": "Yosun",
+  "Krill": "Krill",
+  "Bloodworms": "Kan Kurdu",
+  "Color Enhancing": "Renk Geliştirici",
+  "Spirulina": "Spirulina",
+  "Alfalfa": "Yonca",
+  "Timothy Hay": "Çayır Otu",
+  "Apple": "Elma",
+  "Carrot": "Havuç",
+  "Mixed Berries": "Orman Meyveleri",
+  "Crickets": "Cırcır Böceği",
+  "Mealworms": "Un Kurdu",
+  "Calcium Coated": "Kalsiyum Kaplı",
+  "Vegetable Blend": "Sebze Karışımı",
+  "Standard": "Standart",
+
+  // Ages
+  "Puppy/Kitten": "Yavru",
+  "Adult": "Yetişkin",
+  "Senior": "Yaşlı",
+  "All Life Stages": "Tüm Yaşam Evreleri",
+  "Baby": "Yavru",
+  "Juvenile": "Genç",
+  "All": "Tümü",
+
+  // Sizes
+  "Small": "Küçük",
+  "Medium": "Orta",
+  "Large": "Büyük",
+  "All Breeds": "Tüm Irklar",
+  "Small Bird": "Küçük Kuş",
+  "Medium Bird": "Orta Boy Kuş",
+  "Parrot": "Papağan",
+  "Small Pet": "Küçük Evcil Hayvan",
+  "Hamster/Mouse": "Hamster/Fare",
+  "Rabbit/Guinea Pig": "Tavşan/Gine Domuzu",
+
+  // Materials
+  "Plastic": "Plastik",
+  "Stainless Steel": "Paslanmaz Çelik",
+  "Ceramic": "Seramik",
+  "Silicone": "Silikon",
+  "Nylon": "Naylon",
+  "Leather": "Deri",
+  "Fleece": "Polar",
+  "Wood": "Ahşap",
+  "Metal": "Metal",
+  "Cuttlebone": "Mürekkep Balığı Kemiği",
+  "Natural Branch": "Doğal Dal",
+  "Glass": "Cam",
+  "Acrylic": "Akrilik",
+  "Sponge": "Sünger",
+  "Ceramic Rings": "Seramik Halkalar",
+  "Paper": "Kağıt",
+  "Corn Cob": "Mısır Koçanı",
+  "Mesh": "File",
+  "Resin": "Reçine",
+  "Cork Bark": "Mantar Kabuğu",
+  "Sand": "Kum",
+  "Coco Husk": "Hindistan Cevizi Torfu",
+
   // Trust Section
   "Why shop with Vivia?": "Neden Vivia'yı seçmelisiniz?",
   "Fast & Accessible": "Hızlı ve Ulaşılabilir",
@@ -137,6 +215,7 @@ const TR_DICT: Record<string, string> = {
   "Direct Communication": "Doğrudan İletişim",
   "Always Online": "Her Zaman Çevrimiçi",
   "Shop Now": "Alışverişe Başla",
+  "Continue shopping": "Alışverişe Devam Et",
 
   // Contact
   "Ready to order?": "Sipariş vermeye hazır mısınız?",
@@ -176,7 +255,6 @@ const TR_DICT: Record<string, string> = {
   "Your shopping experience is now tailored for your ": "Alışveriş deneyiminiz artık şunun için özelleştirildi: ",
   "Smart subscriptions are enabled.": "Akıllı abonelikler devrede.",
   "Start Shopping": "Alışverişe Başla",
-  "Continue shopping": "Alışverişe devam et",
   "Estimated total via WhatsApp": "Tahmini toplam (WhatsApp ile iletilecektir)",
   "Confirm with Store": "Mağaza ile Onaylayınız",
   "Checkout Securely": "Güvenle Siparişi Tamamla",
@@ -195,7 +273,7 @@ const TR_DICT: Record<string, string> = {
   "Please enter a valid order ID.": "Lütfen geçerli bir sipariş numarası giriniz."
 };
 
-const t = (text: string, lang: Lang) => lang === 'TR' ? (TR_DICT[text] || text) : text;
+export const t = (text: string, lang: Lang) => lang === 'TR' ? (TR_DICT[text] || text) : text;
 
 // Data
 const CONTACT = {
@@ -254,6 +332,21 @@ function Header({
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Stop closing mega menu immediately to allow cursor movement
+  let debounceTimer: NodeJS.Timeout;
+
+  const handleMouseEnterCategory = (id: string) => {
+    clearTimeout(debounceTimer);
+    setActiveCategory(id);
+  };
+
+  const handleMouseLeaveCategory = () => {
+    debounceTimer = setTimeout(() => setActiveCategory(null), 150);
+  };
 
   const filteredSuggestions = MOCK_PRODUCTS.filter(product => 
     product.name[lang].toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -303,14 +396,26 @@ function Header({
 
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 lg:gap-8">
-        {/* Logo */}
-        <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0" onClick={(e) => {
-          e.preventDefault();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}>
-          <img src="/logo.png" alt="Vivia Logo" className="w-[72px] h-[72px] -mb-1.5 object-contain rounded-xl drop-shadow-md hover:scale-105 transition-transform duration-300" />
-          <span className="font-extrabold tracking-tight text-foreground text-[32px] -ml-2.5 pl-0.5 pt-0.5 mb-1.5">Vivia</span>
-        </a>
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Button */}
+          <button 
+            className="lg:hidden p-1.5 -ml-2 text-foreground hover:bg-secondary rounded-xl transition-colors active:scale-95"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          {/* Logo */}
+          <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0" onClick={(e) => {
+            e.preventDefault();
+            window.location.hash = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}>
+            <img src="/logo.png" alt="Vivia Logo" className="w-[72px] h-[72px] -mb-1.5 object-contain rounded-xl drop-shadow-md hover:scale-105 transition-transform duration-300" />
+            <span className="font-extrabold tracking-tight text-foreground text-[32px] -ml-2.5 pl-0.5 pt-0.5 mb-1.5 hidden sm:block">Vivia</span>
+          </a>
+        </div>
 
         {/* Search Bar - hidden on small mobile, takes up remaining space otherwise */}
         <div className="hidden sm:flex flex-1 max-w-2xl relative">
@@ -585,16 +690,142 @@ function Header({
         </div>
       </div>
       
-      {/* Category Nav - Horizontal Scroll on Mobile */}
-      <div className="border-t border-border overflow-x-auto no-scrollbar hidden sm:block">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-6 md:gap-10">
-           {['Dog', 'Cat', 'Avian', 'Aquatic', 'Rodent', 'Reptile'].map(cat => (
-             <a key={cat} href="#services" className="py-3 px-2 text-sm font-semibold text-muted-foreground hover:text-brand-teal border-b-2 border-transparent hover:border-brand-teal whitespace-nowrap transition-all duration-300">
-               {t(cat, lang)}
-             </a>
-           ))}
+      {/* Desktop Mega Menu Nav */}
+      <div className="border-t border-border hidden lg:block bg-background relative z-40">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-8" onMouseLeave={handleMouseLeaveCategory}>
+          {CATEGORIES.map(category => (
+            <div 
+              key={category.id} 
+              className="relative"
+              onMouseEnter={() => handleMouseEnterCategory(category.id)}
+            >
+              <button 
+                onClick={() => {
+                  if (activeCategory === category.id) setActiveCategory(null);
+                  else setActiveCategory(category.id);
+                }}
+                className={`py-3 px-2 text-sm font-semibold whitespace-nowrap transition-colors flex items-center gap-1 group ${activeCategory === category.id ? 'text-brand-teal' : 'text-muted-foreground hover:text-brand-teal'}`}
+              >
+                {category.name[lang]}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeCategory === category.id ? 'rotate-180 text-brand-teal' : 'text-muted-foreground group-hover:text-brand-teal'}`} />
+              </button>
+            </div>
+          ))}
         </nav>
+        
+        {/* Mega Menu Dropdown */}
+        <AnimatePresence>
+          {activeCategory && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full left-0 w-full bg-card border-b border-border shadow-2xl z-50 overflow-hidden"
+              onMouseEnter={() => handleMouseEnterCategory(activeCategory)}
+              onMouseLeave={handleMouseLeaveCategory}
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex">
+                <div className="w-1/4 pr-8 border-r border-border shrink-0">
+                   {/* Left Feature Column */}
+                   <h3 className="font-bold text-xl mb-4 text-foreground">
+                     {lang === 'TR' ? 'Öne Çıkanlar' : 'Featured'}
+                   </h3>
+                   <div className="bg-brand-teal/10 rounded-xl p-6 border border-brand-teal/20 text-center flex flex-col items-center justify-center h-48 group cursor-pointer hover:bg-brand-teal/20 transition-colors">
+                      <Sparkles className="w-8 h-8 text-brand-teal mb-3 group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-brand-teal">
+                         {lang === 'TR' ? 'Yeni Gelenler' : 'New Arrivals'}
+                      </span>
+                   </div>
+                </div>
+                
+                <div className="w-3/4 pl-8 grid grid-cols-3 gap-y-6 gap-x-8">
+                  {CATEGORIES.find(c => c.id === activeCategory)?.subcategories.map(sub => (
+                    <a key={sub.id} href={`#/category/${sub.id}`} className="text-sm font-medium text-muted-foreground hover:text-brand-teal transition-colors flex items-center group">
+                      <ChevronRight className="w-3.5 h-3.5 mr-1.5 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300 text-brand-teal" />
+                      {sub.name[lang]}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm lg:hidden"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-background shadow-2xl z-[110] lg:hidden flex flex-col"
+            >
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <a href="#" className="flex items-center gap-2" onClick={(e) => {
+                  e.preventDefault();
+                  window.location.hash = '';
+                  setIsMobileMenuOpen(false);
+                }}>
+                  <img src="/logo.png" alt="Vivia Logo" className="w-10 h-10 object-contain rounded-lg" />
+                  <span className="font-extrabold tracking-tight text-foreground text-xl">Vivia</span>
+                </a>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-secondary rounded-full text-foreground hover:bg-secondary-dark transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+                <nav className="flex flex-col gap-2 relative">
+                  {CATEGORIES.map(category => (
+                    <div key={category.id} className="border border-border rounded-xl bg-card overflow-hidden transition-colors">
+                      <button 
+                        onClick={() => setMobileExpanded(mobileExpanded === category.id ? null : category.id)}
+                        className="w-full text-left px-4 py-4 flex items-center justify-between text-base font-semibold text-foreground"
+                      >
+                        {category.name[lang]}
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${mobileExpanded === category.id ? 'rotate-180 text-brand-teal' : ''}`} />
+                      </button>
+                      <AnimatePresence>
+                        {mobileExpanded === category.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-secondary/30"
+                          >
+                            <div className="flex flex-col py-2">
+                              {category.subcategories.map(sub => (
+                                <a 
+                                  key={sub.id} 
+                                  href={`#/category/${sub.id}`} 
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className="py-2.5 px-6 text-sm font-medium text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/5 transition-colors"
+                                >
+                                  {sub.name[lang]}
+                                </a>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </nav>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -689,8 +920,14 @@ const ProductCard: React.FC<{
   const [quantity, setQuantity] = useState(1);
   const topItem = service.items[0];
   const productIdentifier = `${t(service.title, 'EN')} - ${t(topItem, 'EN')}`;
-  const basePrice = getBasePriceFromName(productIdentifier);
-  const discountedPrice = getPriceFromName(productIdentifier);
+  
+  // Create deterministic prices with fewer discounts
+  const numericHash = productIdentifier.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const isDogOrCat = service.id === 'dog' || service.id === 'cat';
+  let basePrice = isDogOrCat ? 400 + (numericHash % 600) : 150 + (numericHash % 300);
+  
+  const hasDiscount = numericHash % 3 === 0;
+  const discountedPrice = hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
   const isWishlisted = wishlistItems.includes(productIdentifier);
   
   return (
@@ -707,16 +944,20 @@ const ProductCard: React.FC<{
         <div className="text-muted-foreground/30 group-hover:scale-110 group-hover:text-brand-teal/50 transition-all duration-500">
           {service.icon}
         </div>
-        <div className="absolute top-2 left-2 bg-[#E27D60] text-white text-[10px] font-bold px-2 py-0.5 rounded">
-          %15
-        </div>
+        {hasDiscount && (
+          <div className="absolute top-2 left-2 bg-[#E27D60] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+            %15
+          </div>
+        )}
       </div>
       
       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t(service.title, lang as any)}</span>
       <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2 h-10 sm:h-12">{t(topItem, lang as any)}</h3>
       
-      <div className="flex flex-col items-center gap-1 mb-4 flex-grow">
-        <span className="text-xs text-muted-foreground line-through">₺{basePrice.toFixed(2)}</span>
+      <div className="flex flex-col items-center gap-1 mb-4 flex-grow justify-center">
+        {hasDiscount && (
+          <span className="text-xs text-muted-foreground line-through">₺{basePrice.toFixed(2)}</span>
+        )}
         <span className="text-lg sm:text-xl font-bold text-brand-teal">₺{discountedPrice.toFixed(2)}</span>
       </div>
 
@@ -757,25 +998,40 @@ function Services({
   onAddToCart, 
   wishlistItems = [], 
   onToggleWishlist = () => {},
-  selectedPetsFilter = []
+  selectedPetsFilter = [],
+  userPets = []
 }: { 
   onAddToCart: (item: string, quantity?: number) => void,
   wishlistItems?: string[],
   onToggleWishlist?: (item: string) => void,
-  selectedPetsFilter?: string[]
+  selectedPetsFilter?: string[],
+  userPets?: PetProfileData[]
 }) {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
+
+  // Combine selectedPetsFilter and userPets into a unified view of what the user owns
+  const combinedPets = Array.from(new Set([
+    ...selectedPetsFilter.map(p => p.toLowerCase()),
+    ...userPets.filter(p => p.type).map(p => p.type.toLowerCase())
+  ]));
 
   const filteredServices = SERVICES.filter(service => 
-    selectedPetsFilter.length === 0 || selectedPetsFilter.map(p => p.toLowerCase()).includes(service.id.toLowerCase())
+    combinedPets.length === 0 || hover_match(service.id, combinedPets)
   );
+
+  function hover_match(serviceId: string, pets: string[]) {
+    return pets.some(p => p.includes(serviceId) || serviceId.includes(p));
+  }
 
   return (
     <section id="services" className="py-20 bg-secondary/50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{t("Complete Care Catalog", lang)}</h2>
-            <a href="#" className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{lang === 'TR' ? 'Dostunuz İçin Özel' : 'Special for Your Companion'}</h2>
+            <a href="#/category/personalized" onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = '#/category/personalized';
+            }} className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300">
               {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
             </a>
          </div>
@@ -794,7 +1050,10 @@ function Services({
          </div>
          
          <div className="mt-8 text-center sm:hidden">
-            <a href="#" className="inline-flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300 py-2 px-4 border text-center border-brand-teal rounded-full w-full justify-center">
+            <a href="#/category/personalized" onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = '#/category/personalized';
+            }} className="inline-flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300 py-2 px-4 border text-center border-brand-teal rounded-full w-full justify-center">
               {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
             </a>
          </div>
@@ -1406,15 +1665,10 @@ function FoldersModal({
 }
 
 // Personalization Modal
-function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, onClose: () => void, pets: PetProfileData[], setPets: React.Dispatch<React.SetStateAction<PetProfileData[]>> }) {
   const { lang, setLang } = useLang();
   
-  const [pets, setPets] = useState<PetProfileData[]>([
-    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }
-  ]);
   const [isSaved, setIsSaved] = useState(false);
-
-  if (!isOpen) return null;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1439,6 +1693,7 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
 
   return (
     <AnimatePresence>
+      {isOpen && (
       <motion.div 
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-darker/60 backdrop-blur-sm"
@@ -1613,6 +1868,7 @@ function PetProfileModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
           )}
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }
@@ -1630,10 +1886,9 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
+      {isOpen && (
       <motion.div 
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-darker/40 backdrop-blur-sm"
@@ -1722,6 +1977,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
           )}
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }
@@ -2648,25 +2904,44 @@ export const getBasePriceFromName = (name: string) => {
     }
   }
 
-  // Deterministic mock base price using the English string
+// Deterministic mock base price using the English string
   const hash = englishName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return Math.round(((hash % 100) + 10.99) * 100) / 100;
+  const isDogOrCat = englishName.toLowerCase().includes('dog') || englishName.toLowerCase().includes('cat');
+  let basePrice = isDogOrCat ? 400 + (hash % 600) : 150 + (hash % 300);
+  basePrice += (hash % 99) / 100;
+  return Math.round(basePrice * 100) / 100;
 };
 
 export const getPriceFromName = (name: string) => {
   const basePrice = getBasePriceFromName(name);
-  return Math.round(basePrice * 0.85 * 100) / 100; // 15% discount applied everywhere
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hasDiscount = hash % 3 === 0;
+  return hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
 };
 
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
+  const [userPets, setUserPets] = useState<PetProfileData[]>([
+    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }
+  ]);
   const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password' | 'reset-password' | null>(null);
+  const [currentHash, setCurrentHash] = useState(() => typeof window !== 'undefined' ? window.location.hash : '');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+      window.scrollTo(0, 0); // Scroll to top when changing route
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('vivia_cart');
@@ -2829,19 +3104,30 @@ export default function App() {
           </Tooltip>
         </div>
         
-        <main>
-          <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} />
-          <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} selectedPetsFilter={selectedPetsFilter} />
-          <OrderTrackingSection />
-          <TrustSection />
-          <Contact />
-        </main>
+        {currentHash.startsWith('#/category/') ? (
+          <CategoryPage 
+            categoryId={currentHash.replace('#/category/', '')} 
+            onAddToCart={handleAddToCart}
+            wishlistItems={wishlistItems}
+            onToggleWishlist={handleToggleWishlist}
+            userPets={userPets}
+            selectedPets={selectedPetsFilter}
+          />
+        ) : (
+          <main>
+            <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} />
+            <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} selectedPetsFilter={selectedPetsFilter} userPets={userPets} />
+            <OrderTrackingSection />
+            <TrustSection />
+            <Contact />
+          </main>
+        )}
         
         <Footer />
 
         {/* Modals */}
         <FoldersModal isOpen={isFoldersModalOpen} onClose={() => setIsFoldersModalOpen(false)} folders={folders} setFolders={setFolders} onAddToCart={handleAddToCart} />
-        <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} />
+        <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} pets={userPets} setPets={setUserPets} />
         <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />
         <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} onClearCart={() => setCartItems([])} onCheckout={handleCheckout} />
         <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onProcessPayment={handleProcessPayment} totalPrice={cartTotalPrice} onOpenLogin={() => { setIsCheckoutOpen(false); setAuthMode('login'); }} />
