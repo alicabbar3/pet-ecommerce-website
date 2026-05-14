@@ -2,11 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { CATEGORIES } from './categories';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, Filter, X, ChevronDown, Heart, Search, Check, ShoppingCart, Loader2, Minus, Plus, Package } from 'lucide-react';
-import { useLang, t } from './App'; 
+import { useLang, t, Lang } from './i18n'; 
 
 export type Product = {
   id: string;
-  name: string;
+  name: { EN: string, TR: string };
   image: string;
   price: number;
   oldPrice?: number;
@@ -26,151 +26,213 @@ export type Product = {
 };
 
 // Generate deterministic dummy data based on ID
-function generateDummyProducts(categoryId: string, count: number): Product[] {
+export function generateDummyProducts(categoryId: string, count: number): Product[] {
   let brands: string[] = [];
-  let flavors: string[] = [];
+  let nouns: { en: string, tr: string, isFood?: boolean, flavorOrMat?: string }[] = [];
   let weights: string[] = [];
   let ages: string[] = [];
   let sizes: string[] = [];
-  let materials: string[] = [];
 
-  const isDogOrCat = categoryId.includes('dog') || categoryId.includes('cat');
-  const isBird = categoryId.includes('bird');
-  const isFish = categoryId.includes('fish') || categoryId.includes('aquarium') || categoryId.includes('water');
-  const isRodent = categoryId.includes('rodent');
-  const isReptile = categoryId.includes('reptile') || categoryId.includes('terrarium');
-
-  const isFoodOrTreat = categoryId.includes('food') || categoryId.includes('treats') || categoryId.includes('vitamins') || categoryId.includes('health');
+  const catLower = categoryId.toLowerCase();
+  const isDog = catLower.includes('dog');
+  const isCat = catLower.includes('cat');
+  const isBird = catLower.includes('bird') || catLower.includes('avian');
+  const isFish = catLower.includes('fish') || catLower.includes('aquarium') || catLower.includes('aquatic');
+  const isRodent = catLower.includes('rodent');
+  const isReptile = catLower.includes('reptile') || catLower.includes('terrarium');
   
-  if (isDogOrCat) {
-    brands = ['Royal Canin', 'Pro Plan', 'Acana', 'Reflex', "Hill's", 'Brit', 'N&D', 'Orijen', 'Trixie', 'Gimcat', 'Whiskas', 'Gimdog'];
-    flavors = ['Chicken', 'Salmon', 'Lamb', 'Beef', 'Turkey', 'Ocean Fish', 'Vegetable', 'Rabbit'];
-    weights = ['1 kg', '2.5 kg', '5 kg', '10 kg', '12 kg', '15 kg'];
-    ages = ['Puppy/Kitten', 'Adult', 'Senior', 'All Life Stages'];
-    sizes = ['Small', 'Medium', 'Large', 'All Breeds'];
-    materials = ['Plastic', 'Stainless Steel', 'Ceramic', 'Silicone', 'Nylon', 'Leather', 'Fleece'];
+  if (isDog) {
+    brands = ['Royal Canin', 'Pro Plan', 'Acana', 'Orijen', "Hill's Science Diet", 'Taste of the Wild', 'Blue Buffalo', 'KONG', 'Ruffwear', 'Chuckit!', 'Julius-K9', 'Nylabone'];
+    nouns = [
+      { en: 'Adult Dry Dog Food', tr: 'Yetişkin Kuru Köpek Maması', isFood: true, flavorOrMat: 'Chicken & Brown Rice' },
+      { en: 'Grain-Free Puppy Formula', tr: 'Tahılsız Yavru Köpek Formülü', isFood: true, flavorOrMat: 'Salmon & Sweet Potato' },
+      { en: 'Weight Management Kibble', tr: 'Kilo Kontrol Maması', isFood: true, flavorOrMat: 'Turkey & Venison' },
+      { en: 'Orthopedic Memory Foam Bed', tr: 'Ortopedik Hafızalı Sünger Yatak', isFood: false, flavorOrMat: 'Plush Fabric' },
+      { en: 'Heavy Duty Retractable Leash', tr: 'Ağır Hizmet Tipi Makaralı Tasma', isFood: false, flavorOrMat: 'Nylon' },
+      { en: 'Extreme Chew Rubber Toy', tr: 'Ekstra Dayanıklı Kauçuk Sesli Oyuncak', isFood: false, flavorOrMat: 'Natural Rubber' },
+      { en: 'No-Pull Training Harness', tr: 'Çekme Önleyici Eğitim Göğüs Tasması', isFood: false, flavorOrMat: 'Breathable Mesh' },
+      { en: 'Dental Chew Sticks', tr: 'Diş Temizleyici Çiğneme Çubukları', isFood: true, flavorOrMat: 'Mint & Parsley' },
+      { en: 'Oatmeal & Aloe Shampoo', tr: 'Yulaf ve Aloe Veralı Şampuan', isFood: false, flavorOrMat: 'Liquid' },
+      { en: 'Joint Support Supplements', tr: 'Eklem Destek Takviyesi', isFood: true, flavorOrMat: 'Beef Liver' }
+    ];
+    weights = ['1.5 kg', '3 kg', '7 kg', '12 kg'];
+    ages = ['Puppy', 'Adult', 'Senior'];
+    sizes = ['Small Breed', 'Medium Breed', 'Large Breed'];
+  } else if (isCat) {
+    brands = ['Royal Canin', 'Pro Plan', 'N&D', 'Whiskas', 'Gimcat', 'Catit', 'Felix', 'Orijen', 'Tidy Cats', 'Ever Clean'];
+    nouns = [
+      { en: 'Indoor Dry Cat Food', tr: 'Evcil Kedi Kuru Maması', isFood: true, flavorOrMat: 'Chicken & Rice' },
+      { en: 'Urinary Tract Health Formula', tr: 'İdrar Yolu Sağlığı Formülü', isFood: true, flavorOrMat: 'Ocean Fish' },
+      { en: 'Hairball Control Paste', tr: 'Tüy Yumağı Önleyici Macun', isFood: true, flavorOrMat: 'Malt' },
+      { en: 'Premium Wet Food Pouches', tr: 'Premium Yaş Mama Keseleri', isFood: true, flavorOrMat: 'Salmon in Gravy' },
+      { en: 'Clumping Bentonite Litter', tr: 'Topaklanan Bentonit Kedi Kumu', isFood: false, flavorOrMat: 'Bentonite Clay' },
+      { en: 'Flushable Tofu Litter', tr: 'Tuvalete Atılabilir Tofu Kum', isFood: false, flavorOrMat: 'Natural Tofu' },
+      { en: 'Multi-Level Cat Tree', tr: 'Çok Katlı Tırmalama Ağacı', isFood: false, flavorOrMat: 'Sisal & Plush' },
+      { en: 'Interactive Laser Toy', tr: 'İnteraktif Lazer Oyuncak', isFood: false, flavorOrMat: 'Plastic' },
+      { en: 'Stainless Steel Water Fountain', tr: 'Paslanmaz Çelik Su Şelalesi', isFood: false, flavorOrMat: 'Stainless Steel' },
+      { en: 'Self-Cleaning Litter Box', tr: 'Otomatik Temizlenen Kum Kabı', isFood: false, flavorOrMat: 'ABS Plastic' }
+    ];
+    weights = ['1.5 kg', '2 kg', '5 kg', '10 L', '10 kg'];
+    ages = ['Kitten', 'Adult', 'Senior'];
+    sizes = ['All Cats'];
   } else if (isBird) {
-    brands = ['Versele-Laga', 'Quik', 'Vitakraft', 'Jungle', 'Trixie', 'Flamingo'];
-    flavors = ['Mixed Seeds', 'Fruit', 'Honey', 'Nut', 'Eucalyptus'];
-    weights = ['250 g', '500 g', '1 kg', '2.5 kg'];
-    ages = ['All Life Stages'];
-    sizes = ['Small Bird', 'Medium Bird', 'Parrot'];
-    materials = ['Wood', 'Metal', 'Plastic', 'Cuttlebone', 'Natural Branch'];
-  } else if (isFish) {
-    brands = ['Tetra', 'Sera', 'JBL', 'Eheim', 'Fluval', 'AquaClear', 'Marina'];
-    flavors = ['Algae', 'Krill', 'Bloodworms', 'Color Enhancing', 'Spirulina'];
-    weights = ['50 g', '100 g', '250 g', '500 g'];
-    ages = ['All Life Stages'];
-    sizes = ['Small', 'Medium', 'Large'];
-    materials = ['Glass', 'Acrylic', 'Plastic', 'Sponge', 'Ceramic Rings'];
-  } else if (isRodent) {
-    brands = ['Beaphar', 'Vitakraft', 'Ferplast', 'Versele-Laga', 'Trixie', 'Living World'];
-    flavors = ['Alfalfa', 'Timothy Hay', 'Apple', 'Carrot', 'Mixed Berries'];
+    brands = ['Versele-Laga', 'Hagen', 'ZuPreem', 'Kaytee', 'Vitakraft', 'Penn-Plax'];
+    nouns = [
+      { en: 'Premium Seed Blend', tr: 'Premium Tohum Karışımı', isFood: true, flavorOrMat: 'Mixed Seeds & Nuts' },
+      { en: 'Fruit & Nut Pellets', tr: 'Meyveli ve Kuruyemişli Peletler', isFood: true, flavorOrMat: 'Tropical Fruit' },
+      { en: 'Calcium Cuttlebone', tr: 'Kalsiyumlu Kalamar Kemiği', isFood: true, flavorOrMat: 'Natural Cuttlebone' },
+      { en: 'Spacious Flight Cage', tr: 'Geniş Uçuş Kafesi', isFood: false, flavorOrMat: 'Powder-coated Metal' },
+      { en: 'Natural Wood Perch', tr: 'Doğal Ahşap Tünek', isFood: false, flavorOrMat: 'Coffee Wood' },
+      { en: 'Colorful Foraging Toy', tr: 'Renkli Yapboz Oyuncak', isFood: false, flavorOrMat: 'Wood & Paper' },
+      { en: 'Hanging Bird Bath', tr: 'Asmalı Kuş Banyosu', isFood: false, flavorOrMat: 'Acrylic' }
+    ];
     weights = ['500 g', '1 kg', '2.5 kg'];
-    ages = ['Baby', 'Adult'];
-    sizes = ['Small Pet', 'Hamster/Mouse', 'Rabbit/Guinea Pig'];
-    materials = ['Wood', 'Plastic', 'Metal', 'Paper', 'Corn Cob'];
+    ages = ['All Life Stages'];
+    sizes = ['Small Birds', 'Parrots'];
+  } else if (isFish) {
+    brands = ['Fluval', 'Tetra', 'Hikari', 'Seachem', 'API', 'Eheim', 'Aqueon'];
+    nouns = [
+      { en: 'Color Enhancing Flakes', tr: 'Renk Arttırıcı Pul Yem', isFood: true, flavorOrMat: 'Shrimp & Algae' },
+      { en: 'Bottom Feeder Wafers', tr: 'Dip Yemi Gofretleri', isFood: true, flavorOrMat: 'Spirulina' },
+      { en: 'Canister Filter 1000L/H', tr: 'Dış Filtre 1000L/S', isFood: false, flavorOrMat: 'Plastic & Ceramic' },
+      { en: 'Submersible Aquarium Heater', tr: 'Dalgıç Akvaryum Isıtıcı', isFood: false, flavorOrMat: 'Quartz Glass' },
+      { en: 'Water Conditioner & Dechlorinator', tr: 'Su Düzenleyici ve Klor Giderici', isFood: false, flavorOrMat: 'Liquid Solution' },
+      { en: 'LED Planted Tank Light', tr: 'Bitkili Akvaryum LED Aydınlatma', isFood: false, flavorOrMat: 'Aluminum' },
+      { en: 'Natural Driftwood Decor', tr: 'Doğal Yati Kökü Dekor', isFood: false, flavorOrMat: 'Wood' }
+    ];
+    weights = ['50 g', '100 g', '250 g', '500 ml'];
+    ages = ['All Life Stages'];
+    sizes = ['All Fish'];
+  } else if (isRodent) {
+    brands = ['Oxbow', 'Supreme Petfoods', 'Mazuri', 'Kaytee', 'Living World', 'Ferplast'];
+    nouns = [
+      { en: 'Timothy Hay First Cut', tr: 'Birinci Hasat Timothy Otu', isFood: true, flavorOrMat: 'Timothy Hay' },
+      { en: 'Adult Guinea Pig Pellets', tr: 'Yetişkin Ginepig Pelet Yemi', isFood: true, flavorOrMat: 'Alfalfa & Vitamin C' },
+      { en: 'Paper Bedding Odor Control', tr: 'Koku Kontrollü Kağıt Taban Malzemesi', isFood: false, flavorOrMat: 'Recycled Paper' },
+      { en: 'Silent Spinner Wheel', tr: 'Sessiz Egzersiz Çarkı', isFood: false, flavorOrMat: 'Plastic & Ball Bearings' },
+      { en: 'Wooden Hideout Hut', tr: 'Ahşap Saklanma Evi', isFood: false, flavorOrMat: 'Pine Wood' },
+      { en: 'Apple Wood Chew Sticks', tr: 'Elma Ağacı Çiğneme Çubukları', isFood: true, flavorOrMat: 'Apple Wood' }
+    ];
+    weights = ['500 g', '1 kg', '2 kg', '10 L'];
+    ages = ['Young', 'Adult'];
+    sizes = ['Small Rodent', 'Rabbit/Guinea Pig'];
   } else if (isReptile) {
-    brands = ['Exo Terra', 'JBL', 'Hagen', 'Lucky Reptile', 'Zoomed', 'Komodo'];
-    flavors = ['Crickets', 'Mealworms', 'Calcium Coated', 'Vegetable Blend'];
-    weights = ['100 g', '250 g', '500 g'];
-    ages = ['Juvenile', 'Adult'];
-    sizes = ['Small', 'Medium', 'Large'];
-    materials = ['Glass', 'Mesh', 'Resin', 'Cork Bark', 'Sand', 'Coco Husk'];
+    brands = ['Exo Terra', 'Zoo Med', 'Fluker\'s', 'Repashy', 'Zilla', 'Arcadia'];
+    nouns = [
+      { en: 'Crusted Gecko Diet', tr: 'Krested Geko Besini', isFood: true, flavorOrMat: 'Papaya & Mango' },
+      { en: 'Calcium Powder with D3', tr: 'D3 Vitaminli Kalsiyum Tozu', isFood: true, flavorOrMat: 'Calcium Carbonate' },
+      { en: 'UVB T5 Fluorescent Bulb', tr: 'UVB T5 Floresan Ampul', isFood: false, flavorOrMat: 'Glass' },
+      { en: 'Digital Thermometer & Hygrometer', tr: 'Dijital Termometre & Higrometre', isFood: false, flavorOrMat: 'Electronic' },
+      { en: 'Heat Mat with Thermostat', tr: 'Termostatlı Isıtıcı Ped', isFood: false, flavorOrMat: 'PVC' },
+      { en: 'Coco Husk Substrate', tr: 'Hindistan Cevizi Torfu', isFood: false, flavorOrMat: 'Coconut Fiber' }
+    ];
+    weights = ['100 g', '250 g', '1 kg', '8 L'];
+    ages = ['All Life Stages'];
+    sizes = ['All Reptiles'];
   } else {
-    brands = ['Premium Pet', 'Pets Plus', 'Happy Tails'];
-    flavors = ['Standard'];
-    weights = ['1 kg'];
-    ages = ['All'];
-    sizes = ['Standard'];
-    materials = ['Standard'];
+    // Generic fallback for mixed "personalized" categories
+    brands = ['Pro Plan', 'Royal Canin', 'Trixie', 'KONG', 'Orijen', 'Versele-Laga', 'Tetra'];
+    nouns = [
+      { en: 'Premium Pet Nutrition Set', tr: 'Premium Evcil Hayvan Beslenme Seti', isFood: true, flavorOrMat: 'Mixed Proteins' },
+      { en: 'Luxury Pet Bed', tr: 'Lüks Evcil Hayvan Yatağı', isFood: false, flavorOrMat: 'Plush & Memory Foam' },
+      { en: 'Advanced Pet Care Kit', tr: 'Gelişmiş Evcil Hayvan Bakım Seti', isFood: false, flavorOrMat: 'Various' },
+      { en: 'Automatic Smart Feeder', tr: 'Otomatik Akıllı Besleyici', isFood: false, flavorOrMat: 'BPA-free Plastic & Metal' },
+      { en: 'Interactive Training Toy', tr: 'İnteraktif Eğitim Oyuncağı', isFood: false, flavorOrMat: 'Durable Rubber' }
+    ];
+    weights = ['1 kg', '2 kg', '5 kg'];
+    ages = ['All Life Stages'];
+    sizes = ['All Sizes'];
   }
   
-  const products: Product[] = [];
+  const products: any[] = [];
   
   for (let i = 0; i < count; i++) {
-    const seed = i * 1337 + categoryId.length;
+    const seed = i * 1337 + categoryId.length * 7;
     
-    // Select specific values based on category
     const brand = brands[seed % brands.length];
-    const isEdible = isFoodOrTreat;
-    const isGear = !isFoodOrTreat;
+    const noun = nouns[seed % nouns.length];
+    const isEdible = noun.isFood;
     
     let flavor, weight, age, breedSize, material;
     
     if (isEdible) {
-      flavor = flavors[seed % flavors.length];
+      flavor = noun.flavorOrMat;
       weight = weights[seed % weights.length];
       age = ages[seed % ages.length];
-      if (isDogOrCat) breedSize = sizes[seed % sizes.length];
+      if (isDog || isCat || isRodent) breedSize = sizes[seed % sizes.length];
     } else {
-      material = materials[seed % materials.length];
-      if (isDogOrCat || isBird || isRodent || isReptile) {
+      material = noun.flavorOrMat;
+      if (isDog || isCat || isBird || isRodent || isReptile) {
          breedSize = sizes[seed % sizes.length];
       }
     }
     
+    // Calculate realistic price based on category
     let basePrice = 50;
-    if (categoryId.includes('dry-food') || categoryId.includes('food')) {
-      basePrice = isDogOrCat ? 400 + (seed % 2000) : 100 + (seed % 400);
-    } else if (categoryId.includes('wet-food') || categoryId.includes('canned')) {
-      basePrice = 35 + (seed % 60);
-    } else if (categoryId.includes('treat')) {
+    if (noun.en.includes('Food') || noun.en.includes('Kibble') || noun.en.includes('Formula') || noun.en.includes('Diet') || noun.en.includes('Pellets')) {
+      basePrice = isDog || isCat ? 400 + (seed % 1500) : 100 + (seed % 300);
+    } else if (noun.en.includes('Wet') || noun.en.includes('Pouches') || noun.en.includes('Paste')) {
+      basePrice = 40 + (seed % 60);
+    } else if (noun.en.includes('Treat') || noun.en.includes('Chew') || noun.en.includes('Sticks')) {
       basePrice = 80 + (seed % 150);
-    } else if (categoryId.includes('toy')) {
-      basePrice = 100 + (seed % 400);
-    } else if (categoryId.includes('cage') || categoryId.includes('aquarium') || categoryId.includes('terrarium')) {
-      basePrice = 1000 + (seed % 4000);
-    } else if (categoryId.includes('bed') || categoryId.includes('furniture') || categoryId.includes('tree')) {
-      basePrice = 600 + (seed % 2000);
-    } else if (categoryId.includes('litter') || categoryId.includes('sand')) {
+    } else if (noun.en.includes('Toy') || noun.en.includes('Leash')) {
       basePrice = 150 + (seed % 300);
+    } else if (noun.en.includes('Bed') || noun.en.includes('Tree') || noun.en.includes('Fountain') || noun.en.includes('Filter') || noun.en.includes('Cage')) {
+      basePrice = 800 + (seed % 3000);
+    } else if (noun.en.includes('Litter') || noun.en.includes('Substrate') || noun.en.includes('Bedding')) {
+      basePrice = 200 + (seed % 300);
     } else {
       basePrice = 150 + (seed % 800);
     }
-    
-    // add minor random cents to basePrice
-    basePrice += (seed % 99) / 100;
-    
-    // Only apply discounts sensibly
+
     const hasDiscount = i % 5 === 0 && basePrice > 100;
-    const discount = hasDiscount ? 10 + (seed % 20) : 0;
-    const price = hasDiscount ? basePrice * (1 - discount/100) : basePrice;
+    const discount = hasDiscount ? 10 + (seed % 30) : 0;
+    const price = hasDiscount ? basePrice * (1 - discount / 100) : basePrice;
+    
+    // Choose realistic Unsplash placeholders
+    let imageKeyword = 'pet%20supplies';
+    if (isDog) imageKeyword = isEdible ? 'dog%20food' : 'dog%20toy';
+    if (isCat) imageKeyword = isEdible ? 'cat%20food' : 'cat%20toy';
+    if (isBird) imageKeyword = 'bird%20cage';
+    if (isFish) imageKeyword = 'aquarium';
+    if (isReptile) imageKeyword = 'reptile%20terrarium';
+    
+    // Specific noun bypasses
+    if (noun.en.toLowerCase().includes('shampoo')) imageKeyword = 'pet%20shampoo';
+    if (noun.en.toLowerCase().includes('bed')) imageKeyword = 'dog%20bed';
+    if (noun.en.toLowerCase().includes('fountain')) imageKeyword = 'cat%20water%20fountain';
+    
+    const imageUrl = `https://source.unsplash.com/400x400/?${imageKeyword}&sig=${seed}`;
 
-    // Formatting product name
-    const unslugCategory = categoryId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    let name = `${brand} Premium ${unslugCategory}`;
-    if (isEdible && flavor) {
-      name += ` ${flavor} Flavor`;
-    } else if (isGear && material) {
-      name += ` (${material})`;
-    }
+    const generateBadges = () => {
+      const b = [];
+      if (seed % 5 === 0) b.push('New');
+      if (seed % 7 === 0) b.push('Bestseller');
+      if (seed % 11 === 0) b.push('Limited');
+      return b.slice(0, 2);
+    };
+    
+    let nameEN = `${brand} ${noun.en}`;
+    let nameTR = `${brand} ${noun.tr}`;
     if (isEdible && weight) {
-      name += ` - ${weight}`;
-    } else if (isGear && breedSize) {
-      name += ` - ${breedSize}`;
+      nameEN += ` ${weight}`;
+      nameTR += ` ${weight}`;
     }
-
-    // specific image keywords
-    let imgKeyword = 'pet';
-    if (isDogOrCat && isEdible) imgKeyword = categoryId.includes('dog') ? 'dog,food' : 'cat,food';
-    else if (isDogOrCat && isGear) imgKeyword = categoryId.includes('dog') ? 'dog,toy' : 'cat,toy';
-    else if (isBird) imgKeyword = 'bird,pet';
-    else if (isFish) imgKeyword = 'aquarium,fish';
-    else if (isRodent) imgKeyword = 'hamster,pet';
-    else if (isReptile) imgKeyword = 'reptile,pet';
 
     products.push({
       id: `${categoryId}-prod-${i}`,
-      name,
-      image: `https://loremflickr.com/320/320/${imgKeyword}?random=${seed}`,
-      price,
+      name: { 
+        EN: nameEN, 
+        TR: nameTR
+      },
+      image: imageUrl,
+      price: Math.round(price * 100) / 100,
       oldPrice: hasDiscount ? basePrice : undefined,
       discount: hasDiscount ? discount : undefined,
       rating: null,
       reviews: null,
       sold: seed % 2000,
-      badges: i % 5 === 0 ? ['Bestseller'] : i % 7 === 0 ? ['New'] : [],
+      badges: generateBadges(),
       
       brand,
       flavor,
@@ -239,7 +301,7 @@ export default function CategoryPage({
       if (categoryId === 'personalized') {
         const combinedPets = Array.from(new Set([
           ...selectedPets.map(p => p.toLowerCase()),
-          ...userPets.filter(p => p.type).map(p => p.type.toLowerCase())
+          ...userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase())
         ]));
         if (combinedPets.length === 0) {
           // fallback to dogs
@@ -553,7 +615,7 @@ export default function CategoryPage({
                       product={product}
                       lang={lang}
                       onAddToCart={onAddToCart}
-                      isWishlisted={wishlistItems.includes(product.name)}
+                      isWishlisted={wishlistItems.includes(product.name.EN)}
                       onToggleWishlist={onToggleWishlist}
                     />
                   ))}
@@ -638,7 +700,7 @@ function FilterSection({ title, children }: { title: string, children: React.Rea
   );
 }
 
-const ProductListingCard: React.FC<{ 
+export const ProductListingCard: React.FC<{ 
   product: Product,
   lang: string,
   onAddToCart: (name: string, quantity?: number, price?: number) => void,
@@ -673,7 +735,7 @@ const ProductListingCard: React.FC<{
 
         {/* Wishlist Button */}
         <button 
-          onClick={(e) => { e.preventDefault(); onToggleWishlist(product.name); }}
+          onClick={(e) => { e.preventDefault(); onToggleWishlist(product.name.EN); }}
           className={`absolute top-3 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isWishlisted ? 'text-[#E27D60] border-[#E27D60]/20' : 'text-muted-foreground hover:text-brand-teal'}`}
         >
           <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isWishlisted ? 'fill-[#E27D60]' : ''}`} />
@@ -699,7 +761,7 @@ const ProductListingCard: React.FC<{
             </button>
           </div>
           <button 
-            onClick={(e) => { e.preventDefault(); onAddToCart(product.name, quantity, product.price); setQuantity(1); }}
+            onClick={(e) => { e.preventDefault(); onAddToCart(product.name.EN, quantity, product.price); setQuantity(1); }}
             className="w-full bg-brand-teal text-white font-bold py-2.5 rounded-xl shadow-[0_4px_14px_0_rgba(45,212,191,0.39)] hover:bg-brand-teal-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
           >
             <ShoppingCart className="w-4 h-4" />
@@ -720,7 +782,7 @@ const ProductListingCard: React.FC<{
           )}
         </div>
         <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug line-clamp-2 min-h-[2.75rem] mb-2 group-hover:text-brand-teal transition-colors">
-          {product.name}
+          {product.name[lang as 'EN' | 'TR'] || product.name.EN}
         </h3>
         
         <div className="flex items-center gap-1.5 mb-4 min-h-[1.25rem]">
@@ -752,7 +814,7 @@ const ProductListingCard: React.FC<{
             
             {/* Mobile / Tablet Add to Cart Button */}
             <button 
-              onClick={(e) => { e.preventDefault(); onAddToCart(product.name, 1, product.price); }}
+              onClick={(e) => { e.preventDefault(); onAddToCart(product.name.EN, 1, product.price); }}
               className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-teal text-white flex items-center justify-center hover:bg-brand-teal-dark active:scale-95 transition-all shadow-[0_4px_14px_0_rgba(45,212,191,0.2)]"
               aria-label="Add to cart"
             >

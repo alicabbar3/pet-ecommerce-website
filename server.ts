@@ -8,15 +8,71 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
+  const REAL_GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const REAL_RESEND_API_KEY = process.env.RESEND_API_KEY;
+  console.log('API key at start:', REAL_GEMINI_API_KEY?.substring(0,4));
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
 
+  // AI Chat Route
+  app.post('/api/ai-chat', async (req, res) => {
+    try {
+      const apiKey = REAL_GEMINI_API_KEY;
+      const { messages, lang } = req.body;
+      
+      // If API key is missing or is the default placeholder, use a simulated response
+      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || !apiKey.startsWith('AIza')) {
+        console.log('Using simulated AI response due to missing or placeholder API key.');
+        const isTr = lang === 'TR';
+        
+        // Return a realistic auto-responder based on their message
+        setTimeout(() => {
+          return res.status(200).json({ 
+            reply: isTr 
+              ? 'Destek ekibimiz şu anda çok yoğun ancak talebinizi aldık. Lütfen sipariş numaranızı iletebilir misiniz? (Not: Gemini API yapılandırılmadığı için bu otomatik bir yanıttır.)' 
+              : 'Our support team is currently experiencing high volume, but we have received your request. Could you please provide your order number? (Note: This is an auto-reply since the Gemini API key is not configured or is a placeholder.)'
+          });
+        }, 1500);
+        return;
+      }
+
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const systemInstruction = `You are a helpful and professional customer support AI assistant for Vivia Pet. You solve customer problems related to pet products, order support, and general inquiries. 
+      Respond consistently in the user's preferred language (currently: ${lang}).
+      Keep responses concise, helpful, and friendly. Do not use markdown unless necessary for links. If the user issue is complex or angry, offer to escalate to a human agent.`;
+      
+      const history = messages.slice(0, -1).map((m: any) => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: m.content }]
+      }));
+      
+      const latestMessage = messages[messages.length - 1].content;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          ...history,
+          { role: 'user', parts: [{ text: latestMessage }] }
+        ],
+        config: { systemInstruction }
+      });
+      
+      return res.status(200).json({ reply: response.text });
+    } catch (err) {
+      console.error('AI chat error:', err);
+      const prefix = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 4) : 'none';
+      return res.status(500).json({ error: String(err), prefix });
+    }
+  });
+
   // API Route for Emails
   app.post('/api/email', async (req, res) => {
     try {
-      const apiKey = process.env.RESEND_API_KEY;
+      const apiKey = REAL_RESEND_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ error: 'RESEND_API_KEY environment variable is missing.' });
       }

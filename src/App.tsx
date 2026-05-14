@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import turkeyData from './turkeyData';
 import { CATEGORIES } from './categories';
-import CategoryPage from './CategoryPage';
+import CategoryPage, { ProductListingCard, generateDummyProducts } from './CategoryPage';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Phone, 
@@ -62,218 +62,7 @@ const BubblesIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-type Lang = 'EN' | 'TR';
-
-const LangContext = createContext<{ lang: Lang, setLang: (l: Lang) => void }>({ lang: 'TR', setLang: () => {} });
-export const useLang = () => useContext(LangContext);
-
-const TR_DICT: Record<string, string> = {
-  // Header / Navigation
-  "Services": "Hizmetler",
-  "About": "Hakkımızda",
-  "Location": "Konum",
-  "Cart": "Sepet",
-  "Contact Us": "Bize Ulaşın",
-
-  // Hero
-  "Premium Services & Beyond": "Premium Hizmetler ve Ötesi",
-  "Personalize Profile": "Profili Kişiselleştir",
-  "Message WhatsApp": "WhatsApp'tan Yazın",
-  "For Your Companion": "Dostunuz İçin",
-  "Premium Nutrition": "Premium Beslenme",
-  "Smart Sub: Active": "Akıllı Abonelik: Aktif",
-  "Water Fountain Filters": "Su Pınarı Filtreleri",
-  "Ready for pickup tomorrow": "Yarın teslim alınmaya hazır",
-
-  // Services Catalog
-  "Complete Care Catalog": "Kapsamlı Bakım Kataloğu",
-  "Dog": "Köpek",
-  "Cat": "Kedi",
-  "Avian": "Kuş",
-  "Aquatic": "Sucul",
-  "Rodent": "Kemirgen",
-  "Reptile": "Sürüngen",
-  
-  "Comfort Collars": "Konforlu Tasmalar",
-  "Training Treats": "Eğitim Ödülleri",
-  "Orthopedic Beds": "Ortopedik Yataklar",
-  "Interactive Toys": "İnteraktif Oyuncaklar",
-  "Healthcare": "Sağlık ve Bakım",
-  
-  "Grain-Free Diet": "Tahılsız Diyet",
-  "Odorless Litter": "Kokusuz Kum",
-  "Cozy Beds": "Rahat Yataklar",
-  "Scratching Posts": "Tırmalama Tahtaları",
-  "Feather Toys": "Tüylü Oyuncaklar",
-  "Malt Pastes": "Malt Macunları",
-  "Water Fountains": "Su Pınarları",
-  
-  "Seed Mixes": "Yem Karışımları",
-  "Spacious Cages": "Geniş Kafesler",
-  "Natural Perches": "Doğal Tünekler",
-  "Smart Feeders": "Akıllı Yemlikler",
-  "Bell Swings": "Zilli Salıncaklar",
-  "Baths": "Banyoluklar",
-  
-  "Flake Food": "Pul Yem",
-  "Glass Aquariums": "Cam Akvaryumlar",
-  "Silent Filtration": "Sessiz Filtreler",
-  "Decorations": "Dekorasyonlar",
-  "Water Care": "Su Bakımı",
-  
-  "Pellet Mix": "Pelet Karışımı",
-  "Multi-level Cages": "Çok Katlı Kafesler",
-  "Running Wheels": "Egzersiz Çarkları",
-  "Chew Toys": "Kemirme Oyuncakları",
-  "Wooden Huts": "Ahşap Kulübeler",
-
-  "Live/Dried Food": "Canlı/Kuru Yem",
-  "Glass Terrariums": "Cam Teraryumlar",
-  "UVB Lamps": "UVB Lambalar",
-  "Thermostats": "Termostatlar",
-  "Hygrometers": "Higrometreler",
-
-  // Flavors / Ingredients
-  "Chicken": "Tavuk",
-  "Salmon": "Somon",
-  "Lamb": "Kuzu",
-  "Beef": "Sığır Eti",
-  "Turkey": "Hindi",
-  "Ocean Fish": "Okyanus Balığı",
-  "Vegetable": "Sebze",
-  "Rabbit": "Tavşan",
-  "Mixed Seeds": "Karışık Tohumlar",
-  "Fruit": "Meyve",
-  "Honey": "Bal",
-  "Nut": "Fındık/Fıstık",
-  "Eucalyptus": "Okaliptüs",
-  "Algae": "Yosun",
-  "Krill": "Krill",
-  "Bloodworms": "Kan Kurdu",
-  "Color Enhancing": "Renk Geliştirici",
-  "Spirulina": "Spirulina",
-  "Alfalfa": "Yonca",
-  "Timothy Hay": "Çayır Otu",
-  "Apple": "Elma",
-  "Carrot": "Havuç",
-  "Mixed Berries": "Orman Meyveleri",
-  "Crickets": "Cırcır Böceği",
-  "Mealworms": "Un Kurdu",
-  "Calcium Coated": "Kalsiyum Kaplı",
-  "Vegetable Blend": "Sebze Karışımı",
-  "Standard": "Standart",
-
-  // Ages
-  "Puppy/Kitten": "Yavru",
-  "Adult": "Yetişkin",
-  "Senior": "Yaşlı",
-  "All Life Stages": "Tüm Yaşam Evreleri",
-  "Baby": "Yavru",
-  "Juvenile": "Genç",
-  "All": "Tümü",
-
-  // Sizes
-  "Small": "Küçük",
-  "Medium": "Orta",
-  "Large": "Büyük",
-  "All Breeds": "Tüm Irklar",
-  "Small Bird": "Küçük Kuş",
-  "Medium Bird": "Orta Boy Kuş",
-  "Parrot": "Papağan",
-  "Small Pet": "Küçük Evcil Hayvan",
-  "Hamster/Mouse": "Hamster/Fare",
-  "Rabbit/Guinea Pig": "Tavşan/Gine Domuzu",
-
-  // Materials
-  "Plastic": "Plastik",
-  "Stainless Steel": "Paslanmaz Çelik",
-  "Ceramic": "Seramik",
-  "Silicone": "Silikon",
-  "Nylon": "Naylon",
-  "Leather": "Deri",
-  "Fleece": "Polar",
-  "Wood": "Ahşap",
-  "Metal": "Metal",
-  "Cuttlebone": "Mürekkep Balığı Kemiği",
-  "Natural Branch": "Doğal Dal",
-  "Glass": "Cam",
-  "Acrylic": "Akrilik",
-  "Sponge": "Sünger",
-  "Ceramic Rings": "Seramik Halkalar",
-  "Paper": "Kağıt",
-  "Corn Cob": "Mısır Koçanı",
-  "Mesh": "File",
-  "Resin": "Reçine",
-  "Cork Bark": "Mantar Kabuğu",
-  "Sand": "Kum",
-  "Coco Husk": "Hindistan Cevizi Torfu",
-
-  // Trust Section
-  "Why shop with Vivia?": "Neden Vivia'yı seçmelisiniz?",
-  "Fast & Accessible": "Hızlı ve Ulaşılabilir",
-  "Wide Ranging Expertise": "Geniş Uzmanlık Alanı",
-  "Direct Communication": "Doğrudan İletişim",
-  "Always Online": "Her Zaman Çevrimiçi",
-  "Shop Now": "Alışverişe Başla",
-  "Continue shopping": "Alışverişe Devam Et",
-
-  // Contact
-  "Ready to order?": "Sipariş vermeye hazır mısınız?",
-  "WhatsApp Us": "WhatsApp'tan Yazın",
-  "Call directly": "Hemen Arayın",
-  "Contact Information": "İletişim Bilgileri",
-  "Copied!": "Kopyalandı!",
-
-  // E-commerce
-  "Search...": "Ürün, kategori veya marka ara...",
-  "New Products": "Yeni Ürünler",
-  "Deals": "Kampanyalar",
-  "Login": "Giriş Yap",
-  "Sign Up": "Üye Ol",
-  "First Name": "Ad",
-  "Last Name": "Soyad",
-  "E-Mail": "E-Posta",
-  "Phone Number": "Telefon Numarası",
-  "Password": "Şifre",
-  "Create Account": "Hesap Oluştur",
-  "Sign in to your account": "Hesabınıza giriş yapın",
-  "Create a new account": "Yeni bir hesap oluşturun",
-  "Remember Me": "Beni Hatırla",
-  "I have read and agree to the KVKK Privacy Policy.": "KVKK Aydınlatma Metni'ni okudum ve kabul ediyorum.",
-  "I want to receive marketing emails and SMS about discounts and new products.": "Kampanya ve indirimlerden e-posta ve SMS ile haberdar olmak istiyorum.",
-  "Account created successfully!": "Hesabınız başarıyla oluşturuldu!",
-
-  // Footer
-  "Terms": "Şartlar",
-  "Privacy": "Gizlilik",
-
-  // Modals
-  "Who are we shopping for?": "Kimin için alışveriş yapıyoruz?",
-  "Set up a profile to get tailored recommendations and automatic filtering.": "Size özel tavsiyeler ve otomatik filtreleme için profilinizi oluşturun.",
-  "Continue": "Devam",
-  "Profile Created!": "Profil Oluşturuldu!",
-  "Your shopping experience is now tailored for your ": "Alışveriş deneyiminiz artık şunun için özelleştirildi: ",
-  "Smart subscriptions are enabled.": "Akıllı abonelikler devrede.",
-  "Start Shopping": "Alışverişe Başla",
-  "Estimated total via WhatsApp": "Tahmini toplam (WhatsApp ile iletilecektir)",
-  "Confirm with Store": "Mağaza ile Onaylayınız",
-  "Checkout Securely": "Güvenle Siparişi Tamamla",
-  "Order Received!": "Sipariş Alındı!",
-  "Back to Catalog": "Kataloğa Dön",
-
-  // Order Tracking
-  "Track Your Order": "Siparişinizi Takip Edin",
-  "Order ID": "Sipariş Numarası",
-  "Enter your order ID (e.g., VIVIA-123)": "Sipariş numaranızı girin (örn. VIVIA-123)",
-  "Track Order": "Siparişi Sorgula",
-  "Processing": "Hazırlanıyor",
-  "Shipped": "Kargoya Verildi",
-  "Delivered": "Teslim Edildi",
-  "Expected Delivery:": "Tahmini Teslimat:",
-  "Please enter a valid order ID.": "Lütfen geçerli bir sipariş numarası giriniz."
-};
-
-export const t = (text: string, lang: Lang) => lang === 'TR' ? (TR_DICT[text] || text) : text;
+import { Lang, LangContext, useLang, t } from './i18n';
 
 // Data
 const CONTACT = {
@@ -830,8 +619,10 @@ function Header({
   );
 }
 
-function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () => void, onStartPetProfile: () => void }) {
+function Hero({ onStartOnboarding, onStartPetProfile, userPets }: { onStartOnboarding: () => void, onStartPetProfile: () => void, userPets: any[] }) {
   const { lang } = useLang();
+  
+  const activePetsCount = userPets.filter(p => p.name).length;
 
   return (
     <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -850,10 +641,10 @@ function Hero({ onStartOnboarding, onStartPetProfile }: { onStartOnboarding: () 
                {t("Shop Now", lang)}
              </button>
            </Tooltip>
-           <Tooltip text={lang === 'TR' ? 'Hayvanınız için mağazayı kişiselleştirin' : 'Tailor your store experience'}>
+           <Tooltip text={lang === 'TR' ? 'Kişiselleştirme ekranını açın' : 'Open personalization settings'}>
              <button onClick={onStartPetProfile} className="rounded-full px-8 h-12 border-2 border-brand-teal/50 bg-brand-teal/5 hover:bg-brand-teal/10 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-brand-teal-dark flex items-center justify-center gap-2 text-base font-semibold transition-all duration-300 shadow-sm">
                <Heart className="w-5 h-5 transition-transform group-hover:scale-110" />
-               {lang === 'TR' ? 'Dostunuzu Ekleyin' : 'Personalize for your Pet'}
+               {activePetsCount > 0 ? (lang === 'TR' ? 'Profilinizi Düzenleyin' : 'Edit Pet Profile') : (lang === 'TR' ? 'Dostunuzu Ekleyin' : 'Personalize for your Pet')}
              </button>
            </Tooltip>
         </div>
@@ -1007,20 +798,31 @@ function Services({
   selectedPetsFilter?: string[],
   userPets?: PetProfileData[]
 }) {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
 
   // Combine selectedPetsFilter and userPets into a unified view of what the user owns
   const combinedPets = Array.from(new Set([
     ...selectedPetsFilter.map(p => p.toLowerCase()),
-    ...userPets.filter(p => p.type).map(p => p.type.toLowerCase())
+    ...userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase())
   ]));
 
-  const filteredServices = SERVICES.filter(service => 
+  const filteredServices = Object.values(SERVICES).filter(service => 
     combinedPets.length === 0 || hover_match(service.id, combinedPets)
   );
 
   function hover_match(serviceId: string, pets: string[]) {
     return pets.some(p => p.includes(serviceId) || serviceId.includes(p));
+  }
+
+  // Generate personalized products instead of showing categories if pets are selected
+  let recommendedProducts: any[] = [];
+  if (combinedPets.length > 0) {
+    let mixedProducts: any[] = [];
+    for (const pet of combinedPets) {
+       const items = generateDummyProducts(pet + 's', Math.floor(8 / combinedPets.length));
+       mixedProducts = [...mixedProducts, ...items];
+    }
+    recommendedProducts = mixedProducts.sort(() => 0.5 - Math.random());
   }
 
   return (
@@ -1036,17 +838,30 @@ function Services({
             </a>
          </div>
 
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {filteredServices.map((service) => (
-              <ProductCard 
-                key={service.id} 
-                service={service} 
-                lang={lang} 
-                onAddToCart={onAddToCart} 
-                wishlistItems={wishlistItems} 
-                onToggleWishlist={onToggleWishlist} 
-              />
-            ))}
+         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {combinedPets.length > 0 ? (
+              recommendedProducts.map((product) => (
+                <ProductListingCard 
+                  key={product.id} 
+                  product={product as any} 
+                  lang={lang as any} 
+                  onAddToCart={onAddToCart} 
+                  isWishlisted={wishlistItems.includes(product.name.EN)} 
+                  onToggleWishlist={onToggleWishlist} 
+                />
+              ))
+            ) : (
+              filteredServices.slice(0, 4).map((service) => (
+                <ProductCard 
+                  key={service.id} 
+                  service={service} 
+                  lang={lang} 
+                  onAddToCart={onAddToCart} 
+                  wishlistItems={wishlistItems} 
+                  onToggleWishlist={onToggleWishlist} 
+                />
+              ))
+            )}
          </div>
          
          <div className="mt-8 text-center sm:hidden">
@@ -2888,11 +2703,11 @@ export const getBasePriceFromName = (name: string) => {
   
   for (const s of SERVICES) {
     const enTitle = s.title;
-    const trTitle = TR_DICT[s.title] || s.title;
+    const trTitle = t(s.title, 'TR');
     
     for (const item of s.items) {
       const enItem = item;
-      const trItem = TR_DICT[item] || item;
+      const trItem = t(item, 'TR');
       
       const enStr = `${enTitle} - ${enItem}`;
       const trStr = `${trTitle} - ${trItem}`;
@@ -2918,6 +2733,8 @@ export const getPriceFromName = (name: string) => {
   const hasDiscount = hash % 3 === 0;
   return hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
 };
+
+import SupportSystem from './SupportWidget';
 
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -3115,7 +2932,7 @@ export default function App() {
           />
         ) : (
           <main>
-            <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} />
+            <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} userPets={userPets} />
             <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} selectedPetsFilter={selectedPetsFilter} userPets={userPets} />
             <OrderTrackingSection />
             <TrustSection />
@@ -3150,6 +2967,10 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Global Support Widget */}
+        <SupportSystem />
+
       </div>
     </LangContext.Provider>
   );
