@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CATEGORIES } from './categories';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Filter, X, ChevronDown, Heart, Search, Check, ShoppingCart, Loader2, Minus, Plus, Package } from 'lucide-react';
+import { ChevronRight, Filter, X, ChevronDown, Heart, Search, Check, ShoppingCart, Loader2, Minus, Plus, Package, FolderPlus } from 'lucide-react';
 import { useLang, t, Lang } from './i18n'; 
+import { generateProductsByCategoryId } from './productGenerator';
 
 export type Product = {
   id: string;
@@ -27,243 +28,29 @@ export type Product = {
 
 // Generate deterministic dummy data based on ID
 export function generateDummyProducts(categoryId: string, count: number): Product[] {
-  let brands: string[] = [];
-  let nouns: { en: string, tr: string, isFood?: boolean, flavorOrMat?: string }[] = [];
-  let weights: string[] = [];
-  let ages: string[] = [];
-  let sizes: string[] = [];
-
-  const catLower = categoryId.toLowerCase();
-  const isDog = catLower.includes('dog');
-  const isCat = catLower.includes('cat');
-  const isBird = catLower.includes('bird') || catLower.includes('avian');
-  const isFish = catLower.includes('fish') || catLower.includes('aquarium') || catLower.includes('aquatic');
-  const isRodent = catLower.includes('rodent');
-  const isReptile = catLower.includes('reptile') || catLower.includes('terrarium');
-  
-  if (isDog) {
-    brands = ['Royal Canin', 'Pro Plan', 'Acana', 'Orijen', "Hill's Science Diet", 'Taste of the Wild', 'Blue Buffalo', 'KONG', 'Ruffwear', 'Chuckit!', 'Julius-K9', 'Nylabone'];
-    nouns = [
-      { en: 'Adult Dry Dog Food', tr: 'Yetişkin Kuru Köpek Maması', isFood: true, flavorOrMat: 'Chicken & Brown Rice' },
-      { en: 'Grain-Free Puppy Formula', tr: 'Tahılsız Yavru Köpek Formülü', isFood: true, flavorOrMat: 'Salmon & Sweet Potato' },
-      { en: 'Weight Management Kibble', tr: 'Kilo Kontrol Maması', isFood: true, flavorOrMat: 'Turkey & Venison' },
-      { en: 'Orthopedic Memory Foam Bed', tr: 'Ortopedik Hafızalı Sünger Yatak', isFood: false, flavorOrMat: 'Plush Fabric' },
-      { en: 'Heavy Duty Retractable Leash', tr: 'Ağır Hizmet Tipi Makaralı Tasma', isFood: false, flavorOrMat: 'Nylon' },
-      { en: 'Extreme Chew Rubber Toy', tr: 'Ekstra Dayanıklı Kauçuk Sesli Oyuncak', isFood: false, flavorOrMat: 'Natural Rubber' },
-      { en: 'No-Pull Training Harness', tr: 'Çekme Önleyici Eğitim Göğüs Tasması', isFood: false, flavorOrMat: 'Breathable Mesh' },
-      { en: 'Dental Chew Sticks', tr: 'Diş Temizleyici Çiğneme Çubukları', isFood: true, flavorOrMat: 'Mint & Parsley' },
-      { en: 'Oatmeal & Aloe Shampoo', tr: 'Yulaf ve Aloe Veralı Şampuan', isFood: false, flavorOrMat: 'Liquid' },
-      { en: 'Joint Support Supplements', tr: 'Eklem Destek Takviyesi', isFood: true, flavorOrMat: 'Beef Liver' }
-    ];
-    weights = ['1.5 kg', '3 kg', '7 kg', '12 kg'];
-    ages = ['Puppy', 'Adult', 'Senior'];
-    sizes = ['Small Breed', 'Medium Breed', 'Large Breed'];
-  } else if (isCat) {
-    brands = ['Royal Canin', 'Pro Plan', 'N&D', 'Whiskas', 'Gimcat', 'Catit', 'Felix', 'Orijen', 'Tidy Cats', 'Ever Clean'];
-    nouns = [
-      { en: 'Indoor Dry Cat Food', tr: 'Evcil Kedi Kuru Maması', isFood: true, flavorOrMat: 'Chicken & Rice' },
-      { en: 'Urinary Tract Health Formula', tr: 'İdrar Yolu Sağlığı Formülü', isFood: true, flavorOrMat: 'Ocean Fish' },
-      { en: 'Hairball Control Paste', tr: 'Tüy Yumağı Önleyici Macun', isFood: true, flavorOrMat: 'Malt' },
-      { en: 'Premium Wet Food Pouches', tr: 'Premium Yaş Mama Keseleri', isFood: true, flavorOrMat: 'Salmon in Gravy' },
-      { en: 'Clumping Bentonite Litter', tr: 'Topaklanan Bentonit Kedi Kumu', isFood: false, flavorOrMat: 'Bentonite Clay' },
-      { en: 'Flushable Tofu Litter', tr: 'Tuvalete Atılabilir Tofu Kum', isFood: false, flavorOrMat: 'Natural Tofu' },
-      { en: 'Multi-Level Cat Tree', tr: 'Çok Katlı Tırmalama Ağacı', isFood: false, flavorOrMat: 'Sisal & Plush' },
-      { en: 'Interactive Laser Toy', tr: 'İnteraktif Lazer Oyuncak', isFood: false, flavorOrMat: 'Plastic' },
-      { en: 'Stainless Steel Water Fountain', tr: 'Paslanmaz Çelik Su Şelalesi', isFood: false, flavorOrMat: 'Stainless Steel' },
-      { en: 'Self-Cleaning Litter Box', tr: 'Otomatik Temizlenen Kum Kabı', isFood: false, flavorOrMat: 'ABS Plastic' }
-    ];
-    weights = ['1.5 kg', '2 kg', '5 kg', '10 L', '10 kg'];
-    ages = ['Kitten', 'Adult', 'Senior'];
-    sizes = ['All Cats'];
-  } else if (isBird) {
-    brands = ['Versele-Laga', 'Hagen', 'ZuPreem', 'Kaytee', 'Vitakraft', 'Penn-Plax'];
-    nouns = [
-      { en: 'Premium Seed Blend', tr: 'Premium Tohum Karışımı', isFood: true, flavorOrMat: 'Mixed Seeds & Nuts' },
-      { en: 'Fruit & Nut Pellets', tr: 'Meyveli ve Kuruyemişli Peletler', isFood: true, flavorOrMat: 'Tropical Fruit' },
-      { en: 'Calcium Cuttlebone', tr: 'Kalsiyumlu Kalamar Kemiği', isFood: true, flavorOrMat: 'Natural Cuttlebone' },
-      { en: 'Spacious Flight Cage', tr: 'Geniş Uçuş Kafesi', isFood: false, flavorOrMat: 'Powder-coated Metal' },
-      { en: 'Natural Wood Perch', tr: 'Doğal Ahşap Tünek', isFood: false, flavorOrMat: 'Coffee Wood' },
-      { en: 'Colorful Foraging Toy', tr: 'Renkli Yapboz Oyuncak', isFood: false, flavorOrMat: 'Wood & Paper' },
-      { en: 'Hanging Bird Bath', tr: 'Asmalı Kuş Banyosu', isFood: false, flavorOrMat: 'Acrylic' }
-    ];
-    weights = ['500 g', '1 kg', '2.5 kg'];
-    ages = ['All Life Stages'];
-    sizes = ['Small Birds', 'Parrots'];
-  } else if (isFish) {
-    brands = ['Fluval', 'Tetra', 'Hikari', 'Seachem', 'API', 'Eheim', 'Aqueon'];
-    nouns = [
-      { en: 'Color Enhancing Flakes', tr: 'Renk Arttırıcı Pul Yem', isFood: true, flavorOrMat: 'Shrimp & Algae' },
-      { en: 'Bottom Feeder Wafers', tr: 'Dip Yemi Gofretleri', isFood: true, flavorOrMat: 'Spirulina' },
-      { en: 'Canister Filter 1000L/H', tr: 'Dış Filtre 1000L/S', isFood: false, flavorOrMat: 'Plastic & Ceramic' },
-      { en: 'Submersible Aquarium Heater', tr: 'Dalgıç Akvaryum Isıtıcı', isFood: false, flavorOrMat: 'Quartz Glass' },
-      { en: 'Water Conditioner & Dechlorinator', tr: 'Su Düzenleyici ve Klor Giderici', isFood: false, flavorOrMat: 'Liquid Solution' },
-      { en: 'LED Planted Tank Light', tr: 'Bitkili Akvaryum LED Aydınlatma', isFood: false, flavorOrMat: 'Aluminum' },
-      { en: 'Natural Driftwood Decor', tr: 'Doğal Yati Kökü Dekor', isFood: false, flavorOrMat: 'Wood' }
-    ];
-    weights = ['50 g', '100 g', '250 g', '500 ml'];
-    ages = ['All Life Stages'];
-    sizes = ['All Fish'];
-  } else if (isRodent) {
-    brands = ['Oxbow', 'Supreme Petfoods', 'Mazuri', 'Kaytee', 'Living World', 'Ferplast'];
-    nouns = [
-      { en: 'Timothy Hay First Cut', tr: 'Birinci Hasat Timothy Otu', isFood: true, flavorOrMat: 'Timothy Hay' },
-      { en: 'Adult Guinea Pig Pellets', tr: 'Yetişkin Ginepig Pelet Yemi', isFood: true, flavorOrMat: 'Alfalfa & Vitamin C' },
-      { en: 'Paper Bedding Odor Control', tr: 'Koku Kontrollü Kağıt Taban Malzemesi', isFood: false, flavorOrMat: 'Recycled Paper' },
-      { en: 'Silent Spinner Wheel', tr: 'Sessiz Egzersiz Çarkı', isFood: false, flavorOrMat: 'Plastic & Ball Bearings' },
-      { en: 'Wooden Hideout Hut', tr: 'Ahşap Saklanma Evi', isFood: false, flavorOrMat: 'Pine Wood' },
-      { en: 'Apple Wood Chew Sticks', tr: 'Elma Ağacı Çiğneme Çubukları', isFood: true, flavorOrMat: 'Apple Wood' }
-    ];
-    weights = ['500 g', '1 kg', '2 kg', '10 L'];
-    ages = ['Young', 'Adult'];
-    sizes = ['Small Rodent', 'Rabbit/Guinea Pig'];
-  } else if (isReptile) {
-    brands = ['Exo Terra', 'Zoo Med', 'Fluker\'s', 'Repashy', 'Zilla', 'Arcadia'];
-    nouns = [
-      { en: 'Crusted Gecko Diet', tr: 'Krested Geko Besini', isFood: true, flavorOrMat: 'Papaya & Mango' },
-      { en: 'Calcium Powder with D3', tr: 'D3 Vitaminli Kalsiyum Tozu', isFood: true, flavorOrMat: 'Calcium Carbonate' },
-      { en: 'UVB T5 Fluorescent Bulb', tr: 'UVB T5 Floresan Ampul', isFood: false, flavorOrMat: 'Glass' },
-      { en: 'Digital Thermometer & Hygrometer', tr: 'Dijital Termometre & Higrometre', isFood: false, flavorOrMat: 'Electronic' },
-      { en: 'Heat Mat with Thermostat', tr: 'Termostatlı Isıtıcı Ped', isFood: false, flavorOrMat: 'PVC' },
-      { en: 'Coco Husk Substrate', tr: 'Hindistan Cevizi Torfu', isFood: false, flavorOrMat: 'Coconut Fiber' }
-    ];
-    weights = ['100 g', '250 g', '1 kg', '8 L'];
-    ages = ['All Life Stages'];
-    sizes = ['All Reptiles'];
-  } else {
-    // Generic fallback for mixed "personalized" categories
-    brands = ['Pro Plan', 'Royal Canin', 'Trixie', 'KONG', 'Orijen', 'Versele-Laga', 'Tetra'];
-    nouns = [
-      { en: 'Premium Pet Nutrition Set', tr: 'Premium Evcil Hayvan Beslenme Seti', isFood: true, flavorOrMat: 'Mixed Proteins' },
-      { en: 'Luxury Pet Bed', tr: 'Lüks Evcil Hayvan Yatağı', isFood: false, flavorOrMat: 'Plush & Memory Foam' },
-      { en: 'Advanced Pet Care Kit', tr: 'Gelişmiş Evcil Hayvan Bakım Seti', isFood: false, flavorOrMat: 'Various' },
-      { en: 'Automatic Smart Feeder', tr: 'Otomatik Akıllı Besleyici', isFood: false, flavorOrMat: 'BPA-free Plastic & Metal' },
-      { en: 'Interactive Training Toy', tr: 'İnteraktif Eğitim Oyuncağı', isFood: false, flavorOrMat: 'Durable Rubber' }
-    ];
-    weights = ['1 kg', '2 kg', '5 kg'];
-    ages = ['All Life Stages'];
-    sizes = ['All Sizes'];
-  }
-  
-  const products: any[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    const seed = i * 1337 + categoryId.length * 7;
-    
-    const brand = brands[seed % brands.length];
-    const noun = nouns[seed % nouns.length];
-    const isEdible = noun.isFood;
-    
-    let flavor, weight, age, breedSize, material;
-    
-    if (isEdible) {
-      flavor = noun.flavorOrMat;
-      weight = weights[seed % weights.length];
-      age = ages[seed % ages.length];
-      if (isDog || isCat || isRodent) breedSize = sizes[seed % sizes.length];
-    } else {
-      material = noun.flavorOrMat;
-      if (isDog || isCat || isBird || isRodent || isReptile) {
-         breedSize = sizes[seed % sizes.length];
-      }
-    }
-    
-    // Calculate realistic price based on category
-    let basePrice = 50;
-    if (noun.en.includes('Food') || noun.en.includes('Kibble') || noun.en.includes('Formula') || noun.en.includes('Diet') || noun.en.includes('Pellets')) {
-      basePrice = isDog || isCat ? 400 + (seed % 1500) : 100 + (seed % 300);
-    } else if (noun.en.includes('Wet') || noun.en.includes('Pouches') || noun.en.includes('Paste')) {
-      basePrice = 40 + (seed % 60);
-    } else if (noun.en.includes('Treat') || noun.en.includes('Chew') || noun.en.includes('Sticks')) {
-      basePrice = 80 + (seed % 150);
-    } else if (noun.en.includes('Toy') || noun.en.includes('Leash')) {
-      basePrice = 150 + (seed % 300);
-    } else if (noun.en.includes('Bed') || noun.en.includes('Tree') || noun.en.includes('Fountain') || noun.en.includes('Filter') || noun.en.includes('Cage')) {
-      basePrice = 800 + (seed % 3000);
-    } else if (noun.en.includes('Litter') || noun.en.includes('Substrate') || noun.en.includes('Bedding')) {
-      basePrice = 200 + (seed % 300);
-    } else {
-      basePrice = 150 + (seed % 800);
-    }
-
-    const hasDiscount = i % 5 === 0 && basePrice > 100;
-    const discount = hasDiscount ? 10 + (seed % 30) : 0;
-    const price = hasDiscount ? basePrice * (1 - discount / 100) : basePrice;
-    
-    // Choose realistic Unsplash placeholders
-    let imageKeyword = 'pet%20supplies';
-    if (isDog) imageKeyword = isEdible ? 'dog%20food' : 'dog%20toy';
-    if (isCat) imageKeyword = isEdible ? 'cat%20food' : 'cat%20toy';
-    if (isBird) imageKeyword = 'bird%20cage';
-    if (isFish) imageKeyword = 'aquarium';
-    if (isReptile) imageKeyword = 'reptile%20terrarium';
-    
-    // Specific noun bypasses
-    if (noun.en.toLowerCase().includes('shampoo')) imageKeyword = 'pet%20shampoo';
-    if (noun.en.toLowerCase().includes('bed')) imageKeyword = 'dog%20bed';
-    if (noun.en.toLowerCase().includes('fountain')) imageKeyword = 'cat%20water%20fountain';
-    
-    const imageUrl = `https://source.unsplash.com/400x400/?${imageKeyword}&sig=${seed}`;
-
-    const generateBadges = () => {
-      const b = [];
-      if (seed % 5 === 0) b.push('New');
-      if (seed % 7 === 0) b.push('Bestseller');
-      if (seed % 11 === 0) b.push('Limited');
-      return b.slice(0, 2);
-    };
-    
-    let nameEN = `${brand} ${noun.en}`;
-    let nameTR = `${brand} ${noun.tr}`;
-    if (isEdible && weight) {
-      nameEN += ` ${weight}`;
-      nameTR += ` ${weight}`;
-    }
-
-    products.push({
-      id: `${categoryId}-prod-${i}`,
-      name: { 
-        EN: nameEN, 
-        TR: nameTR
-      },
-      image: imageUrl,
-      price: Math.round(price * 100) / 100,
-      oldPrice: hasDiscount ? basePrice : undefined,
-      discount: hasDiscount ? discount : undefined,
-      rating: null,
-      reviews: null,
-      sold: seed % 2000,
-      badges: generateBadges(),
-      
-      brand,
-      flavor,
-      weight,
-      age,
-      breedSize,
-      material,
-    });
-  }
-  
-  return products;
+  return generateProductsByCategoryId(categoryId, categoryId, count);
 }
 
 export default function CategoryPage({ 
   categoryId, 
   onAddToCart, 
-  wishlistItems, 
-  onToggleWishlist,
+  savedProductNames, 
+  onSaveToFolder,
   userPets = [],
   selectedPets = []
 }: { 
   categoryId: string, 
   onAddToCart: (name: string, quantity?: number, price?: number) => void,
-  wishlistItems: string[],
-  onToggleWishlist: (name: string) => void,
+  savedProductNames: string[],
+  onSaveToFolder: (name: string) => void,
   userPets?: any[],
   selectedPets?: string[]
 }) {
   const { lang } = useLang();
   
   const [products, setProducts] = useState<Product[]>([]);
+  const [visibleCount, setVisibleCount] = useState(24);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState('recommended');
   
@@ -294,10 +81,32 @@ export default function CategoryPage({
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
 
+  const getOrganicCount = (catId: string) => {
+    let hash = 0;
+    for (let i = 0; i < catId.length; i++) {
+       hash = catId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash % 290) + 60;
+  };
+
+  const resetFilters = () => {
+    setSelectedBrands([]);
+    setPriceRange([0, 5000]);
+    setSelectedFlavors([]);
+    setSelectedWeights([]);
+    setSelectedAges([]);
+    setSelectedSizes([]);
+    setSelectedMaterials([]);
+  };
+
   useEffect(() => {
     // Simulate loading data
+    setIsLoadingProducts(true);
     setProducts([]);
+    setVisibleCount(24);
+    resetFilters();
     const timer = setTimeout(() => {
+      setIsLoadingProducts(false);
       if (categoryId === 'personalized') {
         const combinedPets = Array.from(new Set([
           ...selectedPets.map(p => p.toLowerCase()),
@@ -305,18 +114,18 @@ export default function CategoryPage({
         ]));
         if (combinedPets.length === 0) {
           // fallback to dogs
-          setProducts(generateDummyProducts('dogs', 48));
+          setProducts(generateDummyProducts('dogs', getOrganicCount('dogs')));
         } else {
           // Generate an array of products matching those pets
           let mixedProducts: Product[] = [];
           for (const pet of combinedPets) {
-             const items = generateDummyProducts(pet + 's', Math.floor(48 / combinedPets.length));
+             const items = generateDummyProducts(pet + 's', Math.floor(getOrganicCount(pet + 's') / combinedPets.length));
              mixedProducts = [...mixedProducts, ...items];
           }
           setProducts(mixedProducts.sort(() => 0.5 - Math.random()));
         }
       } else {
-        setProducts(generateDummyProducts(categoryId, 48));
+        setProducts(generateDummyProducts(categoryId, getOrganicCount(categoryId)));
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -348,7 +157,9 @@ export default function CategoryPage({
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       return b.sold - a.sold; // recommended / bestseller
     });
-  }, [products, selectedBrands, priceRange, selectedFlavors, selectedWeights, sortBy]);
+  }, [products, selectedBrands, priceRange, selectedFlavors, selectedWeights, selectedAges, selectedSizes, selectedMaterials, sortBy]);
+
+  const hasActiveFilters = selectedBrands.length > 0 || priceRange[0] > 0 || priceRange[1] < 5000 || selectedFlavors.length > 0 || selectedWeights.length > 0 || selectedAges.length > 0 || selectedSizes.length > 0 || selectedMaterials.length > 0;
 
   const toggleFilter = (setFn: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
     setFn(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
@@ -367,11 +178,29 @@ export default function CategoryPage({
         </button>
       </div>
 
+      {hasActiveFilters && (
+        <div className="mb-4">
+          <button 
+            onClick={resetFilters}
+            className="w-full py-2.5 rounded-lg bg-secondary text-foreground text-sm font-semibold hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2"
+          >
+            <X className="w-4 h-4" />
+            {lang === 'TR' ? 'Filtreleri Temizle' : 'Clear Filters'}
+          </button>
+        </div>
+      )}
+
       {/* Brands */}
       <FilterSection title={lang === 'TR' ? 'Marka' : 'Brand'}>
         <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
           {availableBrands.map(b => (
             <label key={b} className="flex items-center gap-2 cursor-pointer group">
+              <input 
+                type="checkbox" 
+                checked={selectedBrands.includes(b)}
+                onChange={() => toggleFilter(setSelectedBrands, b)}
+                className="hidden" 
+              />
               <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBrands.includes(b) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
                 {selectedBrands.includes(b) && <Check className="w-3.5 h-3.5" />}
               </div>
@@ -509,6 +338,25 @@ export default function CategoryPage({
     </div>
   );
 
+  // Intersection observer for infinite scroll
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const first = entries[0];
+      if (first.isIntersecting && !isLoadingProducts && visibleCount < filteredProducts.length) {
+        setVisibleCount(prev => Math.min(prev + 24, filteredProducts.length));
+      }
+    }, { threshold: 0.1, rootMargin: '200px' });
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) observer.observe(currentRef);
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+      observer.disconnect();
+    };
+  }, [isLoadingProducts, visibleCount, filteredProducts.length]);
+
   return (
     <div className="min-h-screen bg-secondary/30 pt-4 pb-20">
       {/* Breadcrumbs */}
@@ -577,7 +425,7 @@ export default function CategoryPage({
             </div>
 
             {/* Product Grid */}
-            {products.length === 0 ? (
+            {isLoadingProducts ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin text-brand-teal mb-4" />
                 <p>{lang === 'TR' ? 'Ürünler yükleniyor...' : 'Loading products...'}</p>
@@ -609,14 +457,14 @@ export default function CategoryPage({
             ) : (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-8">
-                  {filteredProducts.map(product => (
+                  {filteredProducts.slice(0, visibleCount).map(product => (
                     <ProductListingCard 
                       key={product.id}
                       product={product}
                       lang={lang}
                       onAddToCart={onAddToCart}
-                      isWishlisted={wishlistItems.includes(product.name.EN)}
-                      onToggleWishlist={onToggleWishlist}
+                      isSaved={savedProductNames.includes(product.name.EN)}
+                      onSaveToFolder={onSaveToFolder}
                     />
                   ))}
                 </div>
@@ -625,11 +473,17 @@ export default function CategoryPage({
                 {filteredProducts.length > 0 && (
                   <div className="flex flex-col items-center justify-center pt-8 border-t border-border">
                     <p className="text-sm text-muted-foreground mb-4">
-                      {lang === 'TR' ? `${filteredProducts.length} ürün gösteriliyor` : `Showing ${filteredProducts.length} products`}
+                      {lang === 'TR' ? `${visibleCount < filteredProducts.length ? visibleCount : filteredProducts.length} / ${filteredProducts.length} ürün gösteriliyor` : `Showing ${visibleCount < filteredProducts.length ? visibleCount : filteredProducts.length} of ${filteredProducts.length} products`}
                     </p>
-                    <button className="px-8 py-3 rounded-xl border-2 border-brand-teal text-brand-teal font-bold hover:bg-brand-teal hover:text-white transition-all active:scale-95 flex items-center gap-2">
-                      {lang === 'TR' ? 'Daha Fazla Yükle' : 'Load More'}
-                    </button>
+                    {visibleCount < filteredProducts.length && (
+                      <button 
+                        ref={loadMoreRef}
+                        onClick={() => setVisibleCount(prev => Math.min(prev + 24, filteredProducts.length))}
+                        className="px-8 py-3 rounded-xl border-2 border-brand-teal text-brand-teal font-bold hover:bg-brand-teal hover:text-white transition-all active:scale-95 flex items-center gap-2"
+                      >
+                        {lang === 'TR' ? 'Daha Fazla Yükle' : 'Load More'}
+                      </button>
+                    )}
                   </div>
                 )}
               </>
@@ -704,14 +558,14 @@ export const ProductListingCard: React.FC<{
   product: Product,
   lang: string,
   onAddToCart: (name: string, quantity?: number, price?: number) => void,
-  isWishlisted: boolean,
-  onToggleWishlist: (name: string) => void
+  isSaved: boolean,
+  onSaveToFolder: (name: string) => void
 }> = ({ 
   product, 
   lang,
   onAddToCart,
-  isWishlisted,
-  onToggleWishlist
+  isSaved,
+  onSaveToFolder
 }) => {
   const [quantity, setQuantity] = useState(1);
 
@@ -733,12 +587,12 @@ export const ProductListingCard: React.FC<{
           ))}
         </div>
 
-        {/* Wishlist Button */}
+        {/* Folder Button */}
         <button 
-          onClick={(e) => { e.preventDefault(); onToggleWishlist(product.name.EN); }}
-          className={`absolute top-3 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isWishlisted ? 'text-[#E27D60] border-[#E27D60]/20' : 'text-muted-foreground hover:text-brand-teal'}`}
+          onClick={(e) => { e.preventDefault(); onSaveToFolder(product.name.EN); }}
+          className={`absolute top-3 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isSaved ? 'text-brand-teal border-brand-teal/20 bg-brand-teal/10' : 'text-muted-foreground hover:text-brand-teal'}`}
         >
-          <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isWishlisted ? 'fill-[#E27D60]' : ''}`} />
+          <FolderPlus className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isSaved ? 'fill-current' : ''}`} />
         </button>
 
         <Package className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground/20 group-hover:scale-110 group-hover:text-brand-teal/40 transition-all duration-700 ease-out" />
@@ -786,17 +640,10 @@ export const ProductListingCard: React.FC<{
         </h3>
         
         <div className="flex items-center gap-1.5 mb-4 min-h-[1.25rem]">
-          {product.rating != null && product.reviews != null ? (
-            <>
-              <div className="flex text-[#F4A261] text-[10px] sm:text-xs">
-                {'★'.repeat(Math.round(product.rating))}
-                <span className="text-muted-foreground opacity-30">{'★'.repeat(5 - Math.round(product.rating))}</span>
-              </div>
-              <span className="text-[10px] sm:text-xs text-muted-foreground">({product.reviews})</span>
-            </>
-          ) : (
-             <span className="text-[10px] sm:text-xs text-muted-foreground/60 italic">{lang === 'TR' ? 'Henüz değerlendirme yok' : 'No reviews'}</span>
-          )}
+          <div className="flex text-[#F4A261] text-[10px] sm:text-xs">
+            <span className="text-muted-foreground opacity-30">{'★★★★★'}</span>
+          </div>
+          <span className="text-[10px] sm:text-xs text-muted-foreground">(0)</span>
         </div>
 
         <div className="mt-auto pt-3 border-t border-border/60 flex flex-col gap-3">

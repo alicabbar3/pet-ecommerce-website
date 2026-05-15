@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useMemo } from 'react';
 import turkeyData from './turkeyData';
 import { CATEGORIES } from './categories';
 import CategoryPage, { ProductListingCard, generateDummyProducts } from './CategoryPage';
@@ -50,7 +50,8 @@ import {
   FolderOpen,
   FolderPlus,
   Bookmark,
-  Menu
+  Menu,
+  Check
 } from 'lucide-react';
 
 const BubblesIcon = ({ className }: { className?: string }) => (
@@ -77,21 +78,16 @@ const SERVICES = [
   { id: 'dog', title: 'Dog', icon: <Bone className="w-6 h-6" />, items: ['Premium Nutrition', 'Comfort Collars', 'Training Treats', 'Orthopedic Beds', 'Interactive Toys', 'Healthcare'] },
   { id: 'cat', title: 'Cat', icon: <Cat className="w-6 h-6" />, items: ['Grain-Free Diet', 'Odorless Litter', 'Cozy Beds', 'Scratching Posts', 'Feather Toys', 'Malt Pastes', 'Water Fountains'] },
   { id: 'avian', title: 'Avian', icon: <Bird className="w-6 h-6" />, items: ['Seed Mixes', 'Spacious Cages', 'Natural Perches', 'Smart Feeders', 'Bell Swings', 'Baths'] },
-  { id: 'aquatic', title: 'Aquatic', icon: <BubblesIcon className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
+  { id: 'fish', title: 'Fish', icon: <Fish className="w-6 h-6" />, items: ['Flake Food', 'Glass Aquariums', 'Silent Filtration', 'Decorations', 'Water Care'] },
   { id: 'rodent', title: 'Rodent', icon: <Rat className="w-6 h-6" />, items: ['Pellet Mix', 'Multi-level Cages', 'Running Wheels', 'Chew Toys', 'Wooden Huts'] },
   { id: 'reptile', title: 'Reptile', icon: <Turtle className="w-6 h-6" />, items: ['Live/Dried Food', 'Glass Terrariums', 'UVB Lamps', 'Thermostats', 'Hygrometers'] },
 ];
 
-const MOCK_PRODUCTS = [
-  { id: 1, name: { EN: "Premium Dog Food", TR: "Premium Köpek Maması" }, category: { EN: "Dogs", TR: "Köpekler" } },
-  { id: 2, name: { EN: "Glass Terrarium 40 Gallon", TR: "Cam Teraryum 40 Galon" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
-  { id: 3, name: { EN: "Automatic Cat Feeder", TR: "Otomatik Kedi Besleyici" }, category: { EN: "Cats", TR: "Kediler" } },
-  { id: 4, name: { EN: "UVB Lamp 10.0", TR: "UVB Lamba 10.0" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
-  { id: 5, name: { EN: "Aquarium Filter Pro", TR: "Akvaryum Filtresi Pro" }, category: { EN: "Aquatic", TR: "Sucul Canlılar" } },
-  { id: 6, name: { EN: "Interactive Laser Toy", TR: "İnteraktif Lazer Oyuncak" }, category: { EN: "Cats", TR: "Kediler" } },
-  { id: 7, name: { EN: "Orthopedic Dog Bed", TR: "Ortopedik Köpek Yatağı" }, category: { EN: "Dogs", TR: "Köpekler" } },
-  { id: 8, name: { EN: "Thermostat Controller", TR: "Termostat Kontrol Cihazı" }, category: { EN: "Reptiles", TR: "Sürüngenler" } },
-];
+const MOCK_PRODUCTS = generateDummyProducts('all', 100).map((p, idx) => ({
+  id: idx,
+  name: p.name,
+  category: { EN: p.brand || "Brand", TR: p.brand || "Marka" } // We map category label in search to brand as category mapping is complex here
+}));
 
 function Header({ 
   cartCount, 
@@ -699,14 +695,14 @@ const ProductCard: React.FC<{
   service: any, 
   lang: string, 
   onAddToCart: (item: string, quantity?: number, price?: number) => void, 
-  wishlistItems: string[], 
-  onToggleWishlist: (item: string) => void 
+  savedProductNames: string[], 
+  onSaveToFolder: (item: string) => void 
 }> = ({ 
   service, 
   lang, 
   onAddToCart, 
-  wishlistItems, 
-  onToggleWishlist 
+  savedProductNames, 
+  onSaveToFolder 
 }) => {
   const [quantity, setQuantity] = useState(1);
   const topItem = service.items[0];
@@ -719,16 +715,16 @@ const ProductCard: React.FC<{
   
   const hasDiscount = numericHash % 3 === 0;
   const discountedPrice = hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
-  const isWishlisted = wishlistItems.includes(productIdentifier);
+  const isSaved = savedProductNames.includes(productIdentifier);
   
   return (
     <div className="group bg-card rounded-2xl p-4 sm:p-5 border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center text-center relative h-full">
       <button 
-        onClick={() => onToggleWishlist(productIdentifier)}
-        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all ${isWishlisted ? 'bg-brand-teal/10 text-brand-teal' : 'bg-background text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/10 shadow-sm border border-border'}`}
-        aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+        onClick={() => onSaveToFolder(productIdentifier)}
+        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-brand-teal text-white' : 'bg-background text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/10 shadow-sm border border-border'}`}
+        aria-label="Save to folder"
       >
-        <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current text-brand-teal' : ''}`} />
+        <FolderPlus className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
       </button>
 
       <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-secondary flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal/10 transition-all duration-300">
@@ -787,14 +783,14 @@ const ProductCard: React.FC<{
 
 function Services({ 
   onAddToCart, 
-  wishlistItems = [], 
-  onToggleWishlist = () => {},
+  savedProductNames = [], 
+  onSaveToFolder = () => {},
   selectedPetsFilter = [],
   userPets = []
 }: { 
   onAddToCart: (item: string, quantity?: number) => void,
-  wishlistItems?: string[],
-  onToggleWishlist?: (item: string) => void,
+  savedProductNames?: string[],
+  onSaveToFolder?: (item: string) => void,
   selectedPetsFilter?: string[],
   userPets?: PetProfileData[]
 }) {
@@ -819,7 +815,7 @@ function Services({
   if (combinedPets.length > 0) {
     let mixedProducts: any[] = [];
     for (const pet of combinedPets) {
-       const items = generateDummyProducts(pet + 's', Math.floor(8 / combinedPets.length));
+       const items = generateDummyProducts(pet + 's', Math.floor(12 / combinedPets.length));
        mixedProducts = [...mixedProducts, ...items];
     }
     recommendedProducts = mixedProducts.sort(() => 0.5 - Math.random());
@@ -846,8 +842,8 @@ function Services({
                   product={product as any} 
                   lang={lang as any} 
                   onAddToCart={onAddToCart} 
-                  isWishlisted={wishlistItems.includes(product.name.EN)} 
-                  onToggleWishlist={onToggleWishlist} 
+                  isSaved={savedProductNames.includes(product.name.EN)} 
+                  onSaveToFolder={onSaveToFolder} 
                 />
               ))
             ) : (
@@ -857,8 +853,8 @@ function Services({
                   service={service} 
                   lang={lang} 
                   onAddToCart={onAddToCart} 
-                  wishlistItems={wishlistItems} 
-                  onToggleWishlist={onToggleWishlist} 
+                  savedProductNames={savedProductNames} 
+                  onSaveToFolder={onSaveToFolder} 
                 />
               ))
             )}
@@ -1480,6 +1476,70 @@ function FoldersModal({
 }
 
 // Personalization Modal
+function SaveToFolderModal({
+  isOpen,
+  onClose,
+  productName,
+  folders,
+  onSave
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  productName: string | null;
+  folders: SavedFolder[];
+  onSave: (folderId: string) => void;
+}) {
+  const { lang } = useLang();
+  
+  if (!isOpen || !productName) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-brand-darker/60 backdrop-blur-sm"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-card flex flex-col rounded-[24px] overflow-hidden max-w-sm w-full shadow-2xl relative"
+        >
+          <div className="p-4 sm:p-5 pb-3 border-b border-border/50 bg-card relative flex items-center justify-between">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <FolderPlus className="w-5 h-5 text-brand-teal" />
+              {lang === 'TR' ? 'Klasöre Kaydet' : 'Save to Folder'}
+            </h2>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto custom-scrollbar flex flex-col gap-2">
+             {folders.map(folder => {
+               const isAlreadyAdded = folder.items.includes(productName);
+               return (
+                 <button
+                   key={folder.id}
+                   onClick={() => {
+                     if (!isAlreadyAdded) {
+                       onSave(folder.id);
+                       onClose();
+                     }
+                   }}
+                   disabled={isAlreadyAdded}
+                   className={`w-full text-left px-4 py-3 rounded-xl flex items-center justify-between transition-all ${isAlreadyAdded ? 'bg-secondary/50 text-muted-foreground cursor-default' : 'hover:bg-brand-teal/10 hover:text-brand-teal border border-transparent hover:border-brand-teal/30 cursor-pointer'}`}
+                 >
+                   <span className="font-semibold text-sm">{folder.name}</span>
+                   {isAlreadyAdded && <Check className="w-4 h-4 text-brand-teal" />}
+                 </button>
+               );
+             })}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, onClose: () => void, pets: PetProfileData[], setPets: React.Dispatch<React.SetStateAction<PetProfileData[]>> }) {
   const { lang, setLang } = useLang();
   
@@ -1576,7 +1636,7 @@ function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, 
                         {lang === 'TR' ? 'Türü' : 'Species'}
                       </label>
                       <div className="grid grid-cols-3 sm:flex bg-secondary p-1 gap-1 sm:gap-0 rounded-xl w-full">
-                        {['Dog', 'Cat', 'Avian', 'Rodent', 'Aquatic', 'Reptile'].map((type) => (
+                        {['Dog', 'Cat', 'Avian', 'Rodent', 'Fish', 'Reptile'].map((type) => (
                           <button
                             key={type} type="button"
                             onClick={() => updatePet(pet.id, 'type', type)}
@@ -1586,7 +1646,7 @@ function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, 
                             {type === 'Cat' && <Cat className="w-4 h-4" />}
                             {type === 'Avian' && <Bird className="w-4 h-4" />}
                             {type === 'Rodent' && <Rat className="w-4 h-4" />}
-                            {type === 'Aquatic' && <BubblesIcon className="w-4 h-4" />}
+                            {type === 'Fish' && <Fish className="w-4 h-4" />}
                             {type === 'Reptile' && <Turtle className="w-4 h-4" />}
                             <span className="block sm:inline max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 sm:px-0 truncate">{t(type, lang)}</span>
                           </button>
@@ -1621,7 +1681,7 @@ function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, 
                         </div>
                       </div>
                       
-                      {pet.type !== 'Avian' && pet.type !== 'Rodent' && pet.type !== 'Aquatic' && pet.type !== 'Reptile' ? (
+                      {pet.type !== 'Avian' && pet.type !== 'Rodent' && pet.type !== 'Fish' && pet.type !== 'Reptile' ? (
                         <div className="space-y-1">
                           <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}</label>
                           <input type="text" value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder={pet.type === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
@@ -1745,7 +1805,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
               <p className="text-muted-foreground text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
               
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
-                {['Dog', 'Cat', 'Avian', 'Aquatic', 'Rodent', 'Reptile'].map(pet => (
+                {['Dog', 'Cat', 'Avian', 'Fish', 'Rodent', 'Reptile'].map(pet => (
                   <button 
                     key={pet} onClick={() => togglePet(pet)}
                     aria-pressed={selectedPets.includes(pet)}
@@ -1755,7 +1815,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
                     `}
                   >
                     <span className="text-3xl sm:text-4xl" aria-hidden="true">{
-                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Aquatic' ? '🫧' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
+                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Fish' ? '🫧' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
                     }</span>
                     <span className="font-semibold text-xs sm:text-sm text-center leading-tight break-words w-[90px]">{t(pet, lang)}</span>
                   </button>
@@ -2770,8 +2830,10 @@ export default function App() {
     }
     return [];
   });
-  const [wishlistItems, setWishlistItems] = useState<string[]>([]);
   const [folders, setFolders] = useState<SavedFolder[]>([]);
+  const [selectedProductForFolder, setSelectedProductForFolder] = useState<string | null>(null);
+  
+  const savedProductNames = useMemo(() => folders.flatMap(f => f.items), [folders]);
   const [lang, setLang] = useState<Lang>('TR');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -2849,10 +2911,21 @@ export default function App() {
     setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
 
-  const handleToggleWishlist = (item: string) => {
-    setWishlistItems(prev => 
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
+  const handleSaveToFolderClick = (productName: string) => {
+    if (folders.length === 0) {
+      setToastMessage(lang === 'TR' ? 'Bu özellik için önce bir klasör oluşturmalısınız.' : 'You must create a folder first.');
+      setTimeout(() => setToastMessage(null), 3000);
+      setIsFoldersModalOpen(true);
+    } else {
+      setSelectedProductForFolder(productName);
+    }
+  };
+
+  const handleSaveToSpecificFolder = (folderId: string) => {
+    if (!selectedProductForFolder) return;
+    setFolders(folders.map(f => f.id === folderId ? { ...f, items: [...f.items, selectedProductForFolder] } : f));
+    setToastMessage(lang === 'TR' ? 'Ürün klasöre eklendi!' : 'Product added to folder!');
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const handleCheckout = () => {
@@ -2925,15 +2998,15 @@ export default function App() {
           <CategoryPage 
             categoryId={currentHash.replace('#/category/', '')} 
             onAddToCart={handleAddToCart}
-            wishlistItems={wishlistItems}
-            onToggleWishlist={handleToggleWishlist}
+            savedProductNames={savedProductNames}
+            onSaveToFolder={handleSaveToFolderClick}
             userPets={userPets}
             selectedPets={selectedPetsFilter}
           />
         ) : (
           <main>
             <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} userPets={userPets} />
-            <Services onAddToCart={handleAddToCart} wishlistItems={wishlistItems} onToggleWishlist={handleToggleWishlist} selectedPetsFilter={selectedPetsFilter} userPets={userPets} />
+            <Services onAddToCart={handleAddToCart} savedProductNames={savedProductNames} onSaveToFolder={handleSaveToFolderClick} selectedPetsFilter={selectedPetsFilter} userPets={userPets} />
             <OrderTrackingSection />
             <TrustSection />
             <Contact />
@@ -2943,6 +3016,7 @@ export default function App() {
         <Footer />
 
         {/* Modals */}
+        <SaveToFolderModal isOpen={selectedProductForFolder !== null} onClose={() => setSelectedProductForFolder(null)} productName={selectedProductForFolder} folders={folders} onSave={handleSaveToSpecificFolder} />
         <FoldersModal isOpen={isFoldersModalOpen} onClose={() => setIsFoldersModalOpen(false)} folders={folders} setFolders={setFolders} onAddToCart={handleAddToCart} />
         <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} pets={userPets} setPets={setUserPets} />
         <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />

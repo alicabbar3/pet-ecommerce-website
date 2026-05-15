@@ -28,7 +28,7 @@ const TR_DICT: Record<string, string> = {
   "Dog": "Köpek",
   "Cat": "Kedi",
   "Avian": "Kuş",
-  "Aquatic": "Sucul",
+  "Fish": "Balık",
   "Rodent": "Kemirgen",
   "Reptile": "Sürüngen",
   
