@@ -385,6 +385,17 @@ export function generateProductsByCategoryId(categoryId: string, parentCatId: st
       }
     }
     
+    // Infer age & size
+    const lowerEN = nounInfo.en.toLowerCase();
+    let computedAge = 'All Stages';
+    if (lowerEN.includes('puppy') || lowerEN.includes('kitten')) computedAge = 'Puppy/Kitten';
+    else if (lowerEN.includes('senior')) computedAge = 'Senior';
+    else if (lowerEN.includes('adult')) computedAge = 'Adult';
+    
+    let computedSize = 'All Sizes';
+    if (lowerEN.includes('large')) computedSize = 'Large';
+    else if (lowerEN.includes('small') || lowerEN.includes('nano')) computedSize = 'Small';
+    
     // Build name
     let nameEN = `${brand} ${nounInfo.en}`;
     let nameTR = `${brand} ${nounInfo.tr}`;
@@ -424,6 +435,8 @@ export function generateProductsByCategoryId(categoryId: string, parentCatId: st
       flavor,
       weight,
       material,
+      age: computedAge,
+      breedSize: computedSize,
       price,
       oldPrice: isDiscounted ? basePrice : undefined,
       discount,

@@ -119,13 +119,96 @@ export default function CategoryPage({
           // Generate an array of products matching those pets
           let mixedProducts: Product[] = [];
           for (const pet of combinedPets) {
-             const items = generateDummyProducts(pet + 's', Math.floor(getOrganicCount(pet + 's') / combinedPets.length));
+             const items = generateDummyProducts(pet + 's', Math.floor(getOrganicCount(pet + 's') / combinedPets.length) * 2); // get a larger pool
              mixedProducts = [...mixedProducts, ...items];
           }
-          setProducts(mixedProducts.sort(() => 0.5 - Math.random()));
+          
+          mixedProducts = mixedProducts.filter((product, index, self) => 
+            index === self.findIndex((t) => (t.id === product.id))
+          );
+
+          // Apply allergy filtering - dont show products with known allergies
+          const allAllergies = Array.from(new Set(userPets.flatMap(p => p.allergies.map(a => a.toLowerCase()))));
+          
+          if (allAllergies.length > 0) {
+            mixedProducts = mixedProducts.filter(p => {
+               const pName = p.name.EN.toLowerCase();
+               const pFlavor = p.flavor?.toLowerCase() || '';
+               return !allAllergies.some(allergy => {
+                  const allergyTR = allergy === 'chicken' ? 'tavuk' : allergy === 'grain' ? 'tahıl' : allergy === 'beef' ? 'sığır' : allergy === 'dairy' ? 'süt' : allergy === 'fish' ? 'balık' : 'toz';
+                  return pName.includes(allergy) || pName.includes(allergyTR) || 
+                         pFlavor.includes(allergy) || pFlavor.includes(allergyTR);
+               });
+            });
+          }
+
+          // Compute scoring based on age and weight/size
+          const sortedProducts = mixedProducts.sort((a, b) => {
+            let scoreA = Math.random(); 
+            let scoreB = Math.random();
+
+            for (const pet of userPets) {
+               const petAgeNum = parseFloat(pet.age);
+               let petAgeStage = 'Adult';
+               if (petAgeNum < 1) petAgeStage = 'Puppy/Kitten';
+               else if (petAgeNum >= 7) petAgeStage = 'Senior';
+               
+               let petSizeStage = 'All Sizes';
+               const petWtNum = parseFloat(pet.weight || '0');
+               if (petWtNum > 0 && petWtNum < 10) petSizeStage = 'Small';
+               else if (petWtNum > 25) petSizeStage = 'Large';
+
+               if (a.age === petAgeStage) scoreA += 5;
+               if (b.age === petAgeStage) scoreB += 5;
+               if (a.breedSize === petSizeStage) scoreA += 3;
+               if (b.breedSize === petSizeStage) scoreB += 3;
+            }
+
+            return scoreB - scoreA;
+          });
+
+          // take top portion of the scored products
+          setProducts(sortedProducts.slice(0, getOrganicCount('dogs')));
         }
       } else {
-        setProducts(generateDummyProducts(categoryId, getOrganicCount(categoryId)));
+        let catProducts = generateDummyProducts(categoryId, getOrganicCount(categoryId));
+
+        const allAllergies = Array.from(new Set(userPets.flatMap(p => p.allergies?.map(a => a.toLowerCase()) || [])));
+        if (allAllergies.length > 0) {
+          catProducts = catProducts.filter(p => {
+             const pName = p.name.EN.toLowerCase();
+             const pFlavor = p.flavor?.toLowerCase() || '';
+             return !allAllergies.some(allergy => {
+                const allergyTR = allergy === 'chicken' ? 'tavuk' : allergy === 'grain' ? 'tahıl' : allergy === 'beef' ? 'sığır' : allergy === 'dairy' ? 'süt' : allergy === 'fish' ? 'balık' : 'toz';
+                return pName.includes(allergy) || pName.includes(allergyTR) || 
+                       pFlavor.includes(allergy) || pFlavor.includes(allergyTR);
+             });
+          });
+        }
+        
+        catProducts = catProducts.sort((a, b) => {
+          let scoreA = 0; 
+          let scoreB = 0;
+          for (const pet of userPets) {
+             const petAgeNum = parseFloat(pet.age);
+             let petAgeStage = 'Adult';
+             if (petAgeNum < 1) petAgeStage = 'Puppy/Kitten';
+             else if (petAgeNum >= 7) petAgeStage = 'Senior';
+             
+             let petSizeStage = 'All Sizes';
+             const petWtNum = parseFloat(pet.weight || '0');
+             if (petWtNum > 0 && petWtNum < 10) petSizeStage = 'Small';
+             else if (petWtNum > 25) petSizeStage = 'Large';
+
+             if (a.age === petAgeStage) scoreA += 5;
+             if (b.age === petAgeStage) scoreB += 5;
+             if (a.breedSize === petSizeStage) scoreA += 3;
+             if (b.breedSize === petSizeStage) scoreB += 3;
+          }
+          return scoreB - scoreA;
+        });
+
+        setProducts(catProducts);
       }
     }, 500);
     return () => clearTimeout(timer);

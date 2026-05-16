@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, useMemo } from 'react';
+import React, { useState, useEffect, createContext, useContext, useMemo, useRef } from 'react';
 import turkeyData from './turkeyData';
 import { CATEGORIES } from './categories';
 import CategoryPage, { ProductListingCard, generateDummyProducts } from './CategoryPage';
@@ -51,7 +51,10 @@ import {
   FolderPlus,
   Bookmark,
   Menu,
-  Check
+  Check,
+  ShieldAlert,
+  ShieldCheck,
+  PawPrint
 } from 'lucide-react';
 
 const BubblesIcon = ({ className }: { className?: string }) => (
@@ -64,6 +67,7 @@ const BubblesIcon = ({ className }: { className?: string }) => (
 );
 
 import { Lang, LangContext, useLang, t } from './i18n';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // Data
 const CONTACT = {
@@ -89,20 +93,100 @@ const MOCK_PRODUCTS = generateDummyProducts('all', 100).map((p, idx) => ({
   category: { EN: p.brand || "Brand", TR: p.brand || "Marka" } // We map category label in search to brand as category mapping is complex here
 }));
 
+function PetAvatarGroup({ pets, onOpenPetProfile }: { pets?: any[], onOpenPetProfile?: (id: string) => void }) {
+  const { lang } = useLang();
+  if (!pets || !onOpenPetProfile) return null;
+  const activePets = pets.filter(p => p.name.trim() !== '' || p.photo !== null);
+  if (activePets.length === 0) return null;
+
+  const maxVisible = 3;
+  const visiblePets = activePets.slice(0, maxVisible);
+  const hiddenCount = activePets.length - maxVisible;
+
+  const getIcon = (type: string) => {
+    switch(type) {
+      case 'Dog': return Dog;
+      case 'Cat': return Cat;
+      case 'Avian': return Bird;
+      case 'Rodent': return Rat;
+      case 'Fish': return Fish;
+      case 'Reptile': return Turtle;
+      default: return Heart;
+    }
+  };
+
+  return (
+    <>
+      <div className="relative hidden md:flex items-center group bg-card border border-border/60 shadow-sm rounded-full p-1 pr-3 hover:border-brand-teal/50 hover:shadow-md transition-all duration-300">
+        <div className="flex items-center -space-x-2 mr-2">
+          {visiblePets.map((pet, i) => {
+            const Icon = getIcon(pet.type);
+            return (
+              <button
+                key={pet.id}
+                onClick={() => onOpenPetProfile(pet.id)}
+                style={{ zIndex: 10 - i }}
+                className="relative w-8 h-8 rounded-full bg-secondary border-2 border-background overflow-hidden flex items-center justify-center hover:-translate-y-0.5 hover:shadow-md hover:border-brand-teal transition-all duration-300 group/avatar"
+                title={pet.name || t(pet.type, lang)}
+              >
+                {pet.photo ? (
+                  <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform" />
+                ) : (
+                  <Icon className="w-4 h-4 text-muted-foreground group-hover/avatar:text-brand-teal transition-colors" />
+                )}
+              </button>
+            );
+          })}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => onOpenPetProfile(activePets[maxVisible]?.id || '')}
+              style={{ zIndex: 0 }}
+              className="relative w-8 h-8 rounded-full bg-secondary border-2 border-background flex items-center justify-center text-[10px] font-extrabold text-foreground hover:-translate-y-0.5 hover:border-brand-teal transition-all duration-300"
+            >
+              +{hiddenCount}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col items-start gap-0.5">
+          <span className="text-[11px] font-bold text-foreground leading-none">{lang === 'TR' ? 'Dostlarım' : 'My Pets'}</span>
+          <span className="text-[9px] font-semibold text-muted-foreground leading-none uppercase tracking-wider">{activePets.length} {lang === 'TR' ? 'KAYITLI' : 'SAVED'}</span>
+        </div>
+      </div>
+      
+      {/* Mobile view */}
+      <button 
+        onClick={() => onOpenPetProfile(activePets[0]?.id || '')} 
+        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-brand-teal/10 border border-brand-teal/30 hover:bg-brand-teal/20 transition-colors text-brand-teal relative"
+      >
+        <PawPrint className="w-4 h-4" />
+        {activePets.length > 1 && (
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-foreground text-background text-[8px] font-bold flex items-center justify-center rounded-full leading-none">
+            {activePets.length}
+          </span>
+        )}
+      </button>
+    </>
+  );
+}
+
 function Header({ 
   cartCount, 
   onOpenCart,
   onOpenFolders,
   isLoggedIn,
   onOpenAuth,
-  onLogout
+  onLogout,
+  userPets,
+  onOpenPetProfile
 }: { 
   cartCount: number, 
   onOpenCart: () => void,
   onOpenFolders: () => void,
   isLoggedIn: boolean,
   onOpenAuth: (mode: 'login' | 'register') => void,
-  onLogout: () => void
+  onLogout: () => void,
+  userPets?: any[],
+  onOpenPetProfile?: (id: string) => void
 }) {
   const { lang, setLang } = useLang();
   const [isDark, setIsDark] = useState(() => {
@@ -294,6 +378,8 @@ function Header({
              <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'EN' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇬🇧</span> EN</button>
           </div>
 
+          <PetAvatarGroup pets={userPets} onOpenPetProfile={onOpenPetProfile} />
+          
           {/* Folders Button */}
           <div className="relative hidden md:block">
             <Tooltip text={lang === 'TR' ? 'Klasörlerim' : 'My Folders'} position="bottom">
@@ -620,9 +706,26 @@ function Hero({ onStartOnboarding, onStartPetProfile, userPets }: { onStartOnboa
   
   const activePetsCount = userPets.filter(p => p.name).length;
 
+  const today = new Date();
+  const todayStr = `${today.getMonth() + 1}-${today.getDate()}`;
+  const birthdayPets = userPets.filter(p => {
+    if (!p.birthday || !p.name) return false;
+    const [y, m, d] = p.birthday.split('-');
+    return `${parseInt(m)}-${parseInt(d)}` === todayStr;
+  });
+
   return (
     <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center max-w-3xl mx-auto mb-16">
+        
+        {birthdayPets.length > 0 && (
+          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-yellow-400/20 text-yellow-600 border border-yellow-400/50 rounded-full font-bold shadow-sm animate-pulse">
+            <span>🎉</span>
+            {lang === 'TR' ? `Bugün ${birthdayPets.map((p: any) => p.name).join(', ')}'in doğum günü! Özel %20 İndirim Kazandınız!` : `Today is ${birthdayPets.map((p:any) => p.name).join(', ')}'s birthday! Enjoy a special 20% discount!`}
+            <span>🎂</span>
+          </div>
+        )}
+
         <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
           {lang === 'TR' ? 'Dostlarınız için' : 'Nutrition perfected for'}
           <br/>
@@ -1177,6 +1280,14 @@ interface PetProfileData {
   gender: string;
   healthInfo: string;
   photo: string | null;
+  weight: string;
+  allergies: string[];
+  dietaryPreferences: string[];
+  sterilized: boolean;
+  activityLevel: 'low' | 'normal' | 'high';
+  birthday: string;
+  weightHistory: { date: string, weight: number }[];
+  reminders: { id: string, type: string, dueDate: string, resolved: boolean, name?: string }[];
 }
 
 interface SavedFolder {
@@ -1540,10 +1651,28 @@ function SaveToFolderModal({
   );
 }
 
-function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, onClose: () => void, pets: PetProfileData[], setPets: React.Dispatch<React.SetStateAction<PetProfileData[]>> }) {
+function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isOpen: boolean, onClose: () => void, pets: PetProfileData[], setPets: React.Dispatch<React.SetStateAction<PetProfileData[]>>, focusedPetId?: string | null }) {
   const { lang, setLang } = useLang();
   
   const [isSaved, setIsSaved] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  const [activePetId, setActivePetId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'profile' | 'health'>('profile');
+  const [newWeightDate, setNewWeightDate] = useState('');
+  const [newWeightValue, setNewWeightValue] = useState('');
+  const [newReminder, setNewReminder] = useState({ type: 'Vaccine', date: '', name: '' });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (focusedPetId) {
+        setActivePetId(focusedPetId);
+      } else if (pets.length > 0) {
+        setActivePetId(pets[0].id);
+      }
+    }
+  }, [isOpen, focusedPetId, pets.length]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1555,16 +1684,53 @@ function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, 
   };
 
   const addPet = () => {
-    setPets([...pets, { id: Date.now().toString(), type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }]);
+    const newId = Date.now().toString();
+    setPets([...pets, { id: newId, type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: [] }]);
+    setActivePetId(newId);
   };
 
   const removePet = (id: string) => {
-    setPets(pets.filter(p => p.id !== id));
+    const updatedPets = pets.filter(p => p.id !== id);
+    setPets(updatedPets);
+    if (activePetId === id) {
+      setActivePetId(updatedPets.length > 0 ? updatedPets[0].id : null);
+    }
   };
 
   const updatePet = (id: string, field: keyof PetProfileData, value: string) => {
     setPets(pets.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
+
+  const handlePhotoUpload = (petId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      setPhotoError(lang === 'TR' ? 'Sadece JPG, PNG ve WEBP formatları desteklenmektedir.' : 'Only JPG, PNG and WEBP formats are supported.');
+      setTimeout(() => setPhotoError(null), 3000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      updatePet(petId, 'photo', e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getPetProfileLabel = (pet: PetProfileData) => {
+    if (pet.name.trim() !== '') return pet.name;
+    const petsOfSameType = pets.filter(p => p.type === pet.type);
+    const translatedType = t(pet.type, lang);
+    if (petsOfSameType.length > 1) {
+      const typeIndex = petsOfSameType.findIndex(p => p.id === pet.id) + 1;
+      return `${translatedType} • ${typeIndex}`;
+    }
+    return translatedType;
+  };
+
+  const activePet = pets.find(p => p.id === activePetId) || pets[0];
 
   return (
     <AnimatePresence>
@@ -1598,132 +1764,368 @@ function PetProfileModal({ isOpen, onClose, pets, setPets }: { isOpen: boolean, 
                 <Heart className="w-8 h-8 fill-current" />
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                {lang === 'TR' ? 'Dostlarınızı Tanıyın' : 'Tell us about your pets'}
+                {lang === 'TR' ? 'Evcil Hayvan Yönetimi' : 'Pet Management'}
               </h2>
               <p className="text-muted-foreground">
-                {lang === 'TR' ? 'Özel öneriler için profil oluşturun.' : 'Create profiles for customized recommendations.'}
+                {lang === 'TR' ? 'Profil, sağlık ve tüketim detaylarınızı düzenleyin.' : 'Manage profiles, health, and consumption details.'}
               </p>
             </div>
           </div>
 
           {/* Form Body */}
-          <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-8 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6 custom-scrollbar flex flex-col">
+            {photoError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl text-center text-sm font-medium shrink-0">
+                {photoError}
+              </div>
+            )}
+
             {!isSaved ? (
-              <form id="pet-registration-form" onSubmit={handleSave} className="space-y-8">
-                {pets.map((pet, index) => (
-                  <div key={pet.id} className="p-5 sm:p-6 rounded-2xl border border-border/60 bg-secondary/30 relative space-y-6">
-                    {pets.length > 1 && (
-                      <button type="button" onClick={() => removePet(pet.id)} className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    )}
-                    
-                    <div className="flex items-center gap-4">
-                      {/* Photo Upload Simulation */}
-                      <button type="button" className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-brand-teal hover:bg-brand-teal/5 transition-colors text-muted-foreground hover:text-brand-teal">
-                        <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                        <span className="text-[10px] sm:text-xs font-medium px-1 text-center leading-none">{lang === 'TR' ? 'Fotoğraf' : 'Add Photo'}</span>
-                      </button>
-                      <div>
-                        <h3 className="font-bold text-lg sm:text-xl">{lang === 'TR' ? `Evcil Hayvan #${index + 1}` : `Pet #${index + 1}`}</h3>
-                        <p className="text-sm text-muted-foreground">{pet.name || (lang === 'TR' ? 'İsimsiz' : 'Unnamed')}</p>
-                      </div>
-                    </div>
+              <>
+                {/* Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-4 shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border-b border-border/50 mb-4">
+                  {pets.map(pet => (
+                    <button
+                      key={pet.id}
+                      onClick={() => setActivePetId(pet.id)}
+                      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all border ${activePetId === pet.id ? 'bg-brand-teal text-white border-brand-teal shadow-md' : 'bg-secondary border-border text-muted-foreground hover:bg-secondary-dark'}`}
+                    >
+                      {getPetProfileLabel(pet)}
+                    </button>
+                  ))}
+                  <button onClick={addPet} className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all border border-dashed border-border bg-card text-muted-foreground hover:border-brand-teal hover:text-brand-teal flex items-center gap-1">
+                    <Plus className="w-4 h-4" /> {lang === 'TR' ? 'Ekle' : 'Add'}
+                  </button>
+                </div>
 
-                    {/* Pet Type */}
-                    <div className="space-y-3">
-                      <label className="block text-sm font-semibold text-foreground">
-                        {lang === 'TR' ? 'Türü' : 'Species'}
-                      </label>
-                      <div className="grid grid-cols-3 sm:flex bg-secondary p-1 gap-1 sm:gap-0 rounded-xl w-full">
-                        {['Dog', 'Cat', 'Avian', 'Rodent', 'Fish', 'Reptile'].map((type) => (
-                          <button
-                            key={type} type="button"
-                            onClick={() => updatePet(pet.id, 'type', type)}
-                            className={`sm:flex-1 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition-all rounded-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-w-[70px] ${pet.type === type ? 'bg-card text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-secondary-dark'}`}
-                          >
-                            {type === 'Dog' && <Dog className="w-4 h-4" />}
-                            {type === 'Cat' && <Cat className="w-4 h-4" />}
-                            {type === 'Avian' && <Bird className="w-4 h-4" />}
-                            {type === 'Rodent' && <Rat className="w-4 h-4" />}
-                            {type === 'Fish' && <Fish className="w-4 h-4" />}
-                            {type === 'Reptile' && <Turtle className="w-4 h-4" />}
-                            <span className="block sm:inline max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 sm:px-0 truncate">{t(type, lang)}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {activePet && (
+                  <div className="flex gap-4 mb-4">
+                    <button type="button" onClick={() => setViewMode('profile')} className={`flex-1 py-2 border-b-2 font-bold transition-all ${viewMode === 'profile' ? 'border-brand-teal text-brand-teal' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                      {lang === 'TR' ? 'Profil' : 'Profile'}
+                    </button>
+                    <button type="button" onClick={() => setViewMode('health')} className={`flex-1 py-2 border-b-2 font-bold transition-all ${viewMode === 'health' ? 'border-brand-teal text-brand-teal' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                      {lang === 'TR' ? 'Sağlık & Tüketim' : 'Health & Consumption'}
+                    </button>
+                  </div>
+                )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Adı' : 'Name'}</label>
-                        <input required type="text" value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder={lang === 'TR' ? 'Örn: Tarçın' : 'e.g. Max'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                <form id="pet-registration-form" onSubmit={handleSave} className="space-y-8 flex-1">
+                  {activePet && viewMode === 'profile' && (
+                    <motion.div 
+                      key={activePet.id} 
+                      initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}
+                      className="p-5 sm:p-6 rounded-2xl border border-border/60 bg-secondary/30 relative space-y-6"
+                    >
+                      {pets.length > 1 && (
+                        <button type="button" onClick={() => removePet(activePet.id)} className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" aria-label="Delete Pet">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                      
+                      <div className="flex items-center gap-4">
+                        {/* Photo Upload */}
+                        <input 
+                          type="file" 
+                          accept="image/jpeg, image/png, image/webp" 
+                          className="hidden" 
+                          ref={(el) => fileInputRefs.current[activePet.id] = el!} 
+                          onChange={(e) => handlePhotoUpload(activePet.id, e)} 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => fileInputRefs.current[activePet.id]?.click()}
+                          className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-brand-teal hover:bg-brand-teal/5 transition-colors text-muted-foreground hover:text-brand-teal overflow-hidden relative"
+                        >
+                          {activePet.photo ? (
+                            <img src={activePet.photo} alt={activePet.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <>
+                              <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                              <span className="text-[10px] sm:text-xs font-medium px-1 text-center leading-none">{lang === 'TR' ? 'Fotoğraf' : 'Add Photo'}</span>
+                            </>
+                          )}
+                        </button>
+                        <div>
+                          <h3 className="font-bold text-lg sm:text-xl">{getPetProfileLabel(activePet)}</h3>
+                          <p className="text-sm text-muted-foreground">{activePet.name || (lang === 'TR' ? 'İsimsiz' : 'Unnamed')}</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Yaşı' : 'Age'}</label>
-                        <input required type="number" value={pet.age} onChange={(e) => updatePet(pet.id, 'age', e.target.value)} placeholder={lang === 'TR' ? 'Yıl olarak' : 'In years'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Cinsiyeti' : 'Gender'}</label>
-                        <div className="flex gap-2">
-                          {['Male', 'Female'].map(g => (
+                      {/* Pet Type */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-foreground">
+                          {lang === 'TR' ? 'Türü' : 'Species'}
+                        </label>
+                        <div className="grid grid-cols-3 sm:flex bg-secondary p-1 gap-1 sm:gap-0 rounded-xl w-full">
+                          {['Dog', 'Cat', 'Avian', 'Rodent', 'Fish', 'Reptile'].map((type) => (
                             <button
-                              key={g} type="button"
-                              onClick={() => updatePet(pet.id, 'gender', g)}
-                              className={`flex-1 py-3 px-4 rounded-xl border font-medium text-sm transition-all ${pet.gender === g ? 'bg-brand-teal/10 border-brand-teal text-brand-teal-dark font-semibold' : 'bg-card border-border text-muted-foreground hover:border-brand-teal/50'}`}
+                              key={type} type="button"
+                              onClick={() => updatePet(activePet.id, 'type', type)}
+                              className={`sm:flex-1 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition-all rounded-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-w-[70px] ${activePet.type === type ? 'bg-card text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-secondary-dark'}`}
                             >
-                              {lang === 'TR' ? (g === 'Male' ? 'Erkek' : 'Dişi') : g}
+                              {type === 'Dog' && <Dog className="w-4 h-4" />}
+                              {type === 'Cat' && <Cat className="w-4 h-4" />}
+                              {type === 'Avian' && <Bird className="w-4 h-4" />}
+                              {type === 'Rodent' && <Rat className="w-4 h-4" />}
+                              {type === 'Fish' && <Fish className="w-4 h-4" />}
+                              {type === 'Reptile' && <Turtle className="w-4 h-4" />}
+                              <span className="block sm:inline max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 sm:px-0 truncate">{t(type, lang)}</span>
                             </button>
                           ))}
                         </div>
                       </div>
-                      
-                      {pet.type !== 'Avian' && pet.type !== 'Rodent' && pet.type !== 'Fish' && pet.type !== 'Reptile' ? (
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Adı' : 'Name'}</label>
+                          <input required type="text" value={activePet.name} onChange={(e) => updatePet(activePet.id, 'name', e.target.value)} placeholder={lang === 'TR' ? 'Örn: Tarçın' : 'e.g. Max'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Yaşı' : 'Age'}</label>
+                          <input required type="number" value={activePet.age} onChange={(e) => updatePet(activePet.id, 'age', e.target.value)} placeholder={lang === 'TR' ? 'Yıl olarak' : 'In years'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Cinsiyeti' : 'Gender'}</label>
+                          <div className="flex gap-2">
+                            {['Male', 'Female'].map(g => (
+                              <button
+                                key={g} type="button"
+                                onClick={() => updatePet(activePet.id, 'gender', g)}
+                                className={`flex-1 py-3 px-4 rounded-xl border font-medium text-sm transition-all ${activePet.gender === g ? 'bg-brand-teal/10 border-brand-teal text-brand-teal-dark font-semibold' : 'bg-card border-border text-muted-foreground hover:border-brand-teal/50'}`}
+                              >
+                                {lang === 'TR' ? (g === 'Male' ? 'Erkek' : 'Dişi') : g}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Kısırlaştırılmış mı?' : 'Sterilized?'}</label>
+                          <div className="flex gap-2">
+                            {[true, false].map(val => (
+                              <button
+                                key={val.toString()} type="button"
+                                onClick={() => updatePet(activePet.id, 'sterilized', val as any)}
+                                className={`flex-1 py-3 px-4 rounded-xl border font-medium text-sm transition-all ${activePet.sterilized === val ? 'bg-brand-teal/10 border-brand-teal text-brand-teal-dark font-semibold' : 'bg-card border-border text-muted-foreground hover:border-brand-teal/50'}`}
+                              >
+                                {lang === 'TR' ? (val ? 'Evet' : 'Hayır') : (val ? 'Yes' : 'No')}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-1">
                           <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Irkı (İsteğe bağlı)' : 'Breed (Optional)'}</label>
-                          <input type="text" value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder={pet.type === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                          <input type="text" value={activePet.breed} onChange={(e) => updatePet(activePet.id, 'breed', e.target.value)} placeholder={activePet.type === 'Dog' ? (lang === 'TR' ? 'Örn: Golden Retriever' : 'e.g. Golden Retriever') : (lang === 'TR' ? 'Örn: Tekir' : 'e.g. Siamese')} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
                         </div>
-                      ) : (
                         <div className="space-y-1">
-                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Sağlık Notları (İsteğe bağlı)' : 'Health Notes (Optional)'}</label>
-                          <input type="text" value={pet.healthInfo} onChange={(e) => updatePet(pet.id, 'healthInfo', e.target.value)} placeholder={lang === 'TR' ? 'Alerjiler vb.' : 'Allergies, etc.'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Kilosu (kg)' : 'Weight (kg)'}</label>
+                          <input type="number" step="0.1" value={activePet.weight} onChange={(e) => updatePet(activePet.id, 'weight', e.target.value)} placeholder="0.0" className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* If they had breed, still show health notes below */}
-                    {(pet.type === 'Dog' || pet.type === 'Cat') && (
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Sağlık Notları (İsteğe bağlı)' : 'Health Notes (Optional)'}</label>
-                        <input type="text" value={pet.healthInfo} onChange={(e) => updatePet(pet.id, 'healthInfo', e.target.value)} placeholder={lang === 'TR' ? 'Belirli diyet veya alerjiler...' : 'Specific diets or allergies...'} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Doğum Tarihi' : 'Birthday'}</label>
+                          <input type="date" value={activePet.birthday} onChange={(e) => updatePet(activePet.id, 'birthday', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all outline-none" />
+                        </div>
                       </div>
-                    )}
 
-                  </div>
-                ))}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Aktivite Seviyesi' : 'Activity Level'}</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {['low', 'normal', 'high'].map(level => (
+                            <button
+                              key={level} type="button"
+                              onClick={() => updatePet(activePet.id, 'activityLevel', level as any)}
+                              className={`py-2 px-3 rounded-xl border font-medium text-xs sm:text-sm transition-all ${activePet.activityLevel === level ? 'bg-brand-teal/10 border-brand-teal text-brand-teal-dark font-semibold' : 'bg-card border-border text-muted-foreground hover:border-brand-teal/50'}`}
+                            >
+                              {lang === 'TR' 
+                                ? (level === 'low' ? 'Düşük' : level === 'normal' ? 'Orta' : 'Yüksek') 
+                                : (level === 'low' ? 'Low' : level === 'normal' ? 'Normal' : 'High')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
-                <button 
-                  type="button" 
-                  onClick={addPet}
-                  className="w-full py-4 border-2 border-dashed border-border rounded-xl font-semibold text-muted-foreground hover:text-brand-teal hover:border-brand-teal hover:bg-brand-teal/5 transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  {lang === 'TR' ? 'Başka Bir Evcil Hayvan Ekle' : 'Add Another Pet'}
-                </button>
-              </form>
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Alerjiler ve Hassasiyetler' : 'Allergies & Sensitivities'}</label>
+                        <div className="flex flex-wrap gap-2">
+                           {['Chicken', 'Grain', 'Beef', 'Dairy', 'Fish', 'Dust'].map(allergy => {
+                             const tx = lang === 'TR' ? (allergy === 'Chicken' ? 'Tavuk' : allergy === 'Grain' ? 'Tahıl' : allergy === 'Beef' ? 'Sığır' : allergy === 'Dairy' ? 'Süt/Süt Ürünleri' : allergy === 'Fish' ? 'Balık' : 'Toz') : allergy;
+                             const hasAllergy = activePet.allergies.includes(allergy);
+                             return (
+                               <button
+                                 key={allergy} type="button"
+                                 onClick={() => {
+                                   const newArr = hasAllergy ? activePet.allergies.filter(a => a !== allergy) : [...activePet.allergies, allergy];
+                                   updatePet(activePet.id, 'allergies', newArr as any);
+                                 }}
+                                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${hasAllergy ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-secondary border-border hover:bg-secondary-dark'}`}
+                               >
+                                 {tx}
+                               </button>
+                             );
+                           })}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-foreground">{lang === 'TR' ? 'Özel Diyet İhtiyaçları' : 'Specific Dietary Needs'}</label>
+                        <div className="flex flex-wrap gap-2">
+                           {['Weight Control', 'Sensitive Digestion', 'Hypoallergenic', 'Renal Support', 'Skin & Coat'].map(diet => {
+                             const tx = lang === 'TR' ? (diet === 'Weight Control' ? 'Kilo Kontrolü' : diet === 'Sensitive Digestion' ? 'Hassas Sindirim' : diet === 'Hypoallergenic' ? 'Hipoalerjenik' : diet === 'Renal Support' ? 'Böbrek Destekleyici' : 'Deri ve Tüy Sağlığı') : diet;
+                             const hasDiet = activePet.dietaryPreferences.includes(diet);
+                             return (
+                               <button
+                                 key={diet} type="button"
+                                 onClick={() => {
+                                   const newArr = hasDiet ? activePet.dietaryPreferences.filter(a => a !== diet) : [...activePet.dietaryPreferences, diet];
+                                   updatePet(activePet.id, 'dietaryPreferences', newArr as any);
+                                 }}
+                                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${hasDiet ? 'bg-brand-teal/10 border-brand-teal/30 text-brand-teal' : 'bg-secondary border-border hover:bg-secondary-dark'}`}
+                               >
+                                 {tx}
+                               </button>
+                             );
+                           })}
+                        </div>
+                      </div>
+
+                    </motion.div>
+                  )}
+                  {activePet && viewMode === 'health' && (
+                    <motion.div 
+                      key={activePet.id + '_health'}
+                      initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}
+                      className="space-y-6"
+                    >
+                      {/* Weight Progress */}
+                      <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                           <div>
+                             <h4 className="font-bold text-lg">{lang === 'TR' ? 'Kilo Takibi' : 'Weight Tracking'}</h4>
+                             <p className="text-sm text-muted-foreground">{lang === 'TR' ? 'Evcil hayvanınızın gelişimini izleyin' : 'Monitor your pet’s growth'}</p>
+                           </div>
+                           <div className="flex gap-2">
+                             <input type="date" value={newWeightDate} onChange={(e) => setNewWeightDate(e.target.value)} className="px-3 py-2 rounded-xl text-sm border border-border outline-none bg-secondary" />
+                             <input type="number" step="0.1" value={newWeightValue} onChange={(e) => setNewWeightValue(e.target.value)} placeholder="0.0 kg" className="w-20 px-3 py-2 rounded-xl text-sm border border-border outline-none bg-secondary" />
+                             <button type="button" onClick={() => {
+                               if(newWeightValue && newWeightDate) {
+                                  const updatedHistory = [...(activePet.weightHistory || []), { date: newWeightDate, weight: parseFloat(newWeightValue) }].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                                  updatePet(activePet.id, 'weightHistory', updatedHistory as any);
+                                  updatePet(activePet.id, 'weight', newWeightValue);
+                                  setNewWeightValue(''); setNewWeightDate('');
+                               }
+                             }} className="bg-brand-teal text-white p-2 rounded-xl active:scale-95 transition-all">
+                               <Plus className="w-5 h-5" />
+                             </button>
+                           </div>
+                        </div>
+
+                        {activePet.weightHistory && activePet.weightHistory.length > 0 ? (
+                           <div className="h-48 w-full mr-2 mb-4">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={activePet.weightHistory}>
+                                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888" opacity={0.2} />
+                                   <XAxis dataKey="date" tick={{fontSize: 12}} tickMargin={10} stroke="#888" />
+                                   <YAxis domain={['auto', 'auto']} tick={{fontSize: 12}} tickMargin={10} stroke="#888" width={30} />
+                                   <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                                   <Line type="monotone" dataKey="weight" stroke="#2DD4BF" strokeWidth={3} dot={{r: 4, fill: '#2DD4BF', strokeWidth: 2}} activeDot={{r: 6}} />
+                                </LineChart>
+                             </ResponsiveContainer>
+                           </div>
+                        ) : (
+                          <div className="h-32 flex items-center justify-center border-2 border-dashed border-border rounded-xl mb-4">
+                            <p className="text-muted-foreground text-sm">{lang === 'TR' ? 'Henüz kilo verisi eklenmedi' : 'No weight data added yet'}</p>
+                          </div>
+                        )}
+                        
+                        {/* Smart AI recommendation based on weight */}
+                        {activePet.weightHistory?.length > 1 && parseFloat(activePet.weightHistory[activePet.weightHistory.length-1].weight as any) > parseFloat(activePet.weightHistory[activePet.weightHistory.length-2].weight as any) * 1.05 && (
+                           <div className="mt-4 p-4 rounded-xl bg-[#E27D60]/10 border border-[#E27D60]/30 flex gap-3 items-start">
+                             <ShieldCheck className="w-5 h-5 text-[#E27D60] mt-0.5 shrink-0" />
+                             <p className="text-sm font-medium text-[#E27D60]">
+                               {lang === 'TR' 
+                                 ? 'Akıllı Analiz: Son ölçümlerde hızlı bir kilo artışı tespit ettik. Sağlıklı bir kedi/köpek için Kilo Kontrol (Light) diyetlere geçiş düşünebilirsiniz.' 
+                                 : 'Smart Analysis: We detected rapid weight gain. Consider transitioning to "Weight Control" diets for optimal health.'}
+                             </p>
+                           </div>
+                        )}
+                      </div>
+
+                      {/* Reminders / Consumption */}
+                      <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+                        <h4 className="font-bold text-lg mb-1">{lang === 'TR' ? 'Tüketim Tahmini & Hatırlatıcılar' : 'Consumption & Reminders'}</h4>
+                        <p className="text-sm text-muted-foreground mb-6">{lang === 'TR' ? 'Mama süresi hesaplamaları ve sağlık döngüleri' : 'Food duration estimates and health cycles'}</p>
+                        
+                        <div className="space-y-4 mb-6">
+                           {activePet.reminders && activePet.reminders.length > 0 ? activePet.reminders.map((rem: any) => (
+                             <div key={rem.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${rem.resolved ? 'bg-secondary/50 border-border opacity-60' : 'bg-background border-brand-teal/30 shadow-sm'}`}>
+                                <div className="flex items-center gap-3">
+                                  <button type="button" onClick={() => {
+                                      const newR = activePet.reminders.map((r: any) => r.id === rem.id ? {...r, resolved: !r.resolved} : r);
+                                      updatePet(activePet.id, 'reminders', newR as any);
+                                  }} className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${rem.resolved ? 'bg-brand-teal border-brand-teal text-white' : 'border-muted-foreground'}`}>
+                                     {rem.resolved && <Check className="w-3 h-3" />}
+                                  </button>
+                                  <div>
+                                     <p className={`font-semibold text-sm ${rem.resolved ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                       {rem.type === 'Food' ? (lang === 'TR' ? 'Mama Bitiş Tahmini' : 'Food Depletion Estimate') : rem.type}
+                                       {rem.name && <span className="opacity-70 ml-1">({rem.name})</span>}
+                                     </p>
+                                     <p className="text-xs text-muted-foreground">{new Date(rem.dueDate).toLocaleDateString()}</p>
+                                  </div>
+                                </div>
+                                {!rem.resolved && rem.type === 'Food' && (
+                                   <button type="button" onClick={() => {}} className="text-xs font-bold text-brand-teal hover:underline px-2 py-1 rounded-md hover:bg-brand-teal/10">
+                                      {lang === 'TR' ? 'Tekrar Sipariş Ver' : 'Reorder Now'}
+                                   </button>
+                                )}
+                             </div>
+                           )) : (
+                             <p className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border rounded-xl">
+                               {lang === 'TR' ? 'Aktif hatırlatıcı yok' : 'No active reminders'}
+                             </p>
+                           )}
+                        </div>
+
+                        <div className="flex gap-2 p-3 bg-secondary rounded-xl border border-border items-center">
+                           <select value={newReminder.type} onChange={e => setNewReminder({...newReminder, type: e.target.value})} className="bg-transparent text-sm font-medium outline-none">
+                             <option value="Vaccine">{lang === 'TR' ? 'Aşı/Parazit' : 'Vaccine/Parasite'}</option>
+                             <option value="Grooming">{lang === 'TR' ? 'Kuaför' : 'Grooming'}</option>
+                             <option value="Food">{lang === 'TR' ? 'Mama Alımı' : 'Food Purchase'}</option>
+                             <option value="Custom">{lang === 'TR' ? 'Özel' : 'Custom'}</option>
+                           </select>
+                           <input type="text" value={newReminder.name} onChange={e => setNewReminder({...newReminder, name: e.target.value})} placeholder={lang === 'TR' ? 'Açıklama' : 'Note'} className="flex-1 bg-transparent px-2 text-sm outline-none border-l border-border pl-2 border-r" />
+                           <input type="date" value={newReminder.date} onChange={e => setNewReminder({...newReminder, date: e.target.value})} className="bg-transparent text-sm font-medium outline-none px-2" />
+                           <button type="button" onClick={() => {
+                              if(newReminder.date) {
+                                 const rId = Date.now().toString();
+                                 const nr = [...(activePet.reminders || []), { id: rId, type: newReminder.type, name: newReminder.name, dueDate: newReminder.date, resolved: false }];
+                                 updatePet(activePet.id, 'reminders', nr as any);
+                                 setNewReminder({type: 'Vaccine', date: '', name: ''});
+                              }
+                           }} className="bg-foreground text-background p-1.5 rounded-lg active:scale-95"><Plus className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                      
+                    </motion.div>
+                  )}
+                </form>
+              </>
             ) : (
               <div className="text-center py-12 mt-4 flex flex-col items-center justify-center h-full">
                  <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
                    <CheckCircle2 className="w-10 h-10 text-green-500" />
                  </div>
                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-                   {lang === 'TR' ? `${pets.length} profil eklendi!` : `${pets.length} profiles added!`}
+                   {lang === 'TR' ? `Profil güncellendi!` : `Profile updated!`}
                  </h2>
                  <p className="text-muted-foreground text-lg">
-                   {lang === 'TR' ? 'Mağaza deneyiminiz güncelleniyor...' : 'Personalizing your store experience...'}
+                   {lang === 'TR' ? 'Mağaza deneyiminiz yenileniyor...' : 'Personalizing your store experience...'}
                  </p>
               </div>
             )}
@@ -2800,7 +3202,7 @@ export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
   const [userPets, setUserPets] = useState<PetProfileData[]>([
-    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null }
+    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: [] }
   ]);
   const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -2809,6 +3211,7 @@ export default function App() {
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password' | 'reset-password' | null>(null);
   const [currentHash, setCurrentHash] = useState(() => typeof window !== 'undefined' ? window.location.hash : '');
+  const [focusedPetId, setFocusedPetId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -2878,8 +3281,31 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAddToCart = (itemName: string, quantity = 1, price?: number) => {
+  const [pendingCartItem, setPendingCartItem] = useState<{name: string, quantity: number, price: number, warnings: {petName: string, allergy: string}[]} | null>(null);
+
+  const handleAddToCart = (itemName: string, quantity = 1, price?: number, skipWarning = false) => {
     const finalPrice = price !== undefined ? price : getPriceFromName(itemName);
+    
+    if (!skipWarning) {
+      const lowerName = itemName.toLowerCase();
+      const warnings: {petName: string, allergy: string}[] = [];
+      const activePets = userPets.filter(p => p.name.trim() !== '' || p.photo !== null);
+      
+      activePets.forEach(pet => {
+        pet.allergies.forEach(allergy => {
+          const allergyTR = allergy === 'Chicken' ? 'tavuk' : allergy === 'Grain' ? 'tahıl' : allergy === 'Beef' ? 'sığır' : allergy === 'Dairy' ? 'süt' : allergy === 'Fish' ? 'balık' : 'toz';
+          if (lowerName.includes(allergy.toLowerCase()) || lowerName.includes(allergyTR)) {
+            warnings.push({ petName: pet.name || pet.type, allergy });
+          }
+        });
+      });
+
+      if (warnings.length > 0) {
+        setPendingCartItem({ name: itemName, quantity, price: finalPrice, warnings });
+        return;
+      }
+    }
+
     setCartItems(prev => {
       const existing = prev.find(p => p.name === itemName);
       if (existing) {
@@ -2979,6 +3405,8 @@ export default function App() {
           isLoggedIn={isLoggedIn}
           onOpenAuth={setAuthMode}
           onLogout={handleLogout}
+          userPets={userPets}
+          onOpenPetProfile={(id) => { setFocusedPetId(id); setIsPetProfileOpen(true); }}
         />
         
         {/* Floating Category Filter Button */}
@@ -3014,11 +3442,46 @@ export default function App() {
         )}
         
         <Footer />
-
+        
         {/* Modals */}
+        <AnimatePresence>
+          {pendingCartItem && (
+            <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPendingCartItem(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="bg-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative z-10 border border-border">
+                <div className="p-6">
+                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                    <ShieldAlert className="w-8 h-8 text-red-500" />
+                    <div className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full animate-ping" />
+                  </div>
+                  <h3 className="text-xl font-bold text-center mb-2">{lang === 'TR' ? 'Dikkat: Hassasiyet Uyarısı' : 'Warning: Sensitivity Alert'}</h3>
+                  <div className="text-center text-muted-foreground text-sm mb-6 space-y-2">
+                    <p>{lang === 'TR' ? 'Bu ürün evcil hayvanınızın profiliyle uyumsuz olabilir:' : 'This product may conflict with your pet\'s profile:'}</p>
+                    {pendingCartItem.warnings.map((w, i) => (
+                      <div key={i} className="font-semibold text-foreground/90 bg-secondary/50 py-2 px-3 rounded-lg border border-border">
+                        {w.petName} — {w.allergy} {lang === 'TR' ? 'alerjisi' : 'allergy'}
+                      </div>
+                    ))}
+                    <p className="mt-2 text-xs opacity-70">
+                      {lang === 'TR' ? 'Yine de sepete eklemek istiyor musunuz?' : 'Do you want to add it to your cart anyway?'}
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setPendingCartItem(null)} className="flex-1 py-3 px-4 bg-secondary text-foreground rounded-xl font-bold hover:bg-secondary-dark transition-all">
+                      {lang === 'TR' ? 'İptal' : 'Cancel'}
+                    </button>
+                    <button onClick={() => { handleAddToCart(pendingCartItem.name, pendingCartItem.quantity, pendingCartItem.price, true); setPendingCartItem(null); setToastMessage(lang === 'TR' ? 'Ürün uyarıya rağmen sepete eklendi' : 'Added to cart despite warning'); setTimeout(() => setToastMessage(null), 3000); }} className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 transition-all">
+                      {lang === 'TR' ? 'Yine de Ekle' : 'Add Anyway'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
         <SaveToFolderModal isOpen={selectedProductForFolder !== null} onClose={() => setSelectedProductForFolder(null)} productName={selectedProductForFolder} folders={folders} onSave={handleSaveToSpecificFolder} />
         <FoldersModal isOpen={isFoldersModalOpen} onClose={() => setIsFoldersModalOpen(false)} folders={folders} setFolders={setFolders} onAddToCart={handleAddToCart} />
-        <PetProfileModal isOpen={isPetProfileOpen} onClose={() => setIsPetProfileOpen(false)} pets={userPets} setPets={setUserPets} />
+        <PetProfileModal isOpen={isPetProfileOpen} onClose={() => { setIsPetProfileOpen(false); setFocusedPetId(null); }} pets={userPets} setPets={setUserPets} focusedPetId={focusedPetId} />
         <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />
         <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} onClearCart={() => setCartItems([])} onCheckout={handleCheckout} />
         <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onProcessPayment={handleProcessPayment} totalPrice={cartTotalPrice} onOpenLogin={() => { setIsCheckoutOpen(false); setAuthMode('login'); }} />
