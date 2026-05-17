@@ -1,43 +1,13 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { CATEGORIES } from './categories';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Filter, X, ChevronDown, Heart, Search, Check, ShoppingCart, Loader2, Minus, Plus, Package, FolderPlus } from 'lucide-react';
+import { ChevronRight, FolderPlus, Package, Search } from 'lucide-react';
 import { useLang, t, Lang } from './i18n'; 
-import { generateProductsByCategoryId } from './productGenerator';
-
-export type Product = {
-  id: string;
-  name: { EN: string, TR: string };
-  image: string;
-  price: number;
-  oldPrice?: number;
-  discount?: number;
-  rating?: number | null;
-  reviews?: number | null;
-  sold: number;
-  badges: string[];
-  
-  brand: string;
-  flavor?: string;
-  weight?: string;
-  age?: string;
-  breedSize?: string;
-  material?: string;
-  color?: string;
-};
-
-// Generate deterministic dummy data based on ID
-export function generateDummyProducts(categoryId: string, count: number): Product[] {
-  return generateProductsByCategoryId(categoryId, categoryId, count);
-}
 
 export default function CategoryPage({ 
   categoryId, 
-  onAddToCart, 
-  savedProductNames, 
-  onSaveToFolder,
   userPets = [],
-  selectedPets = []
+  selectedPets
 }: { 
   categoryId: string, 
   onAddToCart: (name: string, quantity?: number, price?: number) => void,
@@ -48,397 +18,68 @@ export default function CategoryPage({
 }) {
   const { lang } = useLang();
   
-  const [products, setProducts] = useState<Product[]>([]);
-  const [visibleCount, setVisibleCount] = useState(24);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState('recommended');
-  
   // Find category info
   const subcategory = useMemo(() => {
     if (categoryId === 'personalized') {
+      const activeFilters = selectedPets !== undefined
+        ? selectedPets.map(p => p.toLowerCase())
+        : userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase());
+        
+      const combinedPets = Array.from(new Set(activeFilters));
+      
+      const mapPetToCategory = (pet: string) => {
+        if (pet === 'avian') return 'birds';
+        if (pet === 'fish') return 'fish';
+        if (pet === 'rodent') return 'rodents';
+        if (pet === 'reptile') return 'reptiles';
+        return pet.endsWith('s') ? pet : pet + 's';
+      };
+
+      const targetCategories = combinedPets.length > 0 
+        ? combinedPets.map(mapPetToCategory)
+        : ['dogs', 'cats', 'birds', 'fish', 'rodents', 'reptiles'];
+
+      const relevantCategories = CATEGORIES.filter(c => targetCategories.includes(c.id.toLowerCase()));
+      let recommendedFolders: any[] = [];
+      for (const cat of relevantCategories) {
+        recommendedFolders.push(...cat.subcategories.slice(0, Math.ceil(12 / relevantCategories.length)));
+      }
+
       return {
         parent: { name: { EN: "Catalog", TR: "Katalog" } },
-        sub: { name: { EN: "Your Personalized Catalog", TR: "Sizin İçin Özel Seçimler" } }
+        sub: { name: { EN: "Your Personalized Catalog", TR: "Sizin İçin Özel Seçimler" } },
+        isParent: true,
+        subcategories: recommendedFolders.slice(0, 12)
       } as any;
     }
+    
+    // check if it's a parent category
+    const parentCat = CATEGORIES.find(c => c.id === categoryId);
+    if (parentCat) {
+      return {
+          parent: { name: { EN: "Catalog", TR: "Katalog" } },
+          sub: { name: parentCat.name, id: parentCat.id },
+          isParent: true,
+          subcategories: parentCat.subcategories
+      }
+    }
+
+    // check if it's a subcategory
     for (const cat of CATEGORIES) {
       const sub = cat.subcategories.find(s => s.id === categoryId);
-      if (sub) return { parent: cat, sub };
+      if (sub) return { parent: cat, sub, isParent: false };
     }
+
     return {
       parent: { name: { EN: "Catalog", TR: "Katalog" } },
-      sub: { name: { EN: categoryId, TR: categoryId } }
+      sub: { name: { EN: categoryId, TR: categoryId } },
+      isParent: false
     } as any;
   }, [categoryId]);
-
-  // Filters state
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
-  const [selectedWeights, setSelectedWeights] = useState<string[]>([]);
-  const [selectedAges, setSelectedAges] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
-
-  const getOrganicCount = (catId: string) => {
-    let hash = 0;
-    for (let i = 0; i < catId.length; i++) {
-       hash = catId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash % 290) + 60;
-  };
-
-  const resetFilters = () => {
-    setSelectedBrands([]);
-    setPriceRange([0, 5000]);
-    setSelectedFlavors([]);
-    setSelectedWeights([]);
-    setSelectedAges([]);
-    setSelectedSizes([]);
-    setSelectedMaterials([]);
-  };
-
-  useEffect(() => {
-    // Simulate loading data
-    setIsLoadingProducts(true);
-    setProducts([]);
-    setVisibleCount(24);
-    resetFilters();
-    const timer = setTimeout(() => {
-      setIsLoadingProducts(false);
-      if (categoryId === 'personalized') {
-        const combinedPets = Array.from(new Set([
-          ...selectedPets.map(p => p.toLowerCase()),
-          ...userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase())
-        ]));
-        if (combinedPets.length === 0) {
-          // fallback to dogs
-          setProducts(generateDummyProducts('dogs', getOrganicCount('dogs')));
-        } else {
-          // Generate an array of products matching those pets
-          let mixedProducts: Product[] = [];
-          for (const pet of combinedPets) {
-             const items = generateDummyProducts(pet + 's', Math.floor(getOrganicCount(pet + 's') / combinedPets.length) * 2); // get a larger pool
-             mixedProducts = [...mixedProducts, ...items];
-          }
-          
-          mixedProducts = mixedProducts.filter((product, index, self) => 
-            index === self.findIndex((t) => (t.id === product.id))
-          );
-
-          // Apply allergy filtering - dont show products with known allergies
-          const allAllergies = Array.from(new Set(userPets.flatMap(p => p.allergies.map(a => a.toLowerCase()))));
-          
-          if (allAllergies.length > 0) {
-            mixedProducts = mixedProducts.filter(p => {
-               const pName = p.name.EN.toLowerCase();
-               const pFlavor = p.flavor?.toLowerCase() || '';
-               return !allAllergies.some(allergy => {
-                  const allergyTR = allergy === 'chicken' ? 'tavuk' : allergy === 'grain' ? 'tahıl' : allergy === 'beef' ? 'sığır' : allergy === 'dairy' ? 'süt' : allergy === 'fish' ? 'balık' : 'toz';
-                  return pName.includes(allergy) || pName.includes(allergyTR) || 
-                         pFlavor.includes(allergy) || pFlavor.includes(allergyTR);
-               });
-            });
-          }
-
-          // Compute scoring based on age and weight/size
-          const sortedProducts = mixedProducts.sort((a, b) => {
-            let scoreA = Math.random(); 
-            let scoreB = Math.random();
-
-            for (const pet of userPets) {
-               const petAgeNum = parseFloat(pet.age);
-               let petAgeStage = 'Adult';
-               if (petAgeNum < 1) petAgeStage = 'Puppy/Kitten';
-               else if (petAgeNum >= 7) petAgeStage = 'Senior';
-               
-               let petSizeStage = 'All Sizes';
-               const petWtNum = parseFloat(pet.weight || '0');
-               if (petWtNum > 0 && petWtNum < 10) petSizeStage = 'Small';
-               else if (petWtNum > 25) petSizeStage = 'Large';
-
-               if (a.age === petAgeStage) scoreA += 5;
-               if (b.age === petAgeStage) scoreB += 5;
-               if (a.breedSize === petSizeStage) scoreA += 3;
-               if (b.breedSize === petSizeStage) scoreB += 3;
-            }
-
-            return scoreB - scoreA;
-          });
-
-          // take top portion of the scored products
-          setProducts(sortedProducts.slice(0, getOrganicCount('dogs')));
-        }
-      } else {
-        let catProducts = generateDummyProducts(categoryId, getOrganicCount(categoryId));
-
-        const allAllergies = Array.from(new Set(userPets.flatMap(p => p.allergies?.map(a => a.toLowerCase()) || [])));
-        if (allAllergies.length > 0) {
-          catProducts = catProducts.filter(p => {
-             const pName = p.name.EN.toLowerCase();
-             const pFlavor = p.flavor?.toLowerCase() || '';
-             return !allAllergies.some(allergy => {
-                const allergyTR = allergy === 'chicken' ? 'tavuk' : allergy === 'grain' ? 'tahıl' : allergy === 'beef' ? 'sığır' : allergy === 'dairy' ? 'süt' : allergy === 'fish' ? 'balık' : 'toz';
-                return pName.includes(allergy) || pName.includes(allergyTR) || 
-                       pFlavor.includes(allergy) || pFlavor.includes(allergyTR);
-             });
-          });
-        }
-        
-        catProducts = catProducts.sort((a, b) => {
-          let scoreA = 0; 
-          let scoreB = 0;
-          for (const pet of userPets) {
-             const petAgeNum = parseFloat(pet.age);
-             let petAgeStage = 'Adult';
-             if (petAgeNum < 1) petAgeStage = 'Puppy/Kitten';
-             else if (petAgeNum >= 7) petAgeStage = 'Senior';
-             
-             let petSizeStage = 'All Sizes';
-             const petWtNum = parseFloat(pet.weight || '0');
-             if (petWtNum > 0 && petWtNum < 10) petSizeStage = 'Small';
-             else if (petWtNum > 25) petSizeStage = 'Large';
-
-             if (a.age === petAgeStage) scoreA += 5;
-             if (b.age === petAgeStage) scoreB += 5;
-             if (a.breedSize === petSizeStage) scoreA += 3;
-             if (b.breedSize === petSizeStage) scoreB += 3;
-          }
-          return scoreB - scoreA;
-        });
-
-        setProducts(catProducts);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [categoryId, userPets, selectedPets]);
-
-  // Derive filter options from products
-  const availableBrands = useMemo(() => Array.from(new Set(products.map(p => p.brand))), [products]);
-  const availableFlavors = useMemo(() => Array.from(new Set(products.map(p => p.flavor).filter(Boolean) as string[])), [products]);
-  const availableWeights = useMemo(() => Array.from(new Set(products.map(p => p.weight).filter(Boolean) as string[])), [products]);
-  const availableAges = useMemo(() => Array.from(new Set(products.map(p => p.age).filter(Boolean) as string[])), [products]);
-  const availableSizes = useMemo(() => Array.from(new Set(products.map(p => p.breedSize).filter(Boolean) as string[])), [products]);
-  const availableMaterials = useMemo(() => Array.from(new Set(products.map(p => p.material).filter(Boolean) as string[])), [products]);
-
-  // Filter and sort
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      if (selectedBrands.length > 0 && !selectedBrands.includes(p.brand)) return false;
-      if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
-      if (selectedFlavors.length > 0 && p.flavor && !selectedFlavors.includes(p.flavor)) return false;
-      if (selectedWeights.length > 0 && p.weight && !selectedWeights.includes(p.weight)) return false;
-      if (selectedAges.length > 0 && p.age && !selectedAges.includes(p.age)) return false;
-      if (selectedSizes.length > 0 && p.breedSize && !selectedSizes.includes(p.breedSize)) return false;
-      if (selectedMaterials.length > 0 && p.material && !selectedMaterials.includes(p.material)) return false;
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'newest') return b.id.localeCompare(a.id);
-      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
-      return b.sold - a.sold; // recommended / bestseller
-    });
-  }, [products, selectedBrands, priceRange, selectedFlavors, selectedWeights, selectedAges, selectedSizes, selectedMaterials, sortBy]);
-
-  const hasActiveFilters = selectedBrands.length > 0 || priceRange[0] > 0 || priceRange[1] < 5000 || selectedFlavors.length > 0 || selectedWeights.length > 0 || selectedAges.length > 0 || selectedSizes.length > 0 || selectedMaterials.length > 0;
-
-  const toggleFilter = (setFn: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
-    setFn(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
-  };
 
   if (!subcategory) {
     return <div className="py-32 text-center">Category not found</div>;
   }
-
-  const FilterSidebar = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between lg:hidden mb-4 border-b border-border pb-4">
-        <h3 className="font-bold text-lg">{lang === 'TR' ? 'Filtreler' : 'Filters'}</h3>
-        <button onClick={() => setIsMobileFiltersOpen(false)} className="p-2 bg-secondary rounded-full">
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      {hasActiveFilters && (
-        <div className="mb-4">
-          <button 
-            onClick={resetFilters}
-            className="w-full py-2.5 rounded-lg bg-secondary text-foreground text-sm font-semibold hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2"
-          >
-            <X className="w-4 h-4" />
-            {lang === 'TR' ? 'Filtreleri Temizle' : 'Clear Filters'}
-          </button>
-        </div>
-      )}
-
-      {/* Brands */}
-      <FilterSection title={lang === 'TR' ? 'Marka' : 'Brand'}>
-        <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-          {availableBrands.map(b => (
-            <label key={b} className="flex items-center gap-2 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={selectedBrands.includes(b)}
-                onChange={() => toggleFilter(setSelectedBrands, b)}
-                className="hidden" 
-              />
-              <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBrands.includes(b) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
-                {selectedBrands.includes(b) && <Check className="w-3.5 h-3.5" />}
-              </div>
-              <span className="text-sm text-foreground">{b}</span>
-            </label>
-          ))}
-        </div>
-      </FilterSection>
-
-      {/* Price */}
-      <FilterSection title={lang === 'TR' ? 'Fiyat Aralığı' : 'Price Range'}>
-        <div className="flex items-center gap-2">
-          <input 
-            type="number" 
-            value={priceRange[0]} 
-            onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
-            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal"
-            placeholder="Min"
-          />
-          <span className="text-muted-foreground">-</span>
-          <input 
-            type="number" 
-            value={priceRange[1]} 
-            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 5000])}
-            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal"
-            placeholder="Max"
-          />
-        </div>
-      </FilterSection>
-
-      {/* Flavors */}
-      {availableFlavors.length > 0 && (
-        <FilterSection title={lang === 'TR' ? 'Lezzet/İçerik' : 'Flavor/Taste'}>
-          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-            {availableFlavors.map(f => (
-              <label key={f} className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={selectedFlavors.includes(f)}
-                  onChange={() => toggleFilter(setSelectedFlavors, f)}
-                  className="hidden" 
-                />
-                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedFlavors.includes(f) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
-                  {selectedFlavors.includes(f) && <Check className="w-3.5 h-3.5" />}
-                </div>
-                <span className="text-sm text-foreground">{t(f, lang)}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
-
-      {/* Materials */}
-      {availableMaterials.length > 0 && (
-        <FilterSection title={lang === 'TR' ? 'Materyal' : 'Material'}>
-          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-            {availableMaterials.map(m => (
-              <label key={m} className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={selectedMaterials.includes(m)}
-                  onChange={() => toggleFilter(setSelectedMaterials, m)}
-                  className="hidden" 
-                />
-                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedMaterials.includes(m) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
-                  {selectedMaterials.includes(m) && <Check className="w-3.5 h-3.5" />}
-                </div>
-                <span className="text-sm text-foreground">{t(m, lang)}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
-
-      {/* Ages */}
-      {availableAges.length > 0 && (
-        <FilterSection title={lang === 'TR' ? 'Yaş Grubu' : 'Age Range'}>
-          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-            {availableAges.map(a => (
-              <label key={a} className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={selectedAges.includes(a)}
-                  onChange={() => toggleFilter(setSelectedAges, a)}
-                  className="hidden" 
-                />
-                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedAges.includes(a) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
-                  {selectedAges.includes(a) && <Check className="w-3.5 h-3.5" />}
-                </div>
-                <span className="text-sm text-foreground">{t(a, lang)}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
-
-      {/* Sizes */}
-      {availableSizes.length > 0 && (
-        <FilterSection title={lang === 'TR' ? 'Boyut / Tür' : 'Size / Type'}>
-          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-            {availableSizes.map(s => (
-              <label key={s} className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={selectedSizes.includes(s)}
-                  onChange={() => toggleFilter(setSelectedSizes, s)}
-                  className="hidden" 
-                />
-                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedSizes.includes(s) ? 'bg-brand-teal border-brand-teal text-white' : 'border-input bg-card group-hover:border-brand-teal'}`}>
-                  {selectedSizes.includes(s) && <Check className="w-3.5 h-3.5" />}
-                </div>
-                <span className="text-sm text-foreground">{t(s, lang)}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
-
-      {/* Weights */}
-      {availableWeights.length > 0 && (
-        <FilterSection title={lang === 'TR' ? 'Ağırlık' : 'Package Weight'}>
-          <div className="grid grid-cols-2 gap-2">
-            {availableWeights.map(w => (
-              <button
-                key={w}
-                onClick={() => toggleFilter(setSelectedWeights, w)}
-                className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all ${selectedWeights.includes(w) ? 'bg-brand-teal/10 border-brand-teal text-brand-teal' : 'bg-card border-input text-muted-foreground hover:border-brand-teal/50'}`}
-              >
-                {w}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-      )}
-    </div>
-  );
-
-  // Intersection observer for infinite scroll
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      const first = entries[0];
-      if (first.isIntersecting && !isLoadingProducts && visibleCount < filteredProducts.length) {
-        setVisibleCount(prev => Math.min(prev + 24, filteredProducts.length));
-      }
-    }, { threshold: 0.1, rootMargin: '200px' });
-
-    const currentRef = loadMoreRef.current;
-    if (currentRef) observer.observe(currentRef);
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-      observer.disconnect();
-    };
-  }, [isLoadingProducts, visibleCount, filteredProducts.length]);
 
   return (
     <div className="min-h-screen bg-secondary/30 pt-4 pb-20">
@@ -460,299 +101,49 @@ export default function CategoryPage({
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-1">
               {subcategory.sub.name[lang]}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              {products.length > 0 ? (lang === 'TR' ? `${products.length} ürün bulundu` : `${products.length} products found`) : ''}
-            </p>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-28 bg-card border border-border rounded-2xl p-5 shadow-sm">
-              <FilterSidebar />
-            </div>
-          </aside>
-
+        <div className="flex flex-col lg:flex-row gap-8 w-full">
           {/* Main Content */}
-          <div className="flex-1">
-            {/* Top Bar for Mobile Filter Toggle & Sorting */}
-            <div className="flex items-center justify-between lg:justify-end mb-6 gap-4">
-              <button 
-                onClick={() => setIsMobileFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 bg-card border border-border px-4 py-2.5 rounded-xl font-medium text-sm text-foreground hover:bg-secondary active:scale-95 transition-all"
-              >
-                <Filter className="w-4 h-4" />
-                {lang === 'TR' ? 'Filtreler' : 'Filters'}
-              </button>
-              
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground hidden sm:block">
-                  {lang === 'TR' ? 'Sırala:' : 'Sort by:'}
-                </span>
-                <div className="relative">
-                  <select 
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value)}
-                    className="appearance-none bg-card border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all cursor-pointer"
+          <div className="flex-1 w-full">
+            {subcategory.isParent ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {subcategory.subcategories.map((sub: any) => (
+                  <a 
+                    href={`#/category/${sub.id}`} 
+                    key={sub.id} 
+                    className="group bg-card rounded-2xl p-6 border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center justify-center text-center relative h-full"
                   >
-                    <option value="recommended">{lang === 'TR' ? 'Önerilen' : 'Recommended'}</option>
-                    <option value="newest">{lang === 'TR' ? 'En Yeniler' : 'Newest'}</option>
-                    <option value="rating">{lang === 'TR' ? 'En Yüksek Puan' : 'Highest Rated'}</option>
-                    <option value="price-low">{lang === 'TR' ? 'Fiyat: Artan' : 'Price: Low to High'}</option>
-                    <option value="price-high">{lang === 'TR' ? 'Fiyat: Azalan' : 'Price: High to Low'}</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            {/* Product Grid */}
-            {isLoadingProducts ? (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-teal mb-4" />
-                <p>{lang === 'TR' ? 'Ürünler yükleniyor...' : 'Loading products...'}</p>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="bg-card border border-border rounded-2xl p-12 text-center flex flex-col items-center">
-                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-                  <Search className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">{lang === 'TR' ? 'Ürün Bulunamadı' : 'No Products Found'}</h3>
-                <p className="text-muted-foreground text-sm max-w-md">
-                  {lang === 'TR' ? 'Seçtiğiniz filtrelere uygun ürün bulamadık. Lütfen farklı seçenekler deneyin.' : 'We couldnt find any products matching your filters. Please try different options.'}
-                </p>
-                <button 
-                  onClick={() => {
-                    setSelectedBrands([]);
-                    setPriceRange([0, 5000]);
-                    setSelectedFlavors([]);
-                    setSelectedWeights([]);
-                    setSelectedAges([]);
-                    setSelectedSizes([]);
-                    setSelectedMaterials([]);
-                  }}
-                  className="mt-6 font-bold text-brand-teal hover:underline"
-                >
-                  {lang === 'TR' ? 'Filtreleri Temizle' : 'Clear Filters'}
-                </button>
-              </div>
+                    <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mb-4 group-hover:bg-brand-teal/10 transition-all duration-300">
+                      <FolderPlus className="w-8 h-8 text-muted-foreground group-hover:text-brand-teal group-hover:scale-110 transition-all duration-500" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug">{sub.name[lang]}</h3>
+                  </a>
+                ))}
+             </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-8">
-                  {filteredProducts.slice(0, visibleCount).map(product => (
-                    <ProductListingCard 
-                      key={product.id}
-                      product={product}
-                      lang={lang}
-                      onAddToCart={onAddToCart}
-                      isSaved={savedProductNames.includes(product.name.EN)}
-                      onSaveToFolder={onSaveToFolder}
-                    />
-                  ))}
-                </div>
-                
-                {/* Pagination / Load More */}
-                {filteredProducts.length > 0 && (
-                  <div className="flex flex-col items-center justify-center pt-8 border-t border-border">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {lang === 'TR' ? `${visibleCount < filteredProducts.length ? visibleCount : filteredProducts.length} / ${filteredProducts.length} ürün gösteriliyor` : `Showing ${visibleCount < filteredProducts.length ? visibleCount : filteredProducts.length} of ${filteredProducts.length} products`}
+                <div className="bg-card border border-border rounded-2xl p-12 text-center flex flex-col items-center">
+                    <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">{lang === 'TR' ? 'Ürün Bulunamadı' : 'No Products Found'}</h3>
+                    <p className="text-muted-foreground text-sm max-w-md mt-2">
+                    {lang === 'TR' ? 'Bu kategoride henüz ürün bulunmuyor. Gerçek satıcılar stoklarını güncellediğinde ürünler burada listelenecektir.' : 'There are no products in this category yet. When real merchants update their inventory, products will be listed here.'}
                     </p>
-                    {visibleCount < filteredProducts.length && (
-                      <button 
-                        ref={loadMoreRef}
-                        onClick={() => setVisibleCount(prev => Math.min(prev + 24, filteredProducts.length))}
-                        className="px-8 py-3 rounded-xl border-2 border-brand-teal text-brand-teal font-bold hover:bg-brand-teal hover:text-white transition-all active:scale-95 flex items-center gap-2"
-                      >
-                        {lang === 'TR' ? 'Daha Fazla Yükle' : 'Load More'}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
+                    <a 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); window.location.hash = ''; }}
+                    className="mt-6 font-bold text-brand-teal hover:underline"
+                    >
+                    {lang === 'TR' ? 'Ana Sayfaya Dön' : 'Back to Home'}
+                    </a>
+                </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Mobile Filter Drawer */}
-      <AnimatePresence>
-        {isMobileFiltersOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setIsMobileFiltersOpen(false)}
-              className="fixed inset-0 bg-black/60 z-[150] lg:hidden backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 w-[85%] max-w-md bg-background shadow-2xl z-[160] lg:hidden flex flex-col"
-            >
-              <div className="flex-1 overflow-y-auto p-6">
-                <FilterSidebar />
-              </div>
-              <div className="p-4 border-t border-border bg-card">
-                <button 
-                  onClick={() => setIsMobileFiltersOpen(false)}
-                  className="w-full bg-brand-teal text-white py-3.5 rounded-xl font-bold active:scale-95 transition-all"
-                >
-                  {lang === 'TR' ? `Sonuçları Göster (${filteredProducts.length})` : `Show Results (${filteredProducts.length})`}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
-// Subcomponents
-
-function FilterSection({ title, children }: { title: string, children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(true);
-  
-  return (
-    <div className="border-b border-border/50 pb-4 last:border-0 last:pb-0">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full py-2 mb-2 group"
-      >
-        <span className="font-semibold text-sm text-foreground tracking-tight">{title}</span>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="pt-2 pb-2">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-export const ProductListingCard: React.FC<{ 
-  product: Product,
-  lang: string,
-  onAddToCart: (name: string, quantity?: number, price?: number) => void,
-  isSaved: boolean,
-  onSaveToFolder: (name: string) => void
-}> = ({ 
-  product, 
-  lang,
-  onAddToCart,
-  isSaved,
-  onSaveToFolder
-}) => {
-  const [quantity, setQuantity] = useState(1);
-
-  return (
-    <div className="bg-card rounded-2xl border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-500 flex flex-col group overflow-hidden relative">
-      {/* Image & Badges Container */}
-      <div className="aspect-[4/5] sm:aspect-square relative bg-secondary/20 overflow-hidden flex items-center justify-center p-4">
-        {/* Badges */}
-        <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
-          {product.discount && (
-            <div className="bg-[#E27D60] text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-              -{Math.round(product.discount)}%
-            </div>
-          )}
-          {product.badges.map(b => (
-            <div key={b} className="bg-foreground text-background text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-              {lang === 'TR' && b === 'New' ? 'Yeni' : b === 'Bestseller' ? (lang === 'TR' ? 'Çok Satan' : b) : b}
-            </div>
-          ))}
-        </div>
-
-        {/* Folder Button */}
-        <button 
-          onClick={(e) => { e.preventDefault(); onSaveToFolder(product.name.EN); }}
-          className={`absolute top-3 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isSaved ? 'text-brand-teal border-brand-teal/20 bg-brand-teal/10' : 'text-muted-foreground hover:text-brand-teal'}`}
-        >
-          <FolderPlus className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isSaved ? 'fill-current' : ''}`} />
-        </button>
-
-        <Package className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground/20 group-hover:scale-110 group-hover:text-brand-teal/40 transition-all duration-700 ease-out" />
-
-        {/* Desktop Add to Cart Overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20 hidden lg:flex flex-col gap-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-          <div className="flex items-center justify-between border border-white/20 rounded-xl overflow-hidden bg-background/95 backdrop-blur-md shadow-lg">
-            <button 
-              onClick={(e) => { e.preventDefault(); setQuantity(Math.max(1, quantity - 1)); }}
-              className="w-10 h-10 flex items-center justify-center text-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <span className="font-semibold text-foreground text-sm min-w-[20px] text-center">{quantity}</span>
-            <button 
-              onClick={(e) => { e.preventDefault(); setQuantity(quantity + 1); }}
-              className="w-10 h-10 flex items-center justify-center text-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          <button 
-            onClick={(e) => { e.preventDefault(); onAddToCart(product.name.EN, quantity, product.price); setQuantity(1); }}
-            className="w-full bg-brand-teal text-white font-bold py-2.5 rounded-xl shadow-[0_4px_14px_0_rgba(45,212,191,0.39)] hover:bg-brand-teal-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {lang === 'TR' ? 'Sepete Ekle' : 'Add to Cart'}
-          </button>
-        </div>
-      </div>
-
-      {/* Info Content */}
-      <div className="p-4 sm:p-5 flex flex-col flex-1 relative bg-card z-10">
-        <div className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-2">
-          <span className="truncate">{product.brand}</span>
-          {product.weight && (
-            <>
-              <span className="w-1 h-1 rounded-full bg-border"></span>
-              <span className="truncate">{product.weight}</span>
-            </>
-          )}
-        </div>
-        <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug line-clamp-2 min-h-[2.75rem] mb-2 group-hover:text-brand-teal transition-colors">
-          {product.name[lang as 'EN' | 'TR'] || product.name.EN}
-        </h3>
-        
-        <div className="flex items-center gap-1.5 mb-4 min-h-[1.25rem]">
-          <div className="flex text-[#F4A261] text-[10px] sm:text-xs">
-            <span className="text-muted-foreground opacity-30">{'★★★★★'}</span>
-          </div>
-          <span className="text-[10px] sm:text-xs text-muted-foreground">(0)</span>
-        </div>
-
-        <div className="mt-auto pt-3 border-t border-border/60 flex flex-col gap-3">
-          <div className="flex items-end justify-between gap-2 w-full">
-            <div className="flex flex-col">
-              {product.oldPrice && (
-                <span className="text-[10px] sm:text-xs text-muted-foreground/60 line-through decoration-muted-foreground/40 font-medium mb-0.5">
-                  ₺{product.oldPrice.toFixed(2)}
-                </span>
-              )}
-              <span className={`text-base sm:text-lg lg:text-xl font-extrabold tracking-tight ${product.discount ? 'text-[#E27D60]' : 'text-foreground'}`}>
-                ₺{product.price.toFixed(2)}
-              </span>
-            </div>
-            
-            {/* Mobile / Tablet Add to Cart Button */}
-            <button 
-              onClick={(e) => { e.preventDefault(); onAddToCart(product.name.EN, 1, product.price); }}
-              className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-teal text-white flex items-center justify-center hover:bg-brand-teal-dark active:scale-95 transition-all shadow-[0_4px_14px_0_rgba(45,212,191,0.2)]"
-              aria-label="Add to cart"
-            >
-              <ShoppingCart className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}

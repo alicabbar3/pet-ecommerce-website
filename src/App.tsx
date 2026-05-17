@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useMemo, useRef } from 'react';
 import turkeyData from './turkeyData';
 import { CATEGORIES } from './categories';
-import CategoryPage, { ProductListingCard, generateDummyProducts } from './CategoryPage';
+import CategoryPage from './CategoryPage';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Phone, 
@@ -54,7 +54,8 @@ import {
   Check,
   ShieldAlert,
   ShieldCheck,
-  PawPrint
+  PawPrint,
+  SlidersHorizontal
 } from 'lucide-react';
 
 const BubblesIcon = ({ className }: { className?: string }) => (
@@ -67,7 +68,7 @@ const BubblesIcon = ({ className }: { className?: string }) => (
 );
 
 import { Lang, LangContext, useLang, t } from './i18n';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // Data
 const CONTACT = {
@@ -87,87 +88,6 @@ const SERVICES = [
   { id: 'reptile', title: 'Reptile', icon: <Turtle className="w-6 h-6" />, items: ['Live/Dried Food', 'Glass Terrariums', 'UVB Lamps', 'Thermostats', 'Hygrometers'] },
 ];
 
-const MOCK_PRODUCTS = generateDummyProducts('all', 100).map((p, idx) => ({
-  id: idx,
-  name: p.name,
-  category: { EN: p.brand || "Brand", TR: p.brand || "Marka" } // We map category label in search to brand as category mapping is complex here
-}));
-
-function PetAvatarGroup({ pets, onOpenPetProfile }: { pets?: any[], onOpenPetProfile?: (id: string) => void }) {
-  const { lang } = useLang();
-  if (!pets || !onOpenPetProfile) return null;
-  const activePets = pets.filter(p => p.name.trim() !== '' || p.photo !== null);
-  if (activePets.length === 0) return null;
-
-  const maxVisible = 3;
-  const visiblePets = activePets.slice(0, maxVisible);
-  const hiddenCount = activePets.length - maxVisible;
-
-  const getIcon = (type: string) => {
-    switch(type) {
-      case 'Dog': return Dog;
-      case 'Cat': return Cat;
-      case 'Avian': return Bird;
-      case 'Rodent': return Rat;
-      case 'Fish': return Fish;
-      case 'Reptile': return Turtle;
-      default: return Heart;
-    }
-  };
-
-  return (
-    <>
-      <div className="relative hidden md:flex items-center group bg-card border border-border/60 shadow-sm rounded-full p-1 pr-3 hover:border-brand-teal/50 hover:shadow-md transition-all duration-300">
-        <div className="flex items-center -space-x-2 mr-2">
-          {visiblePets.map((pet, i) => {
-            const Icon = getIcon(pet.type);
-            return (
-              <button
-                key={pet.id}
-                onClick={() => onOpenPetProfile(pet.id)}
-                style={{ zIndex: 10 - i }}
-                className="relative w-8 h-8 rounded-full bg-secondary border-2 border-background overflow-hidden flex items-center justify-center hover:-translate-y-0.5 hover:shadow-md hover:border-brand-teal transition-all duration-300 group/avatar"
-                title={pet.name || t(pet.type, lang)}
-              >
-                {pet.photo ? (
-                  <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform" />
-                ) : (
-                  <Icon className="w-4 h-4 text-muted-foreground group-hover/avatar:text-brand-teal transition-colors" />
-                )}
-              </button>
-            );
-          })}
-          {hiddenCount > 0 && (
-            <button
-              onClick={() => onOpenPetProfile(activePets[maxVisible]?.id || '')}
-              style={{ zIndex: 0 }}
-              className="relative w-8 h-8 rounded-full bg-secondary border-2 border-background flex items-center justify-center text-[10px] font-extrabold text-foreground hover:-translate-y-0.5 hover:border-brand-teal transition-all duration-300"
-            >
-              +{hiddenCount}
-            </button>
-          )}
-        </div>
-        <div className="flex flex-col items-start gap-0.5">
-          <span className="text-[11px] font-bold text-foreground leading-none">{lang === 'TR' ? 'Dostlarım' : 'My Pets'}</span>
-          <span className="text-[9px] font-semibold text-muted-foreground leading-none uppercase tracking-wider">{activePets.length} {lang === 'TR' ? 'KAYITLI' : 'SAVED'}</span>
-        </div>
-      </div>
-      
-      {/* Mobile view */}
-      <button 
-        onClick={() => onOpenPetProfile(activePets[0]?.id || '')} 
-        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-brand-teal/10 border border-brand-teal/30 hover:bg-brand-teal/20 transition-colors text-brand-teal relative"
-      >
-        <PawPrint className="w-4 h-4" />
-        {activePets.length > 1 && (
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-foreground text-background text-[8px] font-bold flex items-center justify-center rounded-full leading-none">
-            {activePets.length}
-          </span>
-        )}
-      </button>
-    </>
-  );
-}
 
 function Header({ 
   cartCount, 
@@ -177,7 +97,8 @@ function Header({
   onOpenAuth,
   onLogout,
   userPets,
-  onOpenPetProfile
+  onOpenPetProfile,
+  selectedPetsFilter
 }: { 
   cartCount: number, 
   onOpenCart: () => void,
@@ -186,7 +107,8 @@ function Header({
   onOpenAuth: (mode: 'login' | 'register') => void,
   onLogout: () => void,
   userPets?: any[],
-  onOpenPetProfile?: (id: string) => void
+  onOpenPetProfile?: (id: string) => void,
+  selectedPetsFilter?: string[]
 }) {
   const { lang, setLang } = useLang();
   const [isDark, setIsDark] = useState(() => {
@@ -217,18 +139,35 @@ function Header({
     debounceTimer = setTimeout(() => setActiveCategory(null), 150);
   };
 
-  const filteredSuggestions = MOCK_PRODUCTS.filter(product => 
-    product.name[lang].toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category[lang].toLowerCase().includes(searchQuery.toLowerCase())
-  ).slice(0, 5);
+  // If selectedPetsFilter is explicitly provided, use ONLY that. Otherwise use userPets.
+  const activeFilters = selectedPetsFilter !== undefined 
+    ? selectedPetsFilter.map(p => p.toLowerCase())
+    : (userPets || []).filter(p => p.name && p.type).map(p => p.type.toLowerCase());
+    
+  const searchFilterPets = Array.from(new Set(activeFilters));
 
-  const handleSearchSelect = (val: string) => {
-    setSearchQuery(val);
+  const allCategories = CATEGORIES.flatMap(c => 
+    c.subcategories.map(s => ({
+      id: s.id,
+      name: s.name,
+      parentName: c.name,
+      parentId: c.id
+    }))
+  );
+
+  const filteredSuggestions = allCategories.filter(cat => {
+    const matchesSearch = cat.name[lang].toLowerCase().includes(searchQuery.toLowerCase()) || cat.parentName[lang].toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (searchFilterPets.length === 0) return true;
+    
+    const pCat = cat.parentName.EN.toLowerCase();
+    return searchFilterPets.some(pet => pCat.includes(pet) || pet.includes(pCat));
+  }).slice(0, 8);
+
+  const handleSearchSelect = (val: string, categoryId: string) => {
+    setSearchQuery('');
     setIsSearchFocused(false);
-    setSearchHistory(prev => {
-       const newHistory = prev.filter(item => item !== val);
-       return [val, ...newHistory].slice(0, 5);
-    });
+    window.location.hash = `#/category/${categoryId}`;
   };
 
   useEffect(() => {
@@ -312,14 +251,14 @@ function Header({
                  {searchQuery.length > 0 ? (
                    filteredSuggestions.length > 0 ? (
                      <ul className="py-2">
-                       {filteredSuggestions.map((product) => (
-                         <li key={product.id}>
+                       {filteredSuggestions.map((cat) => (
+                         <li key={cat.id}>
                            <button 
-                             onClick={() => handleSearchSelect(product.name[lang])}
+                             onClick={() => handleSearchSelect(cat.name[lang], cat.id)}
                              className="w-full text-left px-6 py-3 hover:bg-brand-teal-light/30 transition-all duration-300 flex flex-col"
                            >
-                             <span className="font-medium text-foreground">{product.name[lang]}</span>
-                             <span className="text-xs text-muted-foreground">{product.category[lang]}</span>
+                             <span className="font-medium text-foreground">{cat.name[lang]}</span>
+                             <span className="text-xs text-muted-foreground">{cat.parentName[lang]}</span>
                            </button>
                          </li>
                        ))}
@@ -378,9 +317,6 @@ function Header({
              <button onClick={() => setLang('EN')} className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full active:scale-95 transition-all duration-200 ${lang === 'EN' ? 'bg-card shadow-sm scale-105' : 'text-muted-foreground hover:text-foreground'}`}><span>🇬🇧</span> EN</button>
           </div>
 
-          <PetAvatarGroup pets={userPets} onOpenPetProfile={onOpenPetProfile} />
-          
-          {/* Folders Button */}
           <div className="relative hidden md:block">
             <Tooltip text={lang === 'TR' ? 'Klasörlerim' : 'My Folders'} position="bottom">
               <button 
@@ -701,8 +637,9 @@ function Header({
   );
 }
 
-function Hero({ onStartOnboarding, onStartPetProfile, userPets }: { onStartOnboarding: () => void, onStartPetProfile: () => void, userPets: any[] }) {
+function Hero({ onStartOnboarding, onStartPetProfile, userPets, onAddToCart }: { onStartOnboarding: () => void, onStartPetProfile: () => void, userPets: any[], onAddToCart?: (name: string, quantity?: number, price?: number) => void }) {
   const { lang } = useLang();
+  const [showBirthdayCard, setShowBirthdayCard] = useState<string | null>(null);
   
   const activePetsCount = userPets.filter(p => p.name).length;
 
@@ -715,14 +652,48 @@ function Hero({ onStartOnboarding, onStartPetProfile, userPets }: { onStartOnboa
   });
 
   return (
-    <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="text-center max-w-3xl mx-auto mb-16">
+    <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-[40vh] relative z-10 w-full overflow-hidden shrink-0">
+      <AnimatePresence>
+         {showBirthdayCard && (
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }} 
+               animate={{ opacity: 1, scale: 1 }} 
+               exit={{ opacity: 0, scale: 0.9 }} 
+               className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+               onClick={() => setShowBirthdayCard(null)}
+            >
+               <div className="bg-gradient-to-br from-[#E27D60] to-[#E2A660] w-full max-w-md rounded-[2rem] shadow-2xl p-8 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                 <button onClick={() => setShowBirthdayCard(null)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-all"><X className="w-5 h-5" /></button>
+                 <div className="flex flex-col items-center text-center relative z-10">
+                    <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                    <h2 className="text-3xl font-extrabold text-white mb-2 font-display">{lang === 'TR' ? 'İyi ki Doğdun' : 'Happy Birthday'}</h2>
+                    <h3 className="text-4xl font-extrabold text-[#FFFDF2] mb-6">{showBirthdayCard}!</h3>
+                    <p className="text-white/90 font-medium mb-8 text-lg">
+                       {lang === 'TR' ? 'Bugün senin özel günün! Sana harika bir doğum günü hediyesi hazırladık. Bu hediye sepetinize özel eklenmiştir.' : 'Today is your special day! We prepared a wonderful birthday gift for you. It has been specially added to your cart.'}
+                    </p>
+                    <button 
+                       onClick={() => {
+                          if (onAddToCart) onAddToCart(`Birthday Cake Bonus for ${showBirthdayCard}`, 1, 0);
+                          setShowBirthdayCard(null);
+                       }} 
+                       className="bg-white text-[#E27D60] px-8 py-3 rounded-full font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all w-full text-lg"
+                    >
+                       {lang === 'TR' ? 'Hediyeyi Al' : 'Claim Gift'}
+                    </button>
+                 </div>
+               </div>
+            </motion.div>
+         )}
+      </AnimatePresence>
+
+      <div className="text-center max-w-4xl mx-auto mb-16 relative z-10 w-full shrink-0">
         
         {birthdayPets.length > 0 && (
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-yellow-400/20 text-yellow-600 border border-yellow-400/50 rounded-full font-bold shadow-sm animate-pulse">
-            <span>🎉</span>
-            {lang === 'TR' ? `Bugün ${birthdayPets.map((p: any) => p.name).join(', ')}'in doğum günü! Özel %20 İndirim Kazandınız!` : `Today is ${birthdayPets.map((p:any) => p.name).join(', ')}'s birthday! Enjoy a special 20% discount!`}
-            <span>🎂</span>
+          <div onClick={() => setShowBirthdayCard(birthdayPets[0].name)} className="cursor-pointer inline-flex items-center gap-3 mb-6 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 hover:from-yellow-400/30 hover:to-orange-400/30 text-yellow-700 border border-yellow-400/50 rounded-full font-bold shadow-sm transition-all animate-pulse hover:animate-none hover:scale-105">
+            <span className="text-xl">🎉</span>
+            <span>{lang === 'TR' ? `Bugün ${birthdayPets.map((p: any) => p.name).join(', ')}'in doğum günü! Hediyen için tıkla!` : `Today is ${birthdayPets.map((p:any) => p.name).join(', ')}'s birthday! Click for your gift!`}</span>
+            <span className="text-xl">🎂</span>
           </div>
         )}
 
@@ -794,101 +765,8 @@ function Hero({ onStartOnboarding, onStartPetProfile, userPets }: { onStartOnboa
   );
 }
 
-const ProductCard: React.FC<{ 
-  service: any, 
-  lang: string, 
-  onAddToCart: (item: string, quantity?: number, price?: number) => void, 
-  savedProductNames: string[], 
-  onSaveToFolder: (item: string) => void 
-}> = ({ 
-  service, 
-  lang, 
-  onAddToCart, 
-  savedProductNames, 
-  onSaveToFolder 
-}) => {
-  const [quantity, setQuantity] = useState(1);
-  const topItem = service.items[0];
-  const productIdentifier = `${t(service.title, 'EN')} - ${t(topItem, 'EN')}`;
-  
-  // Create deterministic prices with fewer discounts
-  const numericHash = productIdentifier.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const isDogOrCat = service.id === 'dog' || service.id === 'cat';
-  let basePrice = isDogOrCat ? 400 + (numericHash % 600) : 150 + (numericHash % 300);
-  
-  const hasDiscount = numericHash % 3 === 0;
-  const discountedPrice = hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
-  const isSaved = savedProductNames.includes(productIdentifier);
-  
-  return (
-    <div className="group bg-card rounded-2xl p-4 sm:p-5 border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center text-center relative h-full">
-      <button 
-        onClick={() => onSaveToFolder(productIdentifier)}
-        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-brand-teal text-white' : 'bg-background text-muted-foreground hover:text-brand-teal hover:bg-brand-teal/10 shadow-sm border border-border'}`}
-        aria-label="Save to folder"
-      >
-        <FolderPlus className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
-      </button>
-
-      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl bg-secondary flex items-center justify-center mb-4 relative overflow-hidden group-hover:bg-brand-teal/10 transition-all duration-300">
-        <div className="text-muted-foreground/30 group-hover:scale-110 group-hover:text-brand-teal/50 transition-all duration-500">
-          {service.icon}
-        </div>
-        {hasDiscount && (
-          <div className="absolute top-2 left-2 bg-[#E27D60] text-white text-[10px] font-bold px-2 py-0.5 rounded">
-            %15
-          </div>
-        )}
-      </div>
-      
-      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{t(service.title, lang as any)}</span>
-      <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 line-clamp-2 h-10 sm:h-12">{t(topItem, lang as any)}</h3>
-      
-      <div className="flex flex-col items-center gap-1 mb-4 flex-grow justify-center">
-        {hasDiscount && (
-          <span className="text-xs text-muted-foreground line-through">₺{basePrice.toFixed(2)}</span>
-        )}
-        <span className="text-lg sm:text-xl font-bold text-brand-teal">₺{discountedPrice.toFixed(2)}</span>
-      </div>
-
-      <div className="w-full flex flex-col gap-2 mt-auto">
-        <div className="flex items-center justify-between border border-border rounded-xl overflow-hidden bg-background">
-          <button 
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <span className="font-semibold text-foreground">{quantity}</span>
-          <button 
-            onClick={() => setQuantity(quantity + 1)}
-            className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <button 
-          aria-label={`Add ${t(topItem, lang as any)} to cart`}
-          onClick={() => {
-            onAddToCart(`${t(service.title, lang as any)} - ${t(topItem, lang as any)}`, quantity, discountedPrice);
-            setQuantity(1);
-          }}
-          className="w-full bg-brand-teal hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 text-white font-bold transition-all duration-300 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all duration-300 shadow-sm"
-        >
-          <ShoppingBag className="w-4 h-4" />
-          {lang === 'TR' ? 'Sepete Ekle' : 'Add to Cart'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function Services({ 
-  onAddToCart, 
-  savedProductNames = [], 
-  onSaveToFolder = () => {},
-  selectedPetsFilter = [],
+  selectedPetsFilter,
   userPets = []
 }: { 
   onAddToCart: (item: string, quantity?: number) => void,
@@ -899,77 +777,58 @@ function Services({
 }) {
   const { lang } = useLang();
 
-  // Combine selectedPetsFilter and userPets into a unified view of what the user owns
-  const combinedPets = Array.from(new Set([
-    ...selectedPetsFilter.map(p => p.toLowerCase()),
-    ...userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase())
-  ]));
+  // If selectedPetsFilter is explicitly provided (user manually filtered), use ONLY that.
+  // Otherwise, fallback to the user's pet profile.
+  const activeFilters = selectedPetsFilter !== undefined 
+    ? selectedPetsFilter.map(p => p.toLowerCase())
+    : userPets.filter(p => p.name && p.type).map(p => p.type.toLowerCase());
+    
+  const combinedPets = Array.from(new Set(activeFilters));
 
-  const filteredServices = Object.values(SERVICES).filter(service => 
-    combinedPets.length === 0 || hover_match(service.id, combinedPets)
-  );
+  const mapPetToCategory = (pet: string) => {
+    if (pet === 'avian') return 'birds';
+    if (pet === 'fish') return 'fish';
+    if (pet === 'rodent') return 'rodents';
+    if (pet === 'reptile') return 'reptiles';
+    return pet.endsWith('s') ? pet : pet + 's';
+  };
 
-  function hover_match(serviceId: string, pets: string[]) {
-    return pets.some(p => p.includes(serviceId) || serviceId.includes(p));
+  const targetCategories = combinedPets.length > 0 
+    ? combinedPets.map(mapPetToCategory)
+    : ['dogs', 'cats', 'birds', 'fish', 'rodents', 'reptiles'];
+
+  // Map requested pets to categories
+  const relevantCategories = CATEGORIES.filter(c => {
+    return targetCategories.includes(c.id.toLowerCase());
+  });
+
+  // Get up to ~12 subcategories to showcase
+  let recommendedFolders = [];
+  for (const cat of relevantCategories) {
+    recommendedFolders.push(...cat.subcategories.slice(0, Math.ceil(12 / relevantCategories.length)));
   }
-
-  // Generate personalized products instead of showing categories if pets are selected
-  let recommendedProducts: any[] = [];
-  if (combinedPets.length > 0) {
-    let mixedProducts: any[] = [];
-    for (const pet of combinedPets) {
-       const items = generateDummyProducts(pet + 's', Math.floor(12 / combinedPets.length));
-       mixedProducts = [...mixedProducts, ...items];
-    }
-    recommendedProducts = mixedProducts.sort(() => 0.5 - Math.random());
-  }
+  recommendedFolders = recommendedFolders.slice(0, 12);
 
   return (
     <section id="services" className="py-20 bg-secondary/50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{lang === 'TR' ? 'Dostunuz İçin Özel' : 'Special for Your Companion'}</h2>
-            <a href="#/category/personalized" onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = '#/category/personalized';
-            }} className="hidden sm:flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300">
-              {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
-            </a>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{lang === 'TR' ? 'Dostunuz İçin Özel Kategoriler' : 'Special Categories for Your Companion'}</h2>
          </div>
 
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {combinedPets.length > 0 ? (
-              recommendedProducts.map((product) => (
-                <ProductListingCard 
-                  key={product.id} 
-                  product={product as any} 
-                  lang={lang as any} 
-                  onAddToCart={onAddToCart} 
-                  isSaved={savedProductNames.includes(product.name.EN)} 
-                  onSaveToFolder={onSaveToFolder} 
-                />
-              ))
-            ) : (
-              filteredServices.slice(0, 4).map((service) => (
-                <ProductCard 
-                  key={service.id} 
-                  service={service} 
-                  lang={lang} 
-                  onAddToCart={onAddToCart} 
-                  savedProductNames={savedProductNames} 
-                  onSaveToFolder={onSaveToFolder} 
-                />
-              ))
-            )}
-         </div>
-         
-         <div className="mt-8 text-center sm:hidden">
-            <a href="#/category/personalized" onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = '#/category/personalized';
-            }} className="inline-flex items-center gap-1 text-sm font-bold text-brand-teal hover:text-brand-teal-dark transition-all duration-300 py-2 px-4 border text-center border-brand-teal rounded-full w-full justify-center">
-              {lang === 'TR' ? 'Tümünü Gör' : 'View All'} <ChevronRight className="w-4 h-4" />
-            </a>
+            {recommendedFolders.map((sub) => (
+              <a 
+                href={`#/category/${sub.id}`} 
+                key={sub.id} 
+                className="group bg-card rounded-2xl p-6 border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-300 flex flex-col items-center justify-center text-center relative h-full"
+              >
+                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mb-4 group-hover:bg-brand-teal/10 transition-all duration-300">
+                  <FolderPlus className="w-8 h-8 text-muted-foreground group-hover:text-brand-teal group-hover:scale-110 transition-all duration-500" />
+                </div>
+                <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug">{sub.name[lang]}</h3>
+              </a>
+            ))}
          </div>
       </div>
     </section>
@@ -1685,7 +1544,18 @@ function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isO
 
   const addPet = () => {
     const newId = Date.now().toString();
-    setPets([...pets, { id: newId, type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: [] }]);
+    const generatedReminders = generatePeriodicCareReminders({ type: 'Dog' }).map(r => {
+       const dueDate = new Date();
+       dueDate.setDate(dueDate.getDate() + r.days);
+       return { 
+          id: Date.now().toString() + Math.random(), 
+          type: r.type, 
+          name: lang === 'TR' ? r.titleTR : r.titleEN, 
+          dueDate: dueDate.toISOString().split('T')[0], 
+          resolved: false 
+       };
+    });
+    setPets([...pets, { id: newId, type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: generatedReminders }]);
     setActivePetId(newId);
   };
 
@@ -2032,7 +1902,7 @@ function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isO
                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888" opacity={0.2} />
                                    <XAxis dataKey="date" tick={{fontSize: 12}} tickMargin={10} stroke="#888" />
                                    <YAxis domain={['auto', 'auto']} tick={{fontSize: 12}} tickMargin={10} stroke="#888" width={30} />
-                                   <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                                   <RechartsTooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
                                    <Line type="monotone" dataKey="weight" stroke="#2DD4BF" strokeWidth={3} dot={{r: 4, fill: '#2DD4BF', strokeWidth: 2}} activeDot={{r: 6}} />
                                 </LineChart>
                              </ResponsiveContainer>
@@ -2044,16 +1914,38 @@ function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isO
                         )}
                         
                         {/* Smart AI recommendation based on weight */}
-                        {activePet.weightHistory?.length > 1 && parseFloat(activePet.weightHistory[activePet.weightHistory.length-1].weight as any) > parseFloat(activePet.weightHistory[activePet.weightHistory.length-2].weight as any) * 1.05 && (
-                           <div className="mt-4 p-4 rounded-xl bg-[#E27D60]/10 border border-[#E27D60]/30 flex gap-3 items-start">
-                             <ShieldCheck className="w-5 h-5 text-[#E27D60] mt-0.5 shrink-0" />
-                             <p className="text-sm font-medium text-[#E27D60]">
-                               {lang === 'TR' 
-                                 ? 'Akıllı Analiz: Son ölçümlerde hızlı bir kilo artışı tespit ettik. Sağlıklı bir kedi/köpek için Kilo Kontrol (Light) diyetlere geçiş düşünebilirsiniz.' 
-                                 : 'Smart Analysis: We detected rapid weight gain. Consider transitioning to "Weight Control" diets for optimal health.'}
-                             </p>
-                           </div>
-                        )}
+                        {activePet.weightHistory?.length > 1 && (() => {
+                           const lastW = parseFloat(activePet.weightHistory[activePet.weightHistory.length-1].weight as any);
+                           const prevW = parseFloat(activePet.weightHistory[activePet.weightHistory.length-2].weight as any);
+                           const isPuppyKitten = parseFloat(activePet.age) < 1;
+                           
+                           if (!isPuppyKitten && lastW > prevW * 1.05) {
+                             return <div className="mt-4 p-4 rounded-xl bg-[#E27D60]/10 border border-[#E27D60]/30 flex flex-col gap-2">
+                               <div className="flex gap-3 items-start">
+                                 <ShieldCheck className="w-5 h-5 text-[#E27D60] mt-0.5 shrink-0" />
+                                 <p className="text-sm font-medium text-[#E27D60]">
+                                   {lang === 'TR' 
+                                     ? `Akıllı Analiz: Son ölçümlerde hızlı bir kilo artışı (+${((lastW/prevW - 1)*100).toFixed(1)}%) tespit ettik. Sağlıklı bir diyet için Kilo Kontrol (Light) formüllere geçişi düşünebilirsiniz.` 
+                                     : `Smart Analysis: We detected rapid weight gain (+${((lastW/prevW - 1)*100).toFixed(1)}%). Consider transitioning to "Weight Control" formulas for optimal health.`}
+                                 </p>
+                               </div>
+                               <button type="button" onClick={() => { window.location.hash = 'catalog'; onClose(); }} className="self-end text-xs font-bold text-[#E27D60] hover:underline px-2">{lang === 'TR' ? 'Light Ürünleri İncele' : 'Browse Light Products'}</button>
+                             </div>;
+                           } else if (!isPuppyKitten && lastW < prevW * 0.95) {
+                             return <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 flex flex-col gap-2">
+                               <div className="flex gap-3 items-start">
+                                 <ShieldCheck className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                                 <p className="text-sm font-medium text-blue-600">
+                                   {lang === 'TR' 
+                                     ? `Akıllı Analiz: Kilo kaybı (-${((1 - lastW/prevW)*100).toFixed(1)}%) tespit edildi. Yüksek proteinli gıdalar veya uzman bir veteriner desteği gerekebilir.` 
+                                     : `Smart Analysis: Weight loss detected (-${((1 - lastW/prevW)*100).toFixed(1)}%). High-protein diets or veterinary support may be needed.`}
+                                 </p>
+                               </div>
+                               <button type="button" onClick={() => { window.location.hash = 'catalog'; onClose(); }} className="self-end text-xs font-bold text-blue-600 hover:underline px-2">{lang === 'TR' ? 'Performans Ürünlerini İncele' : 'Browse Performance Products'}</button>
+                             </div>;
+                           }
+                           return null;
+                        })()}
                       </div>
 
                       {/* Reminders / Consumption */}
@@ -2063,26 +1955,36 @@ function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isO
                         
                         <div className="space-y-4 mb-6">
                            {activePet.reminders && activePet.reminders.length > 0 ? activePet.reminders.map((rem: any) => (
-                             <div key={rem.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${rem.resolved ? 'bg-secondary/50 border-border opacity-60' : 'bg-background border-brand-teal/30 shadow-sm'}`}>
-                                <div className="flex items-center gap-3">
-                                  <button type="button" onClick={() => {
-                                      const newR = activePet.reminders.map((r: any) => r.id === rem.id ? {...r, resolved: !r.resolved} : r);
-                                      updatePet(activePet.id, 'reminders', newR as any);
-                                  }} className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${rem.resolved ? 'bg-brand-teal border-brand-teal text-white' : 'border-muted-foreground'}`}>
-                                     {rem.resolved && <Check className="w-3 h-3" />}
-                                  </button>
-                                  <div>
-                                     <p className={`font-semibold text-sm ${rem.resolved ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                                       {rem.type === 'Food' ? (lang === 'TR' ? 'Mama Bitiş Tahmini' : 'Food Depletion Estimate') : rem.type}
-                                       {rem.name && <span className="opacity-70 ml-1">({rem.name})</span>}
-                                     </p>
-                                     <p className="text-xs text-muted-foreground">{new Date(rem.dueDate).toLocaleDateString()}</p>
+                             <div key={rem.id} className={`flex flex-col p-4 rounded-xl border transition-all ${rem.resolved ? 'bg-secondary/50 border-border opacity-60' : 'bg-background border-brand-teal/30 shadow-sm'} mb-3`}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <button type="button" onClick={() => {
+                                        const newR = activePet.reminders.map((r: any) => r.id === rem.id ? {...r, resolved: !r.resolved} : r);
+                                        updatePet(activePet.id, 'reminders', newR as any);
+                                    }} className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${rem.resolved ? 'bg-brand-teal border-brand-teal text-white' : 'border-muted-foreground'}`}>
+                                       {rem.resolved && <Check className="w-3 h-3" />}
+                                    </button>
+                                    <div>
+                                       <p className={`font-semibold text-sm ${rem.resolved ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                         {rem.type === 'Food' ? (lang === 'TR' ? 'Mama Bitiş Tahmini' : 'Food Depletion Estimate') : rem.type}
+                                         {rem.name && <span className="opacity-70 ml-1">({rem.name})</span>}
+                                       </p>
+                                       <p className={`text-xs ${rem.resolved ? 'text-muted-foreground' : 'text-brand-teal font-medium'}`}>{new Date(rem.dueDate).toLocaleDateString()}</p>
+                                    </div>
                                   </div>
+                                  {!rem.resolved && rem.type === 'Food' && (
+                                     <button type="button" onClick={() => { window.location.hash = 'catalog'; onClose(); }} className="text-xs font-bold bg-brand-teal/10 text-brand-teal hover:bg-brand-teal hover:text-white transition-colors px-3 py-1.5 rounded-lg">
+                                        {lang === 'TR' ? 'Sipariş Ver' : 'Reorder'}
+                                     </button>
+                                  )}
                                 </div>
-                                {!rem.resolved && rem.type === 'Food' && (
-                                   <button type="button" onClick={() => {}} className="text-xs font-bold text-brand-teal hover:underline px-2 py-1 rounded-md hover:bg-brand-teal/10">
-                                      {lang === 'TR' ? 'Tekrar Sipariş Ver' : 'Reorder Now'}
-                                   </button>
+                                {!rem.resolved && (rem.type === 'Parasite' || rem.type === 'Grooming' || rem.type.toLowerCase().includes('care')) && (
+                                   <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                                     <span className="text-xs text-muted-foreground font-medium">{lang === 'TR' ? 'Önerilen Ürünler:' : 'Recommended Products:'}</span>
+                                     <button type="button" onClick={() => { window.location.hash = 'catalog'; onClose(); }} className="text-xs font-bold text-brand-teal hover:underline flex items-center gap-1">
+                                        {lang === 'TR' ? 'Kataloğa Git' : 'Browse Catalog'} <ArrowRight className="w-3 h-3" />
+                                     </button>
+                                   </div>
                                 )}
                              </div>
                            )) : (
@@ -2153,7 +2055,6 @@ function PetProfileModal({ isOpen, onClose, pets, setPets, focusedPetId }: { isO
 // Interactivity Modals
 function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: { isOpen: boolean, onClose: () => void, selectedPets: string[], onSelectionChange: (pets: string[]) => void }) {
   const { lang, setLang } = useLang();
-  const [step, setStep] = useState(1);
 
   const togglePet = (pet: string) => {
     if (selectedPets.includes(pet)) {
@@ -2175,7 +2076,7 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
           className="bg-card rounded-[32px] p-6 sm:p-8 max-w-md w-full shadow-2xl relative"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="onboarding-title"
+          aria-labelledby="filter-title"
         >
           <div className="absolute top-6 left-6 flex bg-secondary/80 rounded-full p-1 z-10">
              <button 
@@ -2194,64 +2095,52 @@ function OnboardingModal({ isOpen, onClose, selectedPets, onSelectionChange }: {
              </button>
           </div>
 
-          <button aria-label="Close setup modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary hover:rotate-90 active:scale-90 transition-all duration-300 z-10">
+          <button aria-label="Close filter modal" onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary hover:rotate-90 active:scale-90 transition-all duration-300 z-10">
             <X className="w-6 h-6 text-muted-foreground" />
           </button>
 
-          {step === 1 ? (
-            <div className="text-center">
-              <div className="flex justify-center mx-auto mb-6">
-                <img src="/logo.png" alt="Vivia Logo" className="w-[128px] h-[128px] mt-[11px] -mb-[14px] object-contain rounded-xl drop-shadow-md" />
+          <div className="text-center">
+            <div className="flex justify-center mx-auto mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-brand-teal/10 flex items-center justify-center mt-8 mb-2">
+                <SlidersHorizontal className="w-8 h-8 text-brand-teal" />
               </div>
-              <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{t("Who are we shopping for?", lang)}</h2>
-              <p className="text-muted-foreground text-base mb-8">{t("Set up a profile to get tailored recommendations and automatic filtering.", lang)}</p>
-              
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
-                {['Dog', 'Cat', 'Avian', 'Fish', 'Rodent', 'Reptile'].map(pet => (
-                  <button 
-                    key={pet} onClick={() => togglePet(pet)}
-                    aria-pressed={selectedPets.includes(pet)}
-                    aria-label={`Select ${t(pet, lang)}`}
-                    className={`w-[46%] sm:w-[30%] p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-2 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] active:scale-[0.98] active:translate-y-0 active:shadow-sm
-                      ${selectedPets.includes(pet) ? 'border-brand-teal bg-brand-teal/5 text-brand-teal-dark shadow-[0_0_20px_rgba(45,212,191,0.25)] ring-1 ring-brand-teal/30 scale-[1.02]' : 'border-border hover:border-brand-teal/30 hover:bg-secondary/50 text-muted-foreground'}
-                    `}
-                  >
-                    <span className="text-3xl sm:text-4xl" aria-hidden="true">{
-                      pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Fish' ? '🫧' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
-                    }</span>
-                    <span className="font-semibold text-xs sm:text-sm text-center leading-tight break-words w-[90px]">{t(pet, lang)}</span>
-                  </button>
-                ))}
-              </div>
+            </div>
+            <h2 id="filter-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{lang === 'TR' ? 'Kategorileri Filtrele' : 'Filter Categories'}</h2>
+            <p className="text-muted-foreground text-base mb-8">{lang === 'TR' ? 'Alışveriş deneyiminizi evcil hayvanlarınıza göre özelleştirin.' : 'Tailor your shopping experience to your pets.'}</p>
+            
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
+              {['Dog', 'Cat', 'Avian', 'Fish', 'Rodent', 'Reptile'].map(pet => (
+                <button 
+                  key={pet} onClick={() => togglePet(pet)}
+                  aria-pressed={selectedPets.includes(pet)}
+                  aria-label={`Select ${t(pet, lang)}`}
+                  className={`w-[46%] sm:w-[30%] p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-2 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] active:scale-[0.98] active:translate-y-0 active:shadow-sm
+                    ${selectedPets.includes(pet) ? 'border-brand-teal bg-brand-teal/5 text-brand-teal-dark shadow-[0_0_20px_rgba(45,212,191,0.25)] ring-1 ring-brand-teal/30 scale-[1.02]' : 'border-border hover:border-brand-teal/30 hover:bg-secondary/50 text-muted-foreground'}
+                  `}
+                >
+                  <span className="text-3xl sm:text-4xl" aria-hidden="true">{
+                    pet === 'Dog' ? '🐕' : pet === 'Cat' ? '🐈' : pet === 'Avian' ? '🦜' : pet === 'Fish' ? '🫧' : pet === 'Rodent' ? '🐹' : pet === 'Reptile' ? '🦎' : '🕷️'
+                  }</span>
+                  <span className="font-semibold text-xs sm:text-sm text-center leading-tight break-words w-[90px]">{t(pet, lang)}</span>
+                </button>
+              ))}
+            </div>
 
+            <div className="flex gap-3">
               <button 
-                onClick={() => setStep(2)}
-                disabled={selectedPets.length === 0}
-                className="w-full bg-primary disabled:opacity-50 text-white rounded-full py-4 font-semibold text-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-brand-dark hover:shadow-[0_8px_24px_rgba(45,212,191,0.3)] hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] active:shadow-md flex items-center justify-center gap-2"
+                onClick={() => onSelectionChange([])}
+                className="w-1/3 bg-secondary text-foreground rounded-full py-4 font-semibold text-lg hover:bg-secondary-dark transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98]"
               >
-                {t("Continue", lang)} <ArrowRight className="w-5 h-5" />
+                {lang === 'TR' ? 'Sıfırla' : 'Reset'}
+              </button>
+              <button 
+                onClick={onClose}
+                className="w-2/3 bg-primary text-white rounded-full py-4 font-semibold text-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-brand-dark hover:shadow-[0_8px_24px_rgba(45,212,191,0.3)] hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] active:shadow-md flex items-center justify-center gap-2"
+              >
+                {lang === 'TR' ? 'Filtreleri Uygula' : 'Apply Filters'}
               </button>
             </div>
-          ) : (
-            <div className="text-center py-6">
-               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6 text-4xl">
-                 🎉
-               </div>
-               <h2 id="onboarding-title" className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{t("Profile Created!", lang)}</h2>
-               <p className="text-muted-foreground text-base mb-10 leading-relaxed">
-                 {t("Your shopping experience is now tailored for your ", lang)} 
-                 <span className="font-bold text-brand-teal">{selectedPets.map(p => t(p, lang)).join(', ')}</span>. 
-                 <br/>
-                 {t("Smart subscriptions are enabled.", lang)}
-               </p>
-               <button 
-                  onClick={onClose}
-                  className="w-full bg-brand-teal text-white rounded-full py-4 font-semibold text-lg hover:bg-brand-teal-dark hover:shadow-brand-teal/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-300"
-               >
-                 {t("Start Shopping", lang)}
-               </button>
-            </div>
-          )}
+          </div>
         </motion.div>
       </motion.div>
       )}
@@ -3196,19 +3085,165 @@ export const getPriceFromName = (name: string) => {
   return hasDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
 };
 
+export const predictFoodConsumptionDays = (itemName: string, pet: any): number | null => {
+  const lowerName = itemName.toLowerCase();
+  if (!lowerName.includes('food') && !lowerName.includes('mama')) return null;
+
+  // Try to parse weight from the name (e.g. "Adult Dog Food 10 kg")
+  let kgWeight = 1; // default to 1kg if unknown
+  const match = lowerName.match(/(\d+(?:\.\d+)?)\s*(kg|g|lb)/);
+  if (match) {
+    const val = parseFloat(match[1]);
+    if (match[2] === 'kg') kgWeight = val;
+    else if (match[2] === 'g') kgWeight = val / 1000;
+    else if (match[2] === 'lb') kgWeight = val * 0.453592;
+  }
+
+  // Very rough daily consumption estimates in kg Based on pet weight & type
+  let dailyConsumption = 0.1; // Default
+  const petWeight = parseFloat(pet.weight) || 10;
+  if (pet.type === 'Dog') {
+     if (petWeight < 5) dailyConsumption = 0.08;
+     else if (petWeight < 15) dailyConsumption = 0.15;
+     else if (petWeight < 30) dailyConsumption = 0.3;
+     else dailyConsumption = 0.5;
+  } else if (pet.type === 'Cat') {
+     if (petWeight < 3) dailyConsumption = 0.05;
+     else dailyConsumption = 0.08;
+  } else if (pet.type === 'Bird') {
+     dailyConsumption = 0.02;
+  } else if (pet.type === 'Fish') {
+     dailyConsumption = 0.005;
+  } else {
+     dailyConsumption = 0.05;
+  }
+
+  // Adjust by activity level / serialization / age
+  if (pet.activityLevel === 'high') dailyConsumption *= 1.25;
+  if (pet.activityLevel === 'low') dailyConsumption *= 0.8;
+  if (pet.sterilized) dailyConsumption *= 0.9;
+  if (parseFloat(pet.age) < 1) dailyConsumption *= 1.5; // growing
+  
+  const days = Math.floor(kgWeight / dailyConsumption);
+  return days > 0 ? days : 15;
+};
+
+export const generatePeriodicCareReminders = (pet: any): { type: string, days: number, titleEN: string, titleTR: string }[] => {
+  const rs: any[] = [];
+  if (pet.type === 'Dog' || pet.type === 'Cat') {
+    rs.push({ type: 'Vaccine', days: 365, titleEN: 'Annual Vaccination', titleTR: 'Yıllık Aşı' });
+    rs.push({ type: 'Parasite', days: 60, titleEN: 'Flea & Tick Prevention', titleTR: 'Pire ve Kene Önleme' });
+    rs.push({ type: 'Parasite', days: 90, titleEN: 'Worming Treatment', titleTR: 'İç Parazit Tedavisi' });
+    rs.push({ type: 'Grooming', days: 45, titleEN: 'Grooming / Nail Trim', titleTR: 'Tüy ve Tırnak Bakımı' });
+  }
+  return rs;
+};
+
 import SupportSystem from './SupportWidget';
+
+function PersistentPetButton({ pets, onClick }: { pets: any[], onClick: (id: string) => void }) {
+  const { lang } = useLang();
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const activePets = pets.filter(p => p.name.trim() !== '' || p.photo !== null);
+  if (activePets.length === 0) return null;
+
+  const getIcon = (type: string) => {
+    switch(type) {
+      case 'Dog': return Dog;
+      case 'Cat': return Cat;
+      case 'Avian': return Bird;
+      case 'Rodent': return Rat;
+      case 'Fish': return Fish;
+      case 'Reptile': return Turtle;
+      default: return Heart;
+    }
+  };
+
+  const getPetLabel = (pet: any) => {
+    if (pet.name.trim() !== '') return pet.name;
+    const petsOfSameType = activePets.filter(p => p.type === pet.type);
+    const translatedType = t(pet.type, lang);
+    if (petsOfSameType.length > 1) {
+      const typeIndex = petsOfSameType.findIndex(p => p.id === pet.id) + 1;
+      return `${translatedType} • ${typeIndex}`;
+    }
+    return translatedType;
+  };
+
+  const maxVisible = 3;
+  const isExpandable = activePets.length > maxVisible;
+  const visiblePets = isHovered ? activePets : activePets.slice(0, maxVisible);
+  const hiddenCount = activePets.length - maxVisible;
+
+  return (
+    <div 
+      className="flex flex-col items-center gap-2 pl-4 sm:pl-5 transition-all duration-300"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <AnimatePresence>
+        <div className="flex flex-col items-center gap-2 bg-card/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/60 p-2 rounded-full max-h-[50vh] overflow-y-auto overflow-x-hidden transition-all duration-500 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {!isHovered && isExpandable && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => onClick(activePets[0]?.id || '')}
+              className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-teal/10 border border-brand-teal/20 flex flex-col items-center justify-center rounded-full hover:bg-brand-teal/20 active:scale-95 transition-all text-brand-teal shrink-0 group select-none relative"
+            >
+              <span className="text-xs font-extrabold">+{hiddenCount}</span>
+            </motion.button>
+          )}
+
+          {visiblePets.map((pet, index) => {
+            const Icon = getIcon(pet.type);
+            const petLabel = getPetLabel(pet);
+            return (
+              <motion.button
+                key={pet.id}
+                initial={{ opacity: 0, scale: 0.8, x: -10 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: -10 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => onClick(pet.id)}
+                title={`Manage ${petLabel}`}
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-background border border-border flex items-center justify-center rounded-full hover:scale-110 active:scale-95 transition-all shrink-0 group hover:shadow-brand-teal/30 hover:border-brand-teal select-none relative overflow-hidden"
+                aria-label={`Manage ${petLabel}`}
+              >
+                {pet.photo ? (
+                  <img src={pet.photo} alt={petLabel} className="w-full h-full object-cover transition-all group-hover:scale-110" />
+                ) : (
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-brand-teal transition-colors" />
+                )}
+                {/* Fallback tooltip for touch devices */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold tracking-tight text-center px-1">
+                  {petLabel}
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
   const [userPets, setUserPets] = useState<PetProfileData[]>([
-    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: [] }
+    { id: '1', type: 'Dog', name: '', age: '', breed: '', gender: '', healthInfo: '', photo: null, weight: '', allergies: [], dietaryPreferences: [], sterilized: false, activityLevel: 'normal', birthday: '', weightHistory: [], reminders: generatePeriodicCareReminders({ type: 'Dog' }).map(r => {
+       const dueDate = new Date();
+       dueDate.setDate(dueDate.getDate() + r.days);
+       return { id: Date.now().toString() + Math.random(), type: r.type, name: r.titleEN, dueDate: dueDate.toISOString().split('T')[0], resolved: false };
+    }) }
   ]);
   const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[]>([]);
+  const [selectedPetsFilter, setSelectedPetsFilter] = useState<string[] | undefined>(undefined);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password' | 'reset-password' | null>(null);
   const [currentHash, setCurrentHash] = useState(() => typeof window !== 'undefined' ? window.location.hash : '');
   const [focusedPetId, setFocusedPetId] = useState<string | null>(null);
@@ -3362,6 +3397,38 @@ export default function App() {
   const handleProcessPayment = () => {
     setIsCheckoutOpen(false);
     setIsSuccessOpen(true);
+    
+    // Process predictive consumption tracking based on cart
+    let petsUpdated = false;
+    const nextUserPets = [...userPets];
+    
+    cartItems.forEach(item => {
+      const activePets = nextUserPets.filter(p => p.name && (p.name.trim() !== '' || p.photo !== null));
+      if (activePets.length === 0) return;
+      
+      const pet = activePets.length === 1 ? activePets[0] : activePets.find(p => item.name.toLowerCase().includes(p.type.toLowerCase())) || activePets[0];
+      
+      const days = predictFoodConsumptionDays(item.name, pet);
+      if (days !== null) {
+        petsUpdated = true;
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + Math.max(1, days - 5)); // remind 5 days early
+        
+        pet.reminders = pet.reminders.filter((r: any) => !(r.type === 'Food' && !r.resolved));
+        pet.reminders.push({ 
+           id: Date.now().toString() + Math.random(),
+           type: 'Food',
+           name: item.name,
+           dueDate: dueDate.toISOString().split('T')[0],
+           resolved: false
+        });
+      }
+    });
+
+    if (petsUpdated) {
+       setUserPets(nextUserPets);
+    }
+    
     setCartItems([]);
     
     // Send email notification for checkout
@@ -3407,19 +3474,26 @@ export default function App() {
           onLogout={handleLogout}
           userPets={userPets}
           onOpenPetProfile={(id) => { setFocusedPetId(id); setIsPetProfileOpen(true); }}
+          selectedPetsFilter={selectedPetsFilter}
         />
         
-        {/* Floating Category Filter Button */}
-        <div className="fixed left-0 top-1/2 -translate-y-1/2 z-40">
-          <Tooltip text={lang === 'TR' ? 'Kategorileri Filtrele' : 'Filter Categories'} position="right">
-            <button
-              onClick={() => setIsOnboardingOpen(true)}
-              className="bg-brand-teal p-2 sm:p-3 rounded-r-2xl text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-brand-teal-dark hover:pl-4 active:scale-95 transition-all duration-300 group overflow-hidden"
-              aria-label="Filter categories"
-            >
-              <PetCollageIcon className="w-9 h-9 sm:w-11 sm:h-11 group-hover:scale-110 transition-transform" />
-            </button>
-          </Tooltip>
+        {/* Left Side Floating Controls */}
+        <div className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-start gap-4 pointer-events-none">
+          <div className="pointer-events-auto">
+            <Tooltip text={lang === 'TR' ? 'Kategorileri Filtrele' : 'Filter Categories'} position="right">
+              <button
+                onClick={() => setIsOnboardingOpen(true)}
+                className="bg-brand-teal p-2 sm:p-3 rounded-r-2xl text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-brand-teal-dark hover:pl-4 active:scale-95 transition-all duration-300 group overflow-hidden"
+                aria-label="Filter categories"
+              >
+                <PetCollageIcon className="w-9 h-9 sm:w-11 sm:h-11 group-hover:scale-110 transition-transform" />
+              </button>
+            </Tooltip>
+          </div>
+
+          <div className="pointer-events-auto">
+            <PersistentPetButton pets={userPets} onClick={(id) => { setFocusedPetId(id); setIsPetProfileOpen(true); }} />
+          </div>
         </div>
         
         {currentHash.startsWith('#/category/') ? (
@@ -3433,7 +3507,7 @@ export default function App() {
           />
         ) : (
           <main>
-            <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} userPets={userPets} />
+            <Hero onStartOnboarding={() => setIsOnboardingOpen(true)} onStartPetProfile={() => setIsPetProfileOpen(true)} userPets={userPets} onAddToCart={handleAddToCart} />
             <Services onAddToCart={handleAddToCart} savedProductNames={savedProductNames} onSaveToFolder={handleSaveToFolderClick} selectedPetsFilter={selectedPetsFilter} userPets={userPets} />
             <OrderTrackingSection />
             <TrustSection />
@@ -3459,7 +3533,7 @@ export default function App() {
                     <p>{lang === 'TR' ? 'Bu ürün evcil hayvanınızın profiliyle uyumsuz olabilir:' : 'This product may conflict with your pet\'s profile:'}</p>
                     {pendingCartItem.warnings.map((w, i) => (
                       <div key={i} className="font-semibold text-foreground/90 bg-secondary/50 py-2 px-3 rounded-lg border border-border">
-                        {w.petName} — {w.allergy} {lang === 'TR' ? 'alerjisi' : 'allergy'}
+                        {lang === 'TR' ? `${w.petName} isimli dostunuzun ${w.allergy} hassasiyeti var. Bu ürün ${w.allergy} içerebilir.` : `You mentioned that ${w.petName} has a ${w.allergy} allergy. This product contains ${w.allergy}.`}
                       </div>
                     ))}
                     <p className="mt-2 text-xs opacity-70">
@@ -3482,7 +3556,12 @@ export default function App() {
         <SaveToFolderModal isOpen={selectedProductForFolder !== null} onClose={() => setSelectedProductForFolder(null)} productName={selectedProductForFolder} folders={folders} onSave={handleSaveToSpecificFolder} />
         <FoldersModal isOpen={isFoldersModalOpen} onClose={() => setIsFoldersModalOpen(false)} folders={folders} setFolders={setFolders} onAddToCart={handleAddToCart} />
         <PetProfileModal isOpen={isPetProfileOpen} onClose={() => { setIsPetProfileOpen(false); setFocusedPetId(null); }} pets={userPets} setPets={setUserPets} focusedPetId={focusedPetId} />
-        <OnboardingModal isOpen={isOnboardingOpen} onClose={() => setIsOnboardingOpen(false)} selectedPets={selectedPetsFilter} onSelectionChange={setSelectedPetsFilter} />
+        <OnboardingModal 
+          isOpen={isOnboardingOpen} 
+          onClose={() => setIsOnboardingOpen(false)} 
+          selectedPets={selectedPetsFilter !== undefined ? selectedPetsFilter : userPets.filter(p => p.name && p.type).map(p => p.type)} 
+          onSelectionChange={setSelectedPetsFilter} 
+        />
         <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} onClearCart={() => setCartItems([])} onCheckout={handleCheckout} />
         <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onProcessPayment={handleProcessPayment} totalPrice={cartTotalPrice} onOpenLogin={() => { setIsCheckoutOpen(false); setAuthMode('login'); }} />
         <CheckoutSuccessModal isOpen={isSuccessOpen} onClose={handleCloseSuccess} />
