@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { CATEGORIES } from "./categories";
 import { motion, AnimatePresence } from "motion/react";
+import VirtualTryOnModal from "./VirtualTryOnModal";
 import {
   ChevronRight,
   Filter,
@@ -15,6 +16,7 @@ import {
   Plus,
   Package,
   FolderPlus,
+  Sparkles,
 } from "lucide-react";
 import { useLang, t, Lang } from "./i18n";
 import { generateDummyProducts, Product } from "./productGenerator";
@@ -39,6 +41,7 @@ export default function CategoryPage({
   const { lang } = useLang();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [tryOnProduct, setTryOnProduct] = useState<Product | null>(null);
   const [visibleCount, setVisibleCount] = useState(24);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -763,6 +766,7 @@ export default function CategoryPage({
                       onAddToCart={onAddToCart}
                       isSaved={savedProductNames.includes(product.name.EN)}
                       onSaveToFolder={onSaveToFolder}
+                      onTryOnProduct={setTryOnProduct}
                     />
                   ))}
                 </div>
@@ -831,6 +835,13 @@ export default function CategoryPage({
           </>
         )}
       </AnimatePresence>
+
+      <VirtualTryOnModal
+        isOpen={!!tryOnProduct}
+        onClose={() => setTryOnProduct(null)}
+        product={tryOnProduct}
+        onAddToCart={onAddToCart}
+      />
     </div>
   );
 }
@@ -881,7 +892,8 @@ export const ProductListingCard: React.FC<{
   onAddToCart: (name: string, quantity?: number, price?: number) => void;
   isSaved: boolean;
   onSaveToFolder: (name: string) => void;
-}> = ({ product, lang, onAddToCart, isSaved, onSaveToFolder }) => {
+  onTryOnProduct?: (p: Product) => void;
+}> = ({ product, lang, onAddToCart, isSaved, onSaveToFolder, onTryOnProduct }) => {
   const [quantity, setQuantity] = useState(1);
 
   return (
@@ -923,6 +935,20 @@ export const ProductListingCard: React.FC<{
             className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isSaved ? "fill-current" : ""}`}
           />
         </button>
+
+        {/* Try On Button */}
+        {onTryOnProduct && !!product.name.EN.toLowerCase().match(/bed|cage|tank|aquarium|terrarium|scratcher|tree|sweater|clothing|coat|collar|harness|raincoat|vest/) && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onTryOnProduct(product);
+            }}
+            className="absolute top-14 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 text-brand-teal hover:border-brand-teal/40"
+            title={lang === "TR" ? "Yapay Zeka ile Dene" : "AI Try-On"}
+          >
+            <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </button>
+        )}
 
         <Package className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground/20 group-hover:scale-110 group-hover:text-brand-teal/40 transition-all duration-700 ease-out" />
 
