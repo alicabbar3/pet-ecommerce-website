@@ -1,0 +1,55 @@
+export const rodentProducts = [
+  // --- KEMİRGEN YEMİ (14 Adet) ---
+  { id: 1, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Versele-Laga Crispy Müsli Hamster Yemi 400 gr", description: "Hamsterlar için vitamin ve mineral açısından zenginleştirilmiş çıtır müsli ve tohum karışımı.", price: "125 TL", imageKeyword: "hamster muesli food" },
+  { id: 2, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Gold Wings Premium Tavşan Yemi 1 Kg", description: "Tavşanların sindirim sistemini destekleyen, lif oranı yüksek, pelet ve kurutulmuş sebzeli ana yem.", price: "160 TL", imageKeyword: "rabbit food mix" },
+  { id: 3, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Quik Guinea Pig Yemi 800 gr", description: "C vitamini takviyeli, gine piglerin günlük besin ihtiyacını karşılayan ekonomik ve lezzetli yem.", price: "140 TL", imageKeyword: "guinea pig food" },
+  { id: 4, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Vitakraft Menu Hamster Yemi 400 gr", description: "Doğal ortamlarındaki beslenme alışkanlıklarına uygun, şekersiz ve protein katkılı tam yem.", price: "135 TL", imageKeyword: "vitakraft hamster food" },
+  { id: 5, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Beaphar Care+ Tavşan Yemi 1.5 Kg", description: "Seçici yeme alışkanlığını önlemek için her peletinde aynı besini barındıran süper premium yem.", price: "450 TL", imageKeyword: "beaphar rabbit food pellets" },
+  { id: 6, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Versele-Laga Nature Cavia Gine Pig Yemi 700 gr", description: "Tahılsız yapısıyla sindirimi çok kolaylaştıran, sebze ve otlarla zenginleştirilmiş doğal karışım.", price: "220 TL", imageKeyword: "grain free guinea pig food" },
+  { id: 7, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Jungle Yetişkin Tavşan Yemi 500 gr", description: "Kurutulmuş havuç ve keçiboynuzu parçaları içeren, enerji verici yetişkin tavşan menüsü.", price: "85 TL", imageKeyword: "carrot rabbit food" },
+  { id: 8, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Witte Molen Puur Chinchilla Yemi 500 gr", description: "Çinçillaların hassas sindirimine özel, düşük yağ ve yüksek lif barındıran gurme besin.", price: "195 TL", imageKeyword: "chinchilla food mix" },
+  { id: 9, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Eurogold Kuru Yonca (Alfalfa) 500 gr", description: "Kemirgenlerin diş sağlığını koruyan ve sindirimine yardımcı olan taze kurutulmuş doğal yonca otu.", price: "110 TL", imageKeyword: "alfalfa hay for rodents" },
+  { id: 10, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Science Selective Rat (Sıçan) Yemi 1.5 Kg", description: "Sıçan ve fareler için elma ve siyah kuşüzümü içeren, veterinerler tarafından tavsiye edilen pelet.", price: "550 TL", imageKeyword: "rat food pellets" },
+  { id: 11, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Versele-Laga Crispy Pellets Tavşan Yemi 2 Kg", description: "Sadece peletlerden oluşan, yemek seçen tavşanlar için ideal, yüksek lifli ekonomik paket.", price: "380 TL", imageKeyword: "rabbit pellet bag" },
+  { id: 12, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Bonnie Hamster Yemi 500 gr", description: "Çekirdek, buğday, yulaf ve kurutulmuş meyvelerle hazırlanan uygun fiyatlı temel hamster yemi.", price: "75 TL", imageKeyword: "basic hamster seed mix" },
+  { id: 13, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "JBL Rodent Kışlık Kuruyemiş Karışımı 300 gr", description: "Kemirgenlerin kış aylarında ihtiyaç duyduğu ekstra enerjiyi sağlayan fındık, ceviz ve tohum seti.", price: "180 TL", imageKeyword: "rodent nuts food" },
+  { id: 14, category: "Kemirgen", subCategory: "Kemirgen Yemi", name: "Çizgili Çekirdek ve Fıstık Karışımı 250 gr", description: "Özellikle Suriye hamsterlarının çok sevdiği, kabuklu yemişlerden oluşan ek besin ve ödül.", price: "60 TL", imageKeyword: "sunflower seeds peanuts hamster" },
+
+  // --- KEMİRGEN KAFESLERİ (8 Adet) ---
+  { id: 15, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Dayang Çift Katlı Hamster Kafesi (Tünelli)", description: "İçerisindeki tünel sistemi, çarkı ve suluğuyla birlikte gelen eğlenceli ve şık hamster evi.", price: "850 TL", imageKeyword: "hamster cage with tubes" },
+  { id: 16, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Eurogold Tavşan ve Gine Pig Kafesi 80 cm", description: "Geniş tabanı sayesinde tavşan ve gine piglerin rahatça dolaşabileceği, kolay temizlenen kafes.", price: "1200 TL", imageKeyword: "large rabbit cage" },
+  { id: 17, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Ferplast Criceti 15 Büyük Boy Hamster Kafesi", description: "Geniş yüzey alanı ve yüksek çatısıyla hamsterınıza maksimum yaşam alanı sunan İtalyan tasarımı.", price: "2400 TL", imageKeyword: "ferplast hamster cage" },
+  { id: 18, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Imac Rat ve Chinchilla Kafesi (Çok Katlı)", description: "Tırmanmayı seven kemirgenler için 3 katlı, ahşap merdivenli ve yüksek boylu dayanıklı kafes.", price: "3500 TL", imageKeyword: "tall chinchilla cage" },
+  { id: 19, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Trixie Ahşap Kemirgen Teraryumu (Cam Ön Panel)", description: "Kemirgeninizi izlemesi keyifli, talaş sıçramasını tamamen engelleyen şık ahşap/cam kafes.", price: "4100 TL", imageKeyword: "wood and glass hamster terrarium" },
+  { id: 20, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Quik Taşıma Çantalı Mini Hamster Kafesi", description: "Kısa seyahatler veya veteriner ziyaretleri için uygun, taşıma kulplu pratik ve küçük boyutlu kafes.", price: "350 TL", imageKeyword: "mini hamster travel carrier" },
+  { id: 21, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "Savic Suite Royale XL Çift Katlı Lüks Kafes", description: "Tekerlekli, devasa boyutlarda, alt ve üstü bağımsız kullanılabilen ultra premium kemirgen köşkü.", price: "14500 TL", imageKeyword: "savic suite royale rat cage" },
+  { id: 22, category: "Kemirgen", subCategory: "Kemirgen Kafesleri", name: "MidWest Guinea Habitat (Oyun Alanı)", description: "Gine pigler için önerilen 8 metrekarelik minimum alanı sağlayan, kumaş tabanlı modüler kafes.", price: "2800 TL", imageKeyword: "midwest guinea pig habitat" },
+
+  // --- KEMİRGEN TABAN MALZEMESİ (2 Adet) ---
+  { id: 23, category: "Kemirgen", subCategory: "Kemirgen Taban Malzemesi", name: "Chipsi Çam Talaşı Sıkıştırılmış 15 Litre", description: "Yüksek emiciliğe sahip, tozdan arındırılmış, doğal çam kokulu klasik kemirgen taban talaşı.", price: "115 TL", imageKeyword: "wood shavings animal bedding" },
+  { id: 24, category: "Kemirgen", subCategory: "Kemirgen Taban Malzemesi", name: "Eurogold Kâğıt Taban Malzemesi (Tozsuz) 10 L", description: "Alerjik ve hassas solunum yoluna sahip kemirgenler için renkli, yumuşak ve tamamen tozsuz kâğıt pelet.", price: "240 TL", imageKeyword: "paper bedding for hamsters" },
+
+  // --- KEMİRGEN YEMLİKLERİ VE SULUKLARI (2 Adet) ---
+  { id: 25, category: "Kemirgen", subCategory: "Kemirgen Yemlikleri ve Sulukları", name: "Trixie Kemirgen Suluğu Bilyeli 250 ml", description: "Damlatma yapmayan, tel kafeslere kolayca asılabilen paslanmaz çelik bilyeli suluk.", price: "95 TL", imageKeyword: "rodent water bottle" },
+  { id: 26, category: "Kemirgen", subCategory: "Kemirgen Yemlikleri ve Sulukları", name: "Seramik Kemirgen Yemliği (Devrilmez) 100 ml", description: "Hamster ve gine piglerin deviremeyeceği ağırlıkta, yıkanması kolay sevimli seramik mama kabı.", price: "120 TL", imageKeyword: "ceramic hamster bowl" },
+
+  // --- KEMİRGEN ÖDÜLLERİ (2 Adet) ---
+  { id: 27, category: "Kemirgen", subCategory: "Kemirgen Ödülleri", name: "Vitakraft Kräcker Ballı Hamster Krakeri 2'li", description: "Kafes teline asılan, kemirme içgüdüsünü tatmin ederken enerji veren ballı ve meyveli fırınlanmış çubuk.", price: "110 TL", imageKeyword: "hamster stick treat" },
+  { id: 28, category: "Kemirgen", subCategory: "Kemirgen Ödülleri", name: "Versele-Laga Crock Complete Havuçlu Ödül 50 gr", description: "Dışı kıtır, içi yumuşak havuç dolgulu, kemirgenlerin çıldırdığı lezzetli ve vitaminli atıştırmalık.", price: "135 TL", imageKeyword: "rodent carrot treats" },
+
+  // --- KEMİRGEN OYUNCAKLARI (2 Adet) ---
+  { id: 29, category: "Kemirgen", subCategory: "Kemirgen Oyuncakları", name: "Trixie Doğal Ahşap Kemirme Köprüsü 22x10 cm", description: "İstediğiniz gibi bükerek mağara veya köprü şekli verebileceğiniz doğal söğüt ağacı dalları.", price: "160 TL", imageKeyword: "wooden bendable bridge hamster" },
+  { id: 30, category: "Kemirgen", subCategory: "Kemirgen Oyuncakları", name: "Hasır Kemirme Topu ve Tüneli 15 cm", description: "%100 yenilebilir doğal hasırdan yapılmış, tavşan ve gine piglerin hem oynayıp hem yediği tünel.", price: "185 TL", imageKeyword: "grass tunnel toy rabbit" },
+
+  // --- KEMİRGEN HİJYEN ÜRÜNLERİ (2 Adet) ---
+  { id: 31, category: "Kemirgen", subCategory: "Kemirgen Hijyen Ürünleri", name: "Beaphar Kemirgen Kafes Koku Giderici Sprey 500 ml", description: "Kafes tabanına sıkılarak idrar kokusunu hapseden, hayvanlara zarar vermeyen biyolojik sprey.", price: "270 TL", imageKeyword: "cage odor neutralizer spray" },
+  { id: 32, category: "Kemirgen", subCategory: "Kemirgen Hijyen Ürünleri", name: "Trixie Hamster Banyo Kumu (Chinchilla Kumu) 1 Kg", description: "Cüce hamster ve çinçillaların tüylerindeki yağı temizleyip parlatmak için doğal yuvarlanma kumu.", price: "145 TL", imageKeyword: "chinchilla bath sand" },
+
+  // --- KEMİRGEN ÇARKLARI VE EGZERSİZ ÜRÜNLERİ (2 Adet) ---
+  { id: 33, category: "Kemirgen", subCategory: "Kemirgen Çarkları ve Egzersiz Ürünleri", name: "Trixie Sessiz Ahşap Hamster Çarkı 20 cm", description: "Gece koşularında asla ses çıkarmayan, omurgaya zarar vermeyen geniş çaplı ve güvenli mantar tabanlı çark.", price: "420 TL", imageKeyword: "silent wooden hamster wheel" },
+  { id: 34, category: "Kemirgen", subCategory: "Kemirgen Çarkları ve Egzersiz Ürünleri", name: "Şeffaf Hamster Gezinme Topu 12 cm", description: "Hamsterınızın evin içinde kaybolmadan ve ezilme tehlikesi yaşamadan güvenle egzersiz yapmasını sağlayan top.", price: "130 TL", imageKeyword: "hamster exercise ball" },
+
+  // --- KEMİRGEN BAKIM ÜRÜNLERİ (2 Adet) ---
+  { id: 35, category: "Kemirgen", subCategory: "Kemirgen Bakım Ürünleri", name: "Trixie Kemirgen Tırnak Makası", description: "Tavşan, gine pig ve diğer kemirgenlerin uzayan tırnaklarını güvenle ve can yakmadan kesmek için özel makas.", price: "115 TL", imageKeyword: "small animal nail clippers" },
+  { id: 36, category: "Kemirgen", subCategory: "Kemirgen Bakım Ürünleri", name: "Beaphar Kemirgen Kuru Şampuan (Pudralı) 150 gr", description: "Suyla yıkanması tehlikeli olan kemirgenler için, tüylere serpilip fırçalanarak uygulanan temizleyici pudra.", price: "210 TL", imageKeyword: "small animal dry shampoo" }
+];

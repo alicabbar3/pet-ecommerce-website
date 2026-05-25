@@ -17,11 +17,49 @@ import {
   Package,
   FolderPlus,
   Sparkles,
+  Camera,
 } from "lucide-react";
+import { isTryOnCompatible } from "./tryOnUtils";
 import { useLang, t, Lang } from "./i18n";
-import { generateDummyProducts, Product } from "./productGenerator";
 
-export { type Product, generateDummyProducts };
+export type Product = {
+  id: string;
+  name: { EN: string; TR: string };
+  image: string;
+  price: number;
+  oldPrice?: number;
+  discount?: number;
+  rating?: number | null;
+  reviews?: number | null;
+  sold: number;
+  stock: number;
+  badges: string[];
+
+  brand: string;
+  flavor?: string;
+  weight?: string;
+  age?: string;
+  breedSize?: string;
+  material?: string;
+  color?: string;
+
+  birdSpecies?: string;
+  feedType?: string;
+  cageSize?: string;
+  toyType?: string;
+  vitaminType?: string;
+
+  waterType?: string;
+  fishType?: string;
+  tankVolume?: string;
+
+  smallPetSpecies?: string;
+  beddingMaterial?: string;
+
+  reptileSpecies?: string;
+  terrariumSize?: string;
+  wattage?: string;
+};
 
 export default function CategoryPage({
   categoryId,
@@ -30,6 +68,8 @@ export default function CategoryPage({
   onSaveToFolder,
   userPets = [],
   selectedPets,
+  database = [],
+  onTryOnProduct,
 }: {
   categoryId: string;
   onAddToCart: (name: string, quantity?: number, price?: number) => void;
@@ -37,6 +77,8 @@ export default function CategoryPage({
   onSaveToFolder: (name: string) => void;
   userPets?: any[];
   selectedPets?: string[];
+  database?: any[];
+  onTryOnProduct?: (product: any) => void;
 }) {
   const { lang } = useLang();
 
@@ -79,6 +121,27 @@ export default function CategoryPage({
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
 
+  // Bird-specific filter states
+  const [selectedBirdSpecies, setSelectedBirdSpecies] = useState<string[]>([]);
+  const [selectedFeedTypes, setSelectedFeedTypes] = useState<string[]>([]);
+  const [selectedCageSizes, setSelectedCageSizes] = useState<string[]>([]);
+
+  // Fish-specific filter states
+  const [selectedWaterTypes, setSelectedWaterTypes] = useState<string[]>([]);
+  const [selectedFishTypes, setSelectedFishTypes] = useState<string[]>([]);
+  const [selectedTankVolumes, setSelectedTankVolumes] = useState<string[]>([]);
+
+  // Rodent-specific filter states
+  const [selectedSmallPetSpecies, setSelectedSmallPetSpecies] = useState<string[]>([]);
+  const [selectedBeddingMaterials, setSelectedBeddingMaterials] = useState<string[]>([]);
+
+  // Reptile-specific filter states
+  const [selectedReptileSpecies, setSelectedReptileSpecies] = useState<string[]>([]);
+  const [selectedTerrariumSizes, setSelectedTerrariumSizes] = useState<string[]>([]);
+  const [selectedWattages, setSelectedWattages] = useState<string[]>([]);
+  // Remove substrate material filter
+
+
   const getOrganicCount = (catId: string) => {
     let hash = 0;
     for (let i = 0; i < catId.length; i++) {
@@ -95,6 +158,17 @@ export default function CategoryPage({
     setSelectedAges([]);
     setSelectedSizes([]);
     setSelectedMaterials([]);
+    setSelectedBirdSpecies([]);
+    setSelectedFeedTypes([]);
+    setSelectedCageSizes([]);
+    setSelectedWaterTypes([]);
+    setSelectedFishTypes([]);
+    setSelectedTankVolumes([]);
+    setSelectedSmallPetSpecies([]);
+    setSelectedBeddingMaterials([]);
+    setSelectedReptileSpecies([]);
+    setSelectedTerrariumSizes([]);
+    setSelectedWattages([]);
   };
 
   useEffect(() => {
@@ -105,164 +179,16 @@ export default function CategoryPage({
     resetFilters();
     const timer = setTimeout(() => {
       setIsLoadingProducts(false);
-      if (categoryId === "personalized") {
-        const activeFilters =
-          selectedPets !== undefined
-            ? selectedPets.map((p) => p.toLowerCase())
-            : userPets
-                .filter((p) => p.name && p.type)
-                .map((p) => p.type.toLowerCase());
-
-        const combinedPets = Array.from(new Set(activeFilters));
-
-        if (combinedPets.length === 0) {
-          // fallback to all
-          setProducts(generateDummyProducts("all", getOrganicCount("all")));
-        } else {
-          // Generate an array of products matching those pets
-          let mixedProducts: Product[] = [];
-          for (const pet of combinedPets) {
-            const items = generateDummyProducts(
-              pet + "s",
-              Math.floor(getOrganicCount(pet + "s") / combinedPets.length) * 2,
-            ); // get a larger pool
-            mixedProducts = [...mixedProducts, ...items];
-          }
-
-          mixedProducts = mixedProducts.filter(
-            (product, index, self) =>
-              index === self.findIndex((t) => t.id === product.id),
-          );
-
-          // Apply allergy filtering - dont show products with known allergies
-          const allAllergies = Array.from(
-            new Set(
-              userPets.flatMap(
-                (p) => p.allergies?.map((a: string) => a.toLowerCase()) || [],
-              ),
-            ),
-          );
-
-          if (allAllergies.length > 0) {
-            mixedProducts = mixedProducts.filter((p) => {
-              const pName = p.name.EN.toLowerCase();
-              const pFlavor = p.flavor?.toLowerCase() || "";
-              return !allAllergies.some((allergy) => {
-                const allergyTR =
-                  allergy === "chicken"
-                    ? "tavuk"
-                    : allergy === "grain"
-                      ? "tahıl"
-                      : allergy === "beef"
-                        ? "sığır"
-                        : allergy === "dairy"
-                          ? "süt"
-                          : allergy === "fish"
-                            ? "balık"
-                            : "toz";
-                return (
-                  pName.includes(allergy) ||
-                  pName.includes(allergyTR) ||
-                  pFlavor.includes(allergy) ||
-                  pFlavor.includes(allergyTR)
-                );
-              });
-            });
-          }
-
-          // Compute scoring based on age and weight/size
-          const sortedProducts = mixedProducts.sort((a, b) => {
-            let scoreA = Math.random();
-            let scoreB = Math.random();
-
-            for (const pet of userPets) {
-              const petAgeNum = parseFloat(pet.age);
-              let petAgeStage = "Adult";
-              if (petAgeNum < 1) petAgeStage = "Puppy/Kitten";
-              else if (petAgeNum >= 7) petAgeStage = "Senior";
-
-              let petSizeStage = "All Sizes";
-              const petWtNum = parseFloat(pet.weight || "0");
-              if (petWtNum > 0 && petWtNum < 10) petSizeStage = "Small";
-              else if (petWtNum > 25) petSizeStage = "Large";
-
-              if (a.age === petAgeStage) scoreA += 5;
-              if (b.age === petAgeStage) scoreB += 5;
-              if (a.breedSize === petSizeStage) scoreA += 3;
-              if (b.breedSize === petSizeStage) scoreB += 3;
-            }
-
-            return scoreB - scoreA;
-          });
-
-          // take top portion of the scored products
-          setProducts(sortedProducts.slice(0, getOrganicCount("dogs")));
-        }
-      } else {
-        let catProducts = generateDummyProducts(
-          categoryId,
-          getOrganicCount(categoryId),
-        );
-
-        const allAllergies = Array.from(
-          new Set(
-            userPets.flatMap(
-              (p) => p.allergies?.map((a: string) => a.toLowerCase()) || [],
-            ),
-          ),
-        );
-        if (allAllergies.length > 0) {
-          catProducts = catProducts.filter((p) => {
-            const pName = p.name.EN.toLowerCase();
-            const pFlavor = p.flavor?.toLowerCase() || "";
-            return !allAllergies.some((allergy) => {
-              const allergyTR =
-                allergy === "chicken"
-                  ? "tavuk"
-                  : allergy === "grain"
-                    ? "tahıl"
-                    : allergy === "beef"
-                      ? "sığır"
-                      : allergy === "dairy"
-                        ? "süt"
-                        : allergy === "fish"
-                          ? "balık"
-                          : "toz";
-              return (
-                pName.includes(allergy) ||
-                pName.includes(allergyTR) ||
-                pFlavor.includes(allergy) ||
-                pFlavor.includes(allergyTR)
-              );
-            });
-          });
-        }
-
-        catProducts = catProducts.sort((a, b) => {
-          let scoreA = 0;
-          let scoreB = 0;
-          for (const pet of userPets) {
-            const petAgeNum = parseFloat(pet.age);
-            let petAgeStage = "Adult";
-            if (petAgeNum < 1) petAgeStage = "Puppy/Kitten";
-            else if (petAgeNum >= 7) petAgeStage = "Senior";
-
-            let petSizeStage = "All Sizes";
-            const petWtNum = parseFloat(pet.weight || "0");
-            if (petWtNum > 0 && petWtNum < 10) petSizeStage = "Small";
-            else if (petWtNum > 25) petSizeStage = "Large";
-
-            if (a.age === petAgeStage) scoreA += 5;
-            if (b.age === petAgeStage) scoreB += 5;
-            if (a.breedSize === petSizeStage) scoreA += 3;
-            if (b.breedSize === petSizeStage) scoreB += 3;
-          }
-          return scoreB - scoreA;
-        });
-
-        setProducts(catProducts);
+      let newProducts = database;
+      
+      // Filter by category
+      if (categoryId && categoryId !== "all" && categoryId !== "personalized") {
+        newProducts = newProducts.filter(p => p._categoryId === categoryId || p._subCategoryId === categoryId);
       }
-    }, 500);
+      
+      setProducts(newProducts);
+    }, 400);
+
     return () => clearTimeout(timer);
   }, [categoryId, userPets, selectedPets]);
 
@@ -306,7 +232,21 @@ export default function CategoryPage({
       ),
     [products],
   );
+  
+  const availableBirdSpecies = useMemo(() => Array.from(new Set(products.map(p => p.birdSpecies).filter(Boolean) as string[])), [products]);
+  const availableFeedTypes = useMemo(() => Array.from(new Set(products.map(p => p.feedType).filter(Boolean) as string[])), [products]);
+  const availableCageSizes = useMemo(() => Array.from(new Set(products.map(p => p.cageSize).filter(Boolean) as string[])), [products]);
 
+  const availableWaterTypes = useMemo(() => Array.from(new Set(products.map(p => p.waterType).filter(Boolean) as string[])), [products]);
+  const availableFishTypes = useMemo(() => Array.from(new Set(products.map(p => p.fishType).filter(Boolean) as string[])), [products]);
+  const availableTankVolumes = useMemo(() => Array.from(new Set(products.map(p => p.tankVolume).filter(Boolean) as string[])), [products]);
+
+  const availableSmallPetSpecies = useMemo(() => Array.from(new Set(products.map(p => p.smallPetSpecies).filter(Boolean) as string[])), [products]);
+  const availableBeddingMaterials = useMemo(() => Array.from(new Set(products.map(p => p.beddingMaterial).filter(Boolean) as string[])), [products]);
+
+  const availableReptileSpecies = useMemo(() => Array.from(new Set(products.map(p => p.reptileSpecies).filter(Boolean) as string[])), [products]);
+  const availableTerrariumSizes = useMemo(() => Array.from(new Set(products.map(p => p.terrariumSize).filter(Boolean) as string[])), [products]);
+  const availableWattages = useMemo(() => Array.from(new Set(products.map(p => p.wattage).filter(Boolean) as string[])), [products]);
   // Filter and sort
   const filteredProducts = useMemo(() => {
     return products
@@ -340,6 +280,26 @@ export default function CategoryPage({
           !selectedMaterials.includes(p.material)
         )
           return false;
+          
+        // Bird-specific filters
+        if (selectedBirdSpecies.length > 0 && p.birdSpecies && !selectedBirdSpecies.includes(p.birdSpecies)) return false;
+        if (selectedFeedTypes.length > 0 && p.feedType && !selectedFeedTypes.includes(p.feedType)) return false;
+        if (selectedCageSizes.length > 0 && p.cageSize && !selectedCageSizes.includes(p.cageSize)) return false;
+
+        // Fish-specific filters
+        if (selectedWaterTypes.length > 0 && p.waterType && !selectedWaterTypes.includes(p.waterType)) return false;
+        if (selectedFishTypes.length > 0 && p.fishType && !selectedFishTypes.includes(p.fishType)) return false;
+        if (selectedTankVolumes.length > 0 && p.tankVolume && !selectedTankVolumes.includes(p.tankVolume)) return false;
+
+        // Rodent-specific filters
+        if (selectedSmallPetSpecies.length > 0 && p.smallPetSpecies && !selectedSmallPetSpecies.includes(p.smallPetSpecies)) return false;
+        if (selectedBeddingMaterials.length > 0 && p.beddingMaterial && !selectedBeddingMaterials.includes(p.beddingMaterial)) return false;
+
+        // Reptile-specific filters
+        if (selectedReptileSpecies.length > 0 && p.reptileSpecies && !selectedReptileSpecies.includes(p.reptileSpecies)) return false;
+        if (selectedTerrariumSizes.length > 0 && p.terrariumSize && !selectedTerrariumSizes.includes(p.terrariumSize)) return false;
+        if (selectedWattages.length > 0 && p.wattage && !selectedWattages.includes(p.wattage)) return false;
+
         return true;
       })
       .sort((a, b) => {
@@ -358,6 +318,17 @@ export default function CategoryPage({
     selectedAges,
     selectedSizes,
     selectedMaterials,
+    selectedBirdSpecies,
+    selectedFeedTypes,
+    selectedCageSizes,
+    selectedWaterTypes,
+    selectedFishTypes,
+    selectedTankVolumes,
+    selectedSmallPetSpecies,
+    selectedBeddingMaterials,
+    selectedReptileSpecies,
+    selectedTerrariumSizes,
+    selectedWattages,
     sortBy,
   ]);
 
@@ -369,6 +340,17 @@ export default function CategoryPage({
     selectedWeights.length > 0 ||
     selectedAges.length > 0 ||
     selectedSizes.length > 0 ||
+    selectedBirdSpecies.length > 0 ||
+    selectedFeedTypes.length > 0 ||
+    selectedCageSizes.length > 0 ||
+    selectedWaterTypes.length > 0 ||
+    selectedFishTypes.length > 0 ||
+    selectedTankVolumes.length > 0 ||
+    selectedSmallPetSpecies.length > 0 ||
+    selectedBeddingMaterials.length > 0 ||
+    selectedReptileSpecies.length > 0 ||
+    selectedTerrariumSizes.length > 0 ||
+    selectedWattages.length > 0 ||
     selectedMaterials.length > 0;
 
   const toggleFilter = (
@@ -491,7 +473,7 @@ export default function CategoryPage({
         </FilterSection>
       )}
 
-      {/* Materials */}
+      {/* Material */}
       {availableMaterials.length > 0 && (
         <FilterSection title={lang === "TR" ? "Materyal" : "Material"}>
           <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
@@ -519,6 +501,327 @@ export default function CategoryPage({
           </div>
         </FilterSection>
       )}
+
+      {/* Bird Species */}
+      {availableBirdSpecies.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Kuş Türü" : "Bird Species"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableBirdSpecies.map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBirdSpecies.includes(s)}
+                  onChange={() => toggleFilter(setSelectedBirdSpecies, s)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBirdSpecies.includes(s) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedBirdSpecies.includes(s) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{t(s, lang)}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Bird Feed Types */}
+      {availableFeedTypes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Yem Tipi" : "Feed Type"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableFeedTypes.map((t) => (
+              <label
+                key={t}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedFeedTypes.includes(t)}
+                  onChange={() => toggleFilter(setSelectedFeedTypes, t)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedFeedTypes.includes(t) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedFeedTypes.includes(t) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{t}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Bird Cage Sizes */}
+      {availableCageSizes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Kafes Boyutu" : "Cage Size"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableCageSizes.map((c) => (
+              <label
+                key={c}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedCageSizes.includes(c)}
+                  onChange={() => toggleFilter(setSelectedCageSizes, c)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedCageSizes.includes(c) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedCageSizes.includes(c) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{t(c, lang)}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Water Types (Fish) */}
+      {availableWaterTypes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Su Tipi" : "Water Type"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableWaterTypes.map((c) => (
+              <label
+                key={c}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedWaterTypes.includes(c)}
+                  onChange={() => toggleFilter(setSelectedWaterTypes, c)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedWaterTypes.includes(c) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedWaterTypes.includes(c) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{c}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Fish Types */}
+      {availableFishTypes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Balık Türü" : "Fish Type"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableFishTypes.map((c) => (
+              <label
+                key={c}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedFishTypes.includes(c)}
+                  onChange={() => toggleFilter(setSelectedFishTypes, c)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedFishTypes.includes(c) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedFishTypes.includes(c) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{c}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Tank Volume */}
+      {availableTankVolumes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Akvaryum Hacmi" : "Tank Volume"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableTankVolumes.map((c) => (
+              <label
+                key={c}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTankVolumes.includes(c)}
+                  onChange={() => toggleFilter(setSelectedTankVolumes, c)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedTankVolumes.includes(c) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedTankVolumes.includes(c) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{c}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Small Pet Species */}
+      {availableSmallPetSpecies.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Tür" : "Species"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableSmallPetSpecies.map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSmallPetSpecies.includes(s)}
+                  onChange={() => toggleFilter(setSelectedSmallPetSpecies, s)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedSmallPetSpecies.includes(s) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedSmallPetSpecies.includes(s) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{s}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Bedding Materials */}
+      {availableBeddingMaterials.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Taban Malzemesi" : "Bedding Material"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableBeddingMaterials.map((m) => (
+              <label
+                key={m}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBeddingMaterials.includes(m)}
+                  onChange={() => toggleFilter(setSelectedBeddingMaterials, m)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBeddingMaterials.includes(m) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedBeddingMaterials.includes(m) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{m}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Reptile Species */}
+      {availableReptileSpecies.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Sürüngen Türü" : "Species"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableReptileSpecies.map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedReptileSpecies.includes(s)}
+                  onChange={() => toggleFilter(setSelectedReptileSpecies, s)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedReptileSpecies.includes(s) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedReptileSpecies.includes(s) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{s}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Terrarium Size */}
+      {availableTerrariumSizes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Teraryum Boyutu" : "Terrarium Size"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableTerrariumSizes.map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTerrariumSizes.includes(s)}
+                  onChange={() => toggleFilter(setSelectedTerrariumSizes, s)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedTerrariumSizes.includes(s) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedTerrariumSizes.includes(s) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{s}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Wattages */}
+      {availableWattages.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Güç (Watt)" : "Wattage"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableWattages.map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedWattages.includes(s)}
+                  onChange={() => toggleFilter(setSelectedWattages, s)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedWattages.includes(s) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedWattages.includes(s) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{s}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+
 
       {/* Ages */}
       {availableAges.length > 0 && (
@@ -766,7 +1069,7 @@ export default function CategoryPage({
                       onAddToCart={onAddToCart}
                       isSaved={savedProductNames.includes(product.name.EN)}
                       onSaveToFolder={onSaveToFolder}
-                      onTryOnProduct={setTryOnProduct}
+                      onTryOnProduct={onTryOnProduct}
                     />
                   ))}
                 </div>
@@ -890,14 +1193,15 @@ export const ProductListingCard: React.FC<{
   product: Product;
   lang: string;
   onAddToCart: (name: string, quantity?: number, price?: number) => void;
-  isSaved: boolean;
+  isSaved?: boolean;
   onSaveToFolder: (name: string) => void;
   onTryOnProduct?: (p: Product) => void;
-}> = ({ product, lang, onAddToCart, isSaved, onSaveToFolder, onTryOnProduct }) => {
+}> = ({ product, lang, onAddToCart, isSaved = false, onSaveToFolder, onTryOnProduct }) => {
   const [quantity, setQuantity] = useState(1);
+  const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="bg-card rounded-2xl border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-500 flex flex-col group overflow-hidden relative h-full">
+    <a href={`#/product/${product.id}`} className="bg-card rounded-2xl border border-border hover:border-brand-teal/40 hover:shadow-xl hover:shadow-brand-teal/5 transition-all duration-500 flex flex-col group overflow-hidden relative h-full">
       {/* Image & Badges Container */}
       <div className="aspect-[4/5] sm:aspect-square relative bg-secondary/20 overflow-hidden flex items-center justify-center p-4">
         {/* Badges */}
@@ -923,34 +1227,45 @@ export const ProductListingCard: React.FC<{
           ))}
         </div>
 
-        {/* Folder Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            onSaveToFolder(product.name.EN);
-          }}
-          className={`absolute top-3 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isSaved ? "text-brand-teal border-brand-teal/20 bg-brand-teal/10" : "text-muted-foreground hover:text-brand-teal"}`}
-        >
-          <FolderPlus
-            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isSaved ? "fill-current" : ""}`}
-          />
-        </button>
-
-        {/* Try On Button */}
-        {onTryOnProduct && !!product.name.EN.toLowerCase().match(/bed|cage|tank|aquarium|terrarium|scratcher|tree|sweater|clothing|coat|collar|harness|raincoat|vest/) && (
+        <div className="absolute top-3 right-3 z-30 flex flex-col gap-2 items-end">
+          {/* Folder Button */}
           <button
             onClick={(e) => {
               e.preventDefault();
-              onTryOnProduct(product);
+              e.stopPropagation();
+              onSaveToFolder(product.name.EN);
             }}
-            className="absolute top-14 right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 text-brand-teal hover:border-brand-teal/40"
-            title={lang === "TR" ? "Yapay Zeka ile Dene" : "AI Try-On"}
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/90 backdrop-blur-md shadow-sm border border-border/50 hover:scale-105 active:scale-95 ${isSaved ? "text-brand-teal border-brand-teal/20 bg-brand-teal/10" : "text-muted-foreground hover:text-brand-teal"}`}
           >
-            <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <FolderPlus
+              className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${isSaved ? "fill-current" : ""}`}
+            />
           </button>
-        )}
 
-        <Package className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground/20 group-hover:scale-110 group-hover:text-brand-teal/40 transition-all duration-700 ease-out" />
+          {/* Try On Button */}
+          {onTryOnProduct && isTryOnCompatible((product as any)._subCategoryId || (product as any)._categoryId, product.name.EN) && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onTryOnProduct(product);
+              }}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all bg-background/95 backdrop-blur-md shadow-md border border-brand-teal/30 hover:border-brand-teal hover:scale-105 active:scale-95 text-brand-teal hover:shadow-brand-teal/20"
+              title={lang === "TR" ? "Yapay Zeka ile Dene" : "AI Try-On"}
+            >
+              <div className="relative flex items-center justify-center">
+                <Camera className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <Sparkles className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 text-yellow-500" />
+              </div>
+            </button>
+          )}
+        </div>
+
+        {product.image && !imgError ? (
+          <img src={product.image} onError={() => setImgError(true)} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-all duration-700 ease-out" alt={product.name.EN} />
+        ) : (
+          <Package className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground/20 group-hover:scale-110 group-hover:text-brand-teal/40 transition-all duration-700 ease-out" />
+        )}
 
         {/* Desktop Add to Cart Overlay */}
         <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20 hidden lg:flex flex-col gap-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
@@ -960,6 +1275,7 @@ export const ProductListingCard: React.FC<{
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setQuantity(Math.max(1, quantity - 1));
                   }}
                   className="w-10 h-10 flex items-center justify-center text-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
@@ -972,6 +1288,7 @@ export const ProductListingCard: React.FC<{
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setQuantity(quantity + 1);
                   }}
                   className="w-10 h-10 flex items-center justify-center text-foreground hover:text-brand-teal hover:bg-secondary active:scale-95 transition-all duration-300"
@@ -982,6 +1299,7 @@ export const ProductListingCard: React.FC<{
               <button
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   onAddToCart(product.name.EN, quantity, product.price);
                   setQuantity(1);
                 }}
@@ -1016,10 +1334,16 @@ export const ProductListingCard: React.FC<{
 
         <div className="flex items-center gap-1.5 mb-4 min-h-[1.25rem]">
           <div className="flex text-[#F4A261] text-[10px] sm:text-xs">
-            <span className="text-muted-foreground opacity-30">{"★★★★★"}</span>
+            {Array.from({ length: Math.floor(product.rating || 5) }).map((_, i) => (
+              <span key={i}>★</span>
+            ))}
+            {product.rating && product.rating % 1 !== 0 && <span>★</span>}
+            {Array.from({ length: 5 - Math.ceil(product.rating || 5) }).map((_, i) => (
+              <span key={`empty-${i}`} className="text-muted-foreground opacity-30">★</span>
+            ))}
           </div>
           <span className="text-[10px] sm:text-xs text-muted-foreground">
-            (0)
+            ({product.reviews || 0})
           </span>
         </div>
 
@@ -1043,6 +1367,7 @@ export const ProductListingCard: React.FC<{
               <button
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   onAddToCart(product.name.EN, 1, product.price);
                 }}
                 className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-teal text-white flex items-center justify-center hover:bg-brand-teal-dark active:scale-95 transition-all shadow-[0_4px_14px_0_rgba(45,212,191,0.2)]"
@@ -1058,6 +1383,6 @@ export const ProductListingCard: React.FC<{
           </div>
         </div>
       </div>
-    </div>
+    </a>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Upload, Sparkles, Loader2, Camera } from "lucide-react";
 import { t, useLang } from "./i18n";
-import { Product } from "./productGenerator";
+import { Product } from "./CategoryPage";
 
 export default function VirtualTryOnModal({
   isOpen,

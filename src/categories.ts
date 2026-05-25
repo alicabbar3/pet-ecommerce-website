@@ -33,7 +33,7 @@ export const CATEGORIES: Category[] = [
     name: { EN: 'Cats', TR: 'Kediler' },
     subcategories: [
       { id: 'cat-dry-food', name: { EN: 'Cat Dry Food', TR: 'Kedi Kuru Mama' } },
-      { id: 'cat-wet-food', name: { EN: 'Cat Wet Food', TR: 'Kedi Konserve Mama' } },
+      { id: 'cat-wet-food', name: { EN: 'Cat Wet Food', TR: 'Kedi Yaş Mama' } },
       { id: 'cat-treats', name: { EN: 'Cat Treats & Rewards', TR: 'Kedi Ödül Maması' } },
       { id: 'cat-toys', name: { EN: 'Cat Toys', TR: 'Kedi Oyuncakları' } },
       { id: 'cat-litter', name: { EN: 'Cat Litter', TR: 'Kedi Kumu' } },
@@ -75,8 +75,7 @@ export const CATEGORIES: Category[] = [
       { id: 'aquarium-cleaning', name: { EN: 'Aquarium Cleaning Products', TR: 'Akvaryum Temizlik Ürünleri' } },
       { id: 'water-conditioners', name: { EN: 'Water Conditioners', TR: 'Su Düzenleyiciler' } },
       { id: 'aquarium-heaters', name: { EN: 'Aquarium Heaters', TR: 'Akvaryum Isıtıcıları' } },
-      { id: 'fish-health', name: { EN: 'Fish Health Products', TR: 'Balık Sağlık Ürünleri' } },
-      { id: 'aquarium-accessories', name: { EN: 'Aquarium Accessories', TR: 'Akvaryum Aksesuarları' } }
+      { id: 'fish-health', name: { EN: 'Fish Health Products', TR: 'Balık Sağlık Ürünleri' } }
     ]
   },
   {
@@ -100,12 +99,7 @@ export const CATEGORIES: Category[] = [
     subcategories: [
       { id: 'reptile-food', name: { EN: 'Reptile Food', TR: 'Sürüngen Yemi' } },
       { id: 'terrariums', name: { EN: 'Terrariums', TR: 'Teraryumlar' } },
-      { id: 'heating-lamps', name: { EN: 'Heating Lamps', TR: 'Isıtıcı Lambalar' } },
       { id: 'uvb-lighting', name: { EN: 'UVB Lighting', TR: 'UVB Aydınlatma' } },
-      { id: 'reptile-substrates', name: { EN: 'Reptile Substrates', TR: 'Sürüngen Taban Malzemeleri' } },
-      { id: 'reptile-decorations', name: { EN: 'Reptile Decorations', TR: 'Sürüngen Dekorasyonları' } },
-      { id: 'reptile-humidity', name: { EN: 'Reptile Humidity & Temperature Products', TR: 'Nem ve Sıcaklık Ürünleri' } },
-      { id: 'reptile-feeding-accessories', name: { EN: 'Reptile Feeding Accessories', TR: 'Sürüngen Besleme Aksesuarları' } },
       { id: 'reptile-health', name: { EN: 'Reptile Health Products', TR: 'Sürüngen Sağlık Ürünleri' } },
       { id: 'reptile-care', name: { EN: 'Reptile Care Products', TR: 'Sürüngen Bakım Ürünleri' } }
     ]

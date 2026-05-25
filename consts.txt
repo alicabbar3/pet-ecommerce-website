@@ -1,0 +1,244 @@
+73:const BubblesIcon = ({ className }: { className?: string }) => (
+102:const CONTACT = {
+108:const WA_LINK = `https://wa.me/905365264966`;
+110:const SERVICES = [
+192:const HighlightText = ({ text }: { text: string, query?: string }) => {
+217:  const { lang, setLang } = useLang();
+218:  const [isDark, setIsDark] = useState(() => {
+220:      const stored = localStorage.getItem("vivia_theme");
+225:  const [searchQuery, setSearchQuery] = useState("");
+226:  const [isSearchFocused, setIsSearchFocused] = useState(false);
+227:  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+228:  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+229:  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+230:  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+231:  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+232:  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+237:  const handleMouseEnterCategory = (id: string) => {
+242:  const handleMouseLeaveCategory = () => {
+247:  const activeFilters =
+254:  const searchFilterPets = Array.from(new Set(activeFilters));
+256:  const { results: searchResults, fallback, fallbackTokens } = useMemo(() => {
+260:  const filteredSuggestions = searchResults.slice(0, 7).map(item => item.product);
+262:  const personalizedPreview = useMemo(() => {
+263:    const uniqueNames = new Set<string>();
+266:          const pt = p._categoryLabel.EN.toLowerCase();
+276:      const nameKey = p.name[lang as 'EN'|'TR'];
+286:  const popularSearches = lang === "TR" 
+290:  const handleSearchSelect = (val: string, productId?: string) => {
+294:      const newHistory = prev.filter((item) => item !== val);
+448:                            const isOutOfStock = product.stock === 0;
+1027:  const { lang } = useLang();
+1028:  const [showBirthdayCard, setShowBirthdayCard] = useState<string | null>(null);
+1030:  const activePetsCount = userPets.filter((p) => p.name).length;
+1032:  const today = new Date();
+1033:  const todayStr = `${today.getMonth() + 1}-${today.getDate()}`;
+1034:  const birthdayPets = userPets.filter((p) => {
+1036:    const [y, m, d] = p.birthday.split("-");
+1282:  const { lang } = useLang();
+1286:  const activeFilters =
+1294:  const combinedPets = Array.from(new Set(activeFilters));
+1301:      const pt = p._categoryLabel.EN.toLowerCase();
+1319:    const allAllergies = Array.from(
+1328:        const pName = p.name.EN.toLowerCase();
+1329:        const pFlavor = p.flavor?.toLowerCase() || "";
+1331:          const allergyTR =
+1357:      for (const pet of userPets) {
+1360:        const petAgeNum = parseFloat(pet.age);
+1366:        const petWtNum = parseFloat(pet.weight || "0");
+1415:  const { lang } = useLang();
+1416:  const [orderId, setOrderId] = useState("");
+1417:  const [status, setStatus] = useState<
+1420:  const [error, setError] = useState("");
+1422:  const handleTrack = (e: React.FormEvent) => {
+1433:      const len = orderId.trim().length;
+1588:  const { lang } = useLang();
+1683:  const { lang } = useLang();
+1684:  const [copied, setCopied] = useState(false);
+1685:  const handleCopyEmail = () => {
+1757:  const { lang } = useLang();
+1878:  const { lang, setLang } = useLang();
+1879:  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+1880:  const [isCreating, setIsCreating] = useState(false);
+1881:  const [newFolderName, setNewFolderName] = useState("");
+1882:  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+1883:  const [editFolderName, setEditFolderName] = useState("");
+1884:  const [isAddingProduct, setIsAddingProduct] = useState(false);
+1888:  const handleCreateFolder = (e: React.FormEvent) => {
+1901:  const handleRenameFolder = (id: string, e: React.FormEvent) => {
+1910:  const handleDeleteFolder = (id: string) => {
+1915:  const handleRemoveProduct = (folderId: string, itemName: string) => {
+1925:  const handleAddProduct = (itemName: string) => {
+1936:  const allPossibleProducts = SERVICES.flatMap((s) =>
+1940:  const activeFolder = folders.find((f) => f.id === activeFolderId);
+2197:                                      const price = getPriceFromName(item);
+2250:  const { lang } = useLang();
+2283:              const isAlreadyAdded = folder.items.includes(productName);
+2323:  const { lang, setLang } = useLang();
+2325:  const [isSaved, setIsSaved] = useState(false);
+2326:  const [photoError, setPhotoError] = useState<string | null>(null);
+2327:  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+2329:  const [activePetId, setActivePetId] = useState<string | null>(null);
+2330:  const [viewMode, setViewMode] = useState<"profile" | "health">("profile");
+2331:  const [newWeightDate, setNewWeightDate] = useState("");
+2332:  const [newWeightValue, setNewWeightValue] = useState("");
+2333:  const [newReminder, setNewReminder] = useState({
+2349:  const handleSave = (e: React.FormEvent) => {
+2358:  const addPet = () => {
+2359:    const newId = Date.now().toString();
+2360:    const generatedReminders = generatePeriodicCareReminders({
+2363:      const dueDate = new Date();
+2397:  const removePet = (id: string) => {
+2398:    const updatedPets = pets.filter((p) => p.id !== id);
+2405:  const updatePet = (
+2413:  const handlePhotoUpload = (
+2417:    const file = event.target.files?.[0];
+2420:    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+2431:    const reader = new FileReader();
+2438:  const getPetProfileLabel = (pet: PetProfileData) => {
+2440:    const petsOfSameType = pets.filter((p) => p.type === pet.type);
+2441:    const translatedType = t(pet.type, lang);
+2443:      const typeIndex = petsOfSameType.findIndex((p) => p.id === pet.id) + 1;
+2449:  const activePet = pets.find((p) => p.id === activePetId) || pets[0];
+2880:                              const tx =
+2894:                              const hasAllergy =
+2901:                                    const newArr = hasAllergy
+2935:                              const tx =
+2947:                              const hasDiet =
+2954:                                    const newArr = hasDiet
+3022:                                    const updatedHistory = [
+3113:                              const lastW = parseFloat(
+3118:                              const prevW = parseFloat(
+3123:                              const isPuppyKitten =
+3210:                                          const newR = activePet.reminders.map(
+3361:                                  const rId = Date.now().toString();
+3362:                                  const nr = [
+3444:  const { lang, setLang } = useLang();
+3446:  const togglePet = (pet: string) => {
+3596:  const { lang } = useLang();
+3600:  const totalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+3601:  const totalPrice = cartItems.reduce(
+3754:  const { lang } = useLang();
+3817:  const { lang } = useLang();
+3818:  const [email, setEmail] = useState("");
+3819:  const [password, setPassword] = useState("");
+3820:  const [confirmPassword, setConfirmPassword] = useState("");
+3821:  const [firstName, setFirstName] = useState("");
+3822:  const [lastName, setLastName] = useState("");
+3823:  const [phone, setPhone] = useState("");
+3824:  const [remember, setRemember] = useState(false);
+3825:  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
+3826:  const [agreedMarketing, setAgreedMarketing] = useState(false);
+3827:  const [isSubmitting, setIsSubmitting] = useState(false);
+3828:  const [success, setSuccess] = useState(false);
+3829:  const [showPassword, setShowPassword] = useState(false);
+3830:  const [resetTokenError, setResetTokenError] = useState("");
+3833:  const [currentMode, setCurrentMode] = useState<
+4313:const PetCollageIcon = ({ className }: { className?: string }) => (
+4331:  const positionClasses = {
+4338:  const arrowClasses = {
+4359:const TR_CITIES = Object.keys(turkeyData).sort((a, b) =>
+4363:const getDistrictsForCity = (city: string) => {
+4380:  const { lang } = useLang();
+4382:  const [city, setCity] = useState("");
+4383:  const [district, setDistrict] = useState("");
+4384:  const [phone, setPhone] = useState("");
+4385:  const [promoCode, setPromoCode] = useState("");
+4386:  const [isPromoApplied, setIsPromoApplied] = useState(false);
+4387:  const isLoggedIn =
+4404:  const handleSubmit = (e: React.FormEvent) => {
+4409:  const districts = city ? getDistrictsForCity(city) : [];
+4411:  const subtotal = totalPrice;
+4412:  const isEligibleForLargeOrderDiscount = subtotal > 1500;
+4413:  const largeOrderDiscount = isEligibleForLargeOrderDiscount
+4416:  const promoDiscount = isPromoApplied ? subtotal * 0.1 : 0; // dummy 10% promo
+4418:  const totalDiscount = largeOrderDiscount + promoDiscount;
+4419:  const finalTotal = Math.max(0, subtotal - totalDiscount);
+4864:export const getBasePriceFromName = (name: string) => {
+4867:  for (const s of SERVICES) {
+4868:    const enTitle = s.title;
+4869:    const trTitle = t(s.title, "TR");
+4871:    for (const item of s.items) {
+4872:      const enItem = item;
+4873:      const trItem = t(item, "TR");
+4875:      const enStr = `${enTitle} - ${enItem}`;
+4876:      const trStr = `${trTitle} - ${trItem}`;
+4886:  const hash = englishName
+4889:  const isDogOrCat =
+4897:export const getPriceFromName = (name: string) => {
+4898:  const basePrice = getBasePriceFromName(name);
+4899:  const hash = name
+4902:  const hasDiscount = hash % 3 === 0;
+4906:export const predictFoodConsumptionDays = (
+4910:  const lowerName = itemName.toLowerCase();
+4915:  const match = lowerName.match(/(\d+(?:\.\d+)?)\s*(kg|g|lb)/);
+4917:    const val = parseFloat(match[1]);
+4925:  const petWeight = parseFloat(pet.weight) || 10;
+4948:  const days = Math.floor(kgWeight / dailyConsumption);
+4952:export const generatePeriodicCareReminders = (
+4955:  const rs: any[] = [];
+4994:  const { lang } = useLang();
+4995:  const [isHovered, setIsHovered] = useState(false);
+4997:  const activePets = pets.filter(
+5002:  const getIcon = (type: string) => {
+5021:  const getPetLabel = (pet: any) => {
+5023:    const petsOfSameType = activePets.filter((p) => p.type === pet.type);
+5024:    const translatedType = t(pet.type, lang);
+5026:      const typeIndex = petsOfSameType.findIndex((p) => p.id === pet.id) + 1;
+5032:  const maxVisible = 3;
+5033:  const isExpandable = activePets.length > maxVisible;
+5034:  const visiblePets = isHovered ? activePets : activePets.slice(0, maxVisible);
+5035:  const hiddenCount = activePets.length - maxVisible;
+5058:            const Icon = getIcon(pet.type);
+5059:            const petLabel = getPetLabel(pet);
+5095:  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+5096:  const [isPetProfileOpen, setIsPetProfileOpen] = useState(false);
+5097:  const [userPets, setUserPets] = useState<PetProfileData[]>([
+5115:        const dueDate = new Date();
+5127:  const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
+5128:  const [isCartOpen, setIsCartOpen] = useState(false);
+5129:  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+5130:  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+5131:  const [selectedPetsFilter, setSelectedPetsFilter] = useState<
+5134:  const [authMode, setAuthMode] = useState<
+5137:  const [currentHash, setCurrentHash] = useState(() =>
+5140:  const [focusedPetId, setFocusedPetId] = useState<string | null>(null);
+5143:    const handleHashChange = () => {
+5151:  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+5153:      const saved = localStorage.getItem("vivia_cart");
+5162:  const [folders, setFolders] = useState<SavedFolder[]>([]);
+5163:  const [selectedProductForFolder, setSelectedProductForFolder] = useState<
+5167:  const savedProductNames = useMemo(
+5171:  const [lang, setLang] = useState<Lang>("TR");
+5172:  const [isLoggedIn, setIsLoggedIn] = useState(false);
+5173:  const [userEmail, setUserEmail] = useState<string | null>(null);
+5175:  const [toastMessage, setToastMessage] = useState<string | null>(null);
+5177:  const cartTotalPrice = cartItems.reduce(
+5184:    const rememberedLogin = localStorage.getItem("vivia_logged_in");
+5185:    const email = localStorage.getItem("vivia_user_email");
+5196:  const handleLogin = (remember: boolean, email: string) => {
+5205:  const handleLogout = () => {
+5214:    const timer = setTimeout(() => setIsOnboardingOpen(true), 1500);
+5218:  const [pendingCartItem, setPendingCartItem] = useState<{
+5225:  const handleAddToCart = (
+5231:    const finalPrice = price !== undefined ? price : getPriceFromName(itemName);
+5234:      const lowerName = itemName.toLowerCase();
+5235:      const warnings: { petName: string; allergy: string }[] = [];
+5236:      const activePets = userPets.filter(
+5242:          const allergyTR =
+5275:      const existing = prev.find((p) => p.name === itemName);
+5300:  const handleRemoveItem = (id: string) => {
+5304:  const handleUpdateQuantity = (id: string, newQuantity: number) => {
+5316:  const handleSaveToFolderClick = (productName: string) => {
+5330:  const handleSaveToSpecificFolder = (folderId: string) => {
+5345:  const handleCheckout = () => {
+5350:  const handleProcessPayment = () => {
+5356:    const nextUserPets = [...userPets];
+5359:      const activePets = nextUserPets.filter(
+5364:      const pet =
+5371:      const days = predictFoodConsumptionDays(item.name, pet);
+5374:        const dueDate = new Date();
+5397:    const email =
+5424:  const handleCloseSuccess = () => {
+5488:                const pId = currentHash.replace("#/product/", "");
+5489:                const product = ALL_MOCK_PRODUCTS.find(p => p.id === pId);
