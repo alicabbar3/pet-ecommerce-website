@@ -12,6 +12,7 @@ import CategoryPage, {
   ProductListingCard,
 } from "./CategoryPage";
 import ProductPage from './ProductPage';
+import CheckoutPage from './CheckoutPage';
 import { TryOnModal } from './components/TryOnModal';
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -1205,37 +1206,34 @@ function Hero({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-[32px]">
-        {/* Large feature - Dogs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 rounded-[32px]">
+        {/* Feature - Dogs */}
         <a 
           href="#/category/dogs"
-          className="block md:col-span-2 relative rounded-[32px] overflow-hidden min-h-[400px] md:min-h-[500px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
-            src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1000&auto=format&fit=crop"
             alt="Dog"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 group-hover:opacity-90" />
-          <div className="absolute bottom-0 left-0 p-8 sm:p-12 w-full transition-transform duration-300 group-hover:-translate-y-2">
-            <div className="inline-flex items-center rounded-full bg-[#E27D60]/90 text-white px-3 py-1 text-xs font-semibold mb-4 backdrop-blur-md">
-              {lang === "TR" ? "En Çok Değerlendirilen" : "Top Rated"}
-            </div>
-            <h3 className="text-3xl sm:text-5xl font-bold text-white mb-4 tracking-tight flex items-center gap-3">
+          <div className="absolute bottom-0 left-0 p-8 w-full z-10 text-left transition-transform duration-300 group-hover:-translate-y-2">
+            <h3 className="text-2xl font-bold text-white mb-2 tracking-tight flex items-center justify-between">
               {lang === "TR" ? "Köpek Temel İhtiyaçları" : "Dog Essentials"}
-              <ArrowRight className="w-8 h-8 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-brand-teal-light" />
+              <ArrowRight className="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-brand-teal-light" />
             </h3>
-            <p className="text-white/80 max-w-md text-lg">
+            <p className="text-white/80">
               {lang === "TR"
-                ? "Aktif yaşam tarzlarını protein açısından zengin, tahılsız formüllerimizle destekleyin."
-                : "Fuel their active lifestyle with our protein-rich, grain-free formulas."}
+                ? "Aktif dostlarınıza özel formüller."
+                : "Active lifestyle formulas."}
             </p>
           </div>
         </a>
         {/* Smaller feature - Cats */}
         <a 
           href="#/category/cats"
-          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
             src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop"
@@ -1258,10 +1256,10 @@ function Hero({
         {/* Smaller feature - Birds */}
         <a 
           href="#/category/birds"
-          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
-            src="https://images.unsplash.com/photo-1522858547137-f1dcec554f55?q=80&w=1000&auto=format&fit=crop"
+            src="/cockatiel_category.png"
             alt="Avian"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -1281,7 +1279,7 @@ function Hero({
         {/* Smaller feature - Fish */}
         <a 
           href="#/category/fish"
-          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
             src="https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=1000&auto=format&fit=crop"
@@ -1304,7 +1302,7 @@ function Hero({
         {/* Smaller feature - Rodents */}
         <a 
           href="#/category/rodents"
-          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
             src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?q=80&w=1000&auto=format&fit=crop"
@@ -1327,10 +1325,10 @@ function Hero({
         {/* Smaller feature - Reptiles */}
         <a 
           href="#/category/reptiles"
-          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-0 border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
+          className="block relative rounded-[32px] overflow-hidden min-h-[300px] md:min-h-[400px] border border-border group bg-card hover:shadow-xl hover:border-brand-teal/30 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 transition-all cursor-pointer"
         >
           <img
-            src="https://images.unsplash.com/photo-1596788574828-56af97ccad16?q=80&w=1000&auto=format&fit=crop"
+            src="/chameleon_category.png"
             alt="Reptile"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -1347,31 +1345,6 @@ function Hero({
             </p>
           </div>
         </a>
-        {/* Stats/Promo */}
-        <div className="md:col-span-3 relative rounded-[32px] overflow-hidden min-h-[250px] border border-border  bg-secondary  p-8 sm:p-12 flex flex-col justify-center items-start">
-          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-brand-teal/10 rounded-full blur-3xl pointer-events-none" />
-          <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">
-            {lang === "TR"
-              ? "Abonelik ile %15 Tasarruf Edin"
-              : "Save 15% with subscriptions"}
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-lg text-lg">
-            {lang === "TR"
-              ? "Erzaksız kalmayın. Dostunuzun iştahına göre düzenlenmiş otomatik teslimatı ayarlayın."
-              : "Never run out of food again. Set up auto-delivery tailored to your companion's appetite."}
-          </p>
-          <button
-            onClick={() => {
-              document
-                .getElementById("services")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="rounded-full px-6 h-10 border border-border hover:bg-card hover:shadow-sm hover:-translate-y-0.5 active:scale-95 text-foreground text-sm font-semibold transition-all duration-300 flex items-center"
-          >
-            {lang === "TR" ? "Daha Fazla Bilgi" : "Learn More"}{" "}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
-        </div>
       </div>
     </section>
   );
@@ -3979,7 +3952,6 @@ function AuthModal({
   const [phone, setPhone] = useState("");
   const [remember, setRemember] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
-  const [agreedMarketing, setAgreedMarketing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -4402,24 +4374,6 @@ function AuthModal({
                         )}
                       </label>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <input
-                        type="checkbox"
-                        id="agreedMarketing"
-                        checked={agreedMarketing}
-                        onChange={(e) => setAgreedMarketing(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-brand-teal focus:ring-brand-teal border-border rounded cursor-pointer shrink-0"
-                      />
-                      <label
-                        htmlFor="agreedMarketing"
-                        className="cursor-pointer select-none leading-tight"
-                      >
-                        {t(
-                          "I want to receive marketing emails and SMS about discounts and new products.",
-                          lang,
-                        )}
-                      </label>
-                    </div>
                   </div>
                 )}
 
@@ -4519,506 +4473,6 @@ const TR_CITIES = Object.keys(turkeyData).sort((a, b) =>
 const getDistrictsForCity = (city: string) => {
   return (turkeyData as Record<string, string[]>)[city] || [];
 };
-
-function CheckoutModal({
-  isOpen,
-  onClose,
-  onProcessPayment,
-  totalPrice,
-  onOpenLogin,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onProcessPayment: () => void;
-  totalPrice: number;
-  onOpenLogin: () => void;
-}) {
-  const { lang } = useLang();
-
-  const [city, setCity] = useState("");
-  const [district, setDistrict] = useState("");
-  const [phone, setPhone] = useState("");
-  const [promoCode, setPromoCode] = useState("");
-  const [isPromoApplied, setIsPromoApplied] = useState(false);
-  const isLoggedIn =
-    typeof window !== "undefined"
-      ? localStorage.getItem("vivia_logged_in") === "true"
-      : false;
-
-  useEffect(() => {
-    if (!isOpen) {
-      setCity("");
-      setDistrict("");
-      setPhone("");
-      setPromoCode("");
-      setIsPromoApplied(false);
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onProcessPayment();
-  };
-
-  const districts = city ? getDistrictsForCity(city) : [];
-
-  const subtotal = totalPrice;
-  
-  let discountRate = 0;
-  if (subtotal >= 5000) discountRate = 30;
-  else if (subtotal >= 2500) discountRate = 20;
-  else if (subtotal >= 1500) discountRate = 15;
-  
-  const largeOrderDiscount = (subtotal * discountRate) / 100;
-  const promoDiscount = isPromoApplied ? subtotal * 0.1 : 0; // dummy 10% promo
-
-  const totalDiscount = largeOrderDiscount + promoDiscount;
-  const finalTotal = Math.max(0, subtotal - totalDiscount);
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[110] flex justify-center items-center py-4 sm:py-8 backdrop-blur-sm bg-brand-darker/80 px-4"
-      >
-        <div
-          className="absolute inset-0 z-0"
-          onClick={onClose}
-          aria-label="Close modal overlay"
-        />
-
-        <motion.div
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "100%", opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-card w-full max-w-4xl max-h-full overflow-y-auto rounded-3xl shadow-2xl flex flex-col relative z-10"
-        >
-          {/* Watermark Logo */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center justify-center z-[-1] overflow-hidden"
-            style={{
-              backgroundImage: "url(/logo.png)",
-              backgroundPosition: "center",
-              backgroundRepeat: "repeat",
-              backgroundSize: "300px auto",
-            }}
-          />
-
-          <div className="flex justify-between items-center p-6 border-b border-border sticky top-0 bg-card/95 backdrop-blur z-20">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
-                {lang === "TR" ? "Güvenli Ödeme" : "Secure Checkout"}
-              </h2>
-              <p className="text-muted-foreground text-sm font-medium">
-                {lang === "TR"
-                  ? "Tüm alanların doldurulması zorunludur."
-                  : "All fields are required."}
-              </p>
-            </div>
-            <button
-              aria-label="Close checkout"
-              onClick={onClose}
-              className="p-2 rounded-full bg-secondary hover:bg-secondary-dark active:scale-95 text-foreground transition-all duration-300 shadow-sm border border-border"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
-            {!isLoggedIn && (
-              <div className="mb-6 p-4 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">
-                  {lang === "TR"
-                    ? "Zaten bir hesabınız var mı?"
-                    : "Already have an account?"}
-                </span>
-                <button
-                  onClick={onOpenLogin}
-                  className="text-sm font-bold text-brand-teal hover:text-brand-teal-dark active:scale-95 transition-all"
-                >
-                  {lang === "TR" ? "Giriş Yap" : "Log In"}
-                </button>
-              </div>
-            )}
-
-            <form
-              id="checkout-form"
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-8 relative z-10"
-            >
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
-                  {lang === "TR" ? "İletişim Bilgileri" : "Contact Information"}
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="email"
-                    >
-                      {lang === "TR" ? "E-posta Adresi" : "Email Address"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="phone"
-                    >
-                      {lang === "TR" ? "Telefon Numarası" : "Phone Number"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <div className="relative flex items-center bg-background border border-border rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-brand-teal focus-within:border-transparent transition-all">
-                      <span className="text-muted-foreground mr-2 select-none border-r border-border pr-2 font-medium">
-                        +90
-                      </span>
-                      <input
-                        id="phone"
-                        type="tel"
-                        required
-                        pattern="5[0-9]{9}"
-                        value={phone}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, "");
-                          if (val.startsWith("0")) val = val.substring(1);
-                          setPhone(val.substring(0, 10));
-                        }}
-                        className="w-full bg-transparent text-foreground focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="marketing"
-                    className="w-4 h-4 text-brand-teal rounded border-gray-300 focus:ring-brand-teal"
-                  />
-                  <label
-                    htmlFor="marketing"
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    {lang === "TR"
-                      ? "Haberler ve özel fırsatlardan haberdar olmak istiyorum."
-                      : "Keep me informed about news and special offers."}
-                  </label>
-                </div>
-              </div>
-
-              {/* Delivery Address */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
-                  {lang === "TR" ? "Teslimat Adresi" : "Delivery Address"}
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="firstName"
-                    >
-                      {lang === "TR" ? "Ad" : "First Name"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="lastName"
-                    >
-                      {lang === "TR" ? "Soyad" : "Last Name"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="address"
-                    >
-                      {lang === "TR" ? "Açık Adres" : "Full Address"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <textarea
-                      id="address"
-                      required
-                      rows={2}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all resize-none"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="aptdetails"
-                    >
-                      {lang === "TR"
-                        ? "Apartman / Daire / Bina Bilgisi"
-                        : "Apartment / Flat / Office / Building details"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <input
-                      id="aptdetails"
-                      type="text"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="city"
-                    >
-                      {lang === "TR" ? "İl" : "City"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="city"
-                        required
-                        value={city}
-                        onChange={(e) => {
-                          setCity(e.target.value);
-                          setDistrict("");
-                        }}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-                      >
-                        <option value="" disabled>
-                          {lang === "TR" ? "Seçiniz" : "Select City"}
-                        </option>
-                        {TR_CITIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="district"
-                    >
-                      {lang === "TR" ? "İlçe" : "District"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="district"
-                        required
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        disabled={!city}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 appearance-none text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all disabled:opacity-50"
-                      >
-                        <option value="" disabled>
-                          {lang === "TR" ? "Seçiniz" : "Select District"}
-                        </option>
-                        {districts.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Notes */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
-                  {lang === "TR" ? "Sipariş Notu" : "Order Notes"}
-                </h3>
-                <textarea
-                  rows={2}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all resize-none"
-                />
-              </div>
-
-              {/* Payment Info */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-foreground border-b border-border pb-2">
-                  {lang === "TR" ? "Ödeme Bilgileri" : "Payment Information"}
-                </h3>
-
-                <div className="space-y-4 bg-background p-4 sm:p-5 rounded-2xl border border-border shadow-inner">
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="cardName"
-                    >
-                      {lang === "TR"
-                        ? "Kart Üzerindeki İsim"
-                        : "Cardholder Name"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <input
-                      id="cardName"
-                      type="text"
-                      required
-                      className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                      htmlFor="cardNumber"
-                    >
-                      {lang === "TR"
-                        ? "Kredi Kartı Numarası"
-                        : "Credit Card Number"}{" "}
-                      <span className="text-brand-teal">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="cardNumber"
-                        type="text"
-                        required
-                        pattern="\d{16}"
-                        maxLength={16}
-                        className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono tracking-widest"
-                      />
-                      <CreditCard className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-foreground mb-1.5"
-                        htmlFor="expiry"
-                      >
-                        {lang === "TR" ? "Son Kullanma Tarihi" : "Expiry Date"}{" "}
-                        <span className="text-brand-teal">*</span>
-                      </label>
-                      <input
-                        id="expiry"
-                        type="text"
-                        required
-                        pattern="(0[1-9]|1[0-2])\/?([0-9]{2})"
-                        maxLength={5}
-                        placeholder={lang === "TR" ? "AA/YY" : "MM/YY"}
-                        className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-foreground mb-1.5"
-                        htmlFor="cvv"
-                      >
-                        CVV <span className="text-brand-teal">*</span>
-                      </label>
-                      <input
-                        id="cvv"
-                        type="text"
-                        required
-                        pattern="\d{3,4}"
-                        maxLength={4}
-                        placeholder="123"
-                        className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <div className="border-t border-border bg-card p-6 sm:p-8">
-            {/* Promo Code */}
-            <div className="flex gap-2 mb-6">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                aria-label={lang === "TR" ? "İndirim Kodu" : "Promo Code"}
-                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-teal transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (promoCode) setIsPromoApplied(true);
-                }}
-                className="bg-secondary text-foreground font-semibold px-6 py-3 rounded-xl hover:bg-secondary-dark active:scale-95 transition-all"
-              >
-                {lang === "TR" ? "Uygula" : "Apply"}
-              </button>
-            </div>
-
-            {/* Price Summary */}
-            <div className="space-y-2 mb-6 text-sm sm:text-base">
-              <div className="flex justify-between items-center text-muted-foreground">
-                <span>{lang === "TR" ? "Ara Toplam" : "Subtotal"}</span>
-                <span>₺{subtotal.toFixed(2)}</span>
-              </div>
-
-              {largeOrderDiscount > 0 && (
-                <div className="flex justify-between items-center text-brand-teal font-medium">
-                  <span>
-                    {lang === "TR"
-                      ? `Seçili İndirim (%${discountRate})`
-                      : `Volume Discount (${discountRate}%)`}
-                  </span>
-                  <span>-₺{largeOrderDiscount.toFixed(2)}</span>
-                </div>
-              )}
-
-              {isPromoApplied && (
-                <div className="flex justify-between items-center text-brand-teal font-medium">
-                  <span>
-                    {lang === "TR" ? "Promosyon İndirimi" : "Promo Discount"}
-                  </span>
-                  <span>-₺{promoDiscount.toFixed(2)}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-xl font-bold text-foreground pt-4 border-t border-border mt-2">
-                <span>{lang === "TR" ? "Ödenecek Tutar" : "Total to Pay"}</span>
-                <span>₺{finalTotal.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <button
-              form="checkout-form"
-              type="submit"
-              className="w-full bg-brand-teal text-white rounded-xl py-4 text-lg font-bold hover:bg-brand-teal-dark active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
-            >
-              <Lock className="w-5 h-5" />{" "}
-              {lang === "TR" ? "Siparişi Tamamla" : "Complete Order"}
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
 
 export const getBasePriceFromName = (name: string) => {
   let englishName = name;
@@ -5285,7 +4739,6 @@ export default function App() {
   ]);
   const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<
     string[] | undefined
@@ -5504,7 +4957,7 @@ export default function App() {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
-    setIsCheckoutOpen(true);
+    window.location.hash = "checkout";
   };
 
   const handleProcessPayment = () => {
@@ -5583,6 +5036,7 @@ export default function App() {
 
   const handleCloseSuccess = () => {
     setIsSuccessOpen(false);
+    window.location.hash = "";
   };
 
   return (
@@ -5654,6 +5108,12 @@ export default function App() {
             onSaveToFolder={handleSaveToFolderClick}
             userPets={userPets}
             onTryOnProduct={setTryOnProduct}
+          />
+        ) : currentHash === "#checkout" ? (
+          <CheckoutPage
+            cartItems={cartItems}
+            cartTotalPrice={cartTotalPrice}
+            onProcessPayment={handleProcessPayment}
           />
         ) : (
           <main>
@@ -5803,16 +5263,6 @@ export default function App() {
           onUpdateQuantity={handleUpdateQuantity}
           onClearCart={() => setCartItems([])}
           onCheckout={handleCheckout}
-        />
-        <CheckoutModal
-          isOpen={isCheckoutOpen}
-          onClose={() => setIsCheckoutOpen(false)}
-          onProcessPayment={handleProcessPayment}
-          totalPrice={cartTotalPrice}
-          onOpenLogin={() => {
-            setIsCheckoutOpen(false);
-            setAuthMode("login");
-          }}
         />
         <CheckoutSuccessModal
           isOpen={isSuccessOpen}

@@ -63,7 +63,7 @@ export const MAPPED_REPTILE_PRODUCTS = reptileProducts.map((p) => {
   return {
     id: `${subCategory}/${slug}`,
     name: { EN: p.name, TR: p.name },
-    image: REPTILE_IMAGES[p.id % REPTILE_IMAGES.length],
+    image: undefined,
     price: numericalPrice,
     oldPrice: oldPrice,
     discount: discount,

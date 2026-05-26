@@ -19,7 +19,6 @@ const TR_DICT: Record<string, string> = {
   "Message WhatsApp": "WhatsApp'tan Yazın",
   "For Your Companion": "Dostunuz İçin",
   "Premium Nutrition": "Premium Beslenme",
-  "Smart Sub: Active": "Akıllı Abonelik: Aktif",
   "Water Fountain Filters": "Su Pınarı Filtreleri",
   "Ready for pickup tomorrow": "Yarın teslim alınmaya hazır",
 
@@ -191,7 +190,7 @@ const TR_DICT: Record<string, string> = {
   "Continue": "Devam",
   "Profile Created!": "Profil Oluşturuldu!",
   "Your shopping experience is now tailored for your ": "Alışveriş deneyiminiz artık şunun için özelleştirildi: ",
-  "Smart subscriptions are enabled.": "Akıllı abonelikler devrede.",
+  // Removed subscription string
   "Start Shopping": "Alışverişe Başla",
   "Estimated total via WhatsApp": "Tahmini toplam (WhatsApp ile iletilecektir)",
   "Confirm with Store": "Mağaza ile Onaylayınız",

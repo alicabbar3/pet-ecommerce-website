@@ -66,7 +66,7 @@ export const MAPPED_RODENT_PRODUCTS = rodentProducts.map((p) => {
   return {
     id: `${subCategory.replace('rodent-', '')}/${slug}`,
     name: { EN: p.name, TR: p.name },
-    image: RODENT_IMAGES[p.id % RODENT_IMAGES.length],
+    image: undefined,
     price: numericalPrice,
     oldPrice: oldPrice,
     discount: discount,

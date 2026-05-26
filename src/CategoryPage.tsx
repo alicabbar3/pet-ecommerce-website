@@ -61,6 +61,15 @@ export type Product = {
   wattage?: string;
 };
 
+const MAIN_CAT_NAMES: Record<string, { EN: string; TR: string }> = {
+  dogs: { EN: "Dogs", TR: "Köpek Ürünleri" },
+  cats: { EN: "Cats", TR: "Kedi Ürünleri" },
+  birds: { EN: "Birds", TR: "Kuş Ürünleri" },
+  fish: { EN: "Fish", TR: "Balık Ürünleri" },
+  rodents: { EN: "Rodents", TR: "Kemirgen Ürünleri" },
+  reptiles: { EN: "Reptiles", TR: "Sürüngen Ürünleri" },
+};
+
 export default function CategoryPage({
   categoryId,
   onAddToCart,
@@ -102,6 +111,15 @@ export default function CategoryPage({
         },
       } as any;
     }
+
+    const mainCatName = MAIN_CAT_NAMES[categoryId];
+    if (mainCatName) {
+      return {
+        parent: { name: { EN: "Catalog", TR: "Katalog" } },
+        sub: { name: mainCatName } // Directly use our mapped name
+      } as any;
+    }
+
     for (const cat of CATEGORIES) {
       const sub = cat.subcategories.find((s) => s.id === categoryId);
       if (sub) return { parent: cat, sub };
@@ -120,6 +138,9 @@ export default function CategoryPage({
   const [selectedAges, setSelectedAges] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
+  const [selectedStockStatuses, setSelectedStockStatuses] = useState<string[]>([]);
+  const [selectedVolumes, setSelectedVolumes] = useState<string[]>([]);
 
   // Bird-specific filter states
   const [selectedBirdSpecies, setSelectedBirdSpecies] = useState<string[]>([]);
@@ -158,6 +179,9 @@ export default function CategoryPage({
     setSelectedAges([]);
     setSelectedSizes([]);
     setSelectedMaterials([]);
+    setSelectedProductTypes([]);
+    setSelectedStockStatuses([]);
+    setSelectedVolumes([]);
     setSelectedBirdSpecies([]);
     setSelectedFeedTypes([]);
     setSelectedCageSizes([]);
@@ -179,7 +203,33 @@ export default function CategoryPage({
     resetFilters();
     const timer = setTimeout(() => {
       setIsLoadingProducts(false);
-      let newProducts = database;
+      let newProducts = database.map(p => {
+        let weightVal = p.weight;
+        let volVal = p.volume;
+        let sizeVal = p.breedSize || p.size;
+        
+        const nameKey = typeof p.name === 'string' ? p.name : p.name?.EN || "";
+
+        // Extract weight
+        const weightMatch = nameKey.match(/([\d.,]+)\s*(kg|g)\b/i);
+        if (weightMatch) weightVal = `${weightMatch[1].replace(',', '.')} ${weightMatch[2].toLowerCase()}`;
+
+        // Extract volume
+        const volMatch = nameKey.match(/([\d.,]+)\s*(ml|l)\b/i);
+        if (volMatch) volVal = `${volMatch[1].replace(',', '.')} ${volMatch[2].toLowerCase()}`;
+
+        // Extract size
+        const sizeMatch = nameKey.match(/([\d.,]+)\s*(cm|mm)\b/i);
+        if (sizeMatch) sizeVal = `${sizeMatch[1].replace(',', '.')} ${sizeMatch[2].toLowerCase()}`;
+
+        return {
+          ...p,
+          weight: weightVal,
+          volume: volVal,
+          size: sizeVal,
+          productType: p._subCategoryId,
+        };
+      });
       
       // Filter by category
       if (categoryId && categoryId !== "all" && categoryId !== "personalized") {
@@ -192,11 +242,27 @@ export default function CategoryPage({
     return () => clearTimeout(timer);
   }, [categoryId, userPets, selectedPets]);
 
+  const parseWeightMeasure = (str: string) => {
+    if(!str) return 0;
+    const match = str.match(/([\d.,]+)\s*(kg|g|ml|l|cm|mm)/i);
+    if(!match) return 0;
+    const val = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    if(unit === 'kg' || unit === 'l') return val * 1000;
+    return val;
+  };
+
   // Derive filter options from products
   const availableBrands = useMemo(
-    () => Array.from(new Set(products.map((p) => p.brand))),
+    () => Array.from(new Set(products.map((p) => p.brand).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b)),
     [products],
   );
+  
+  const availableProductTypes = useMemo(
+    () => Array.from(new Set(products.map((p) => p.productType).filter(Boolean) as string[])),
+    [products]
+  );
+  
   const availableFlavors = useMemo(
     () =>
       Array.from(
@@ -208,7 +274,14 @@ export default function CategoryPage({
     () =>
       Array.from(
         new Set(products.map((p) => p.weight).filter(Boolean) as string[]),
-      ),
+      ).sort((a,b) => parseWeightMeasure(a) - parseWeightMeasure(b)),
+    [products],
+  );
+  const availableVolumes = useMemo(
+    () =>
+      Array.from(
+        new Set(products.map((p) => p.volume).filter(Boolean) as string[]),
+      ).sort((a,b) => parseWeightMeasure(a) - parseWeightMeasure(b)),
     [products],
   );
   const availableAges = useMemo(
@@ -221,8 +294,8 @@ export default function CategoryPage({
   const availableSizes = useMemo(
     () =>
       Array.from(
-        new Set(products.map((p) => p.breedSize).filter(Boolean) as string[]),
-      ),
+        new Set(products.map((p) => p.size).filter(Boolean) as string[]),
+      ).sort((a,b) => parseWeightMeasure(a) - parseWeightMeasure(b)),
     [products],
   );
   const availableMaterials = useMemo(
@@ -254,6 +327,14 @@ export default function CategoryPage({
         if (selectedBrands.length > 0 && !selectedBrands.includes(p.brand))
           return false;
         if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
+        
+        if (selectedProductTypes.length > 0 && p.productType && !selectedProductTypes.includes(p.productType)) return false;
+        
+        if (selectedStockStatuses.length > 0) {
+          const status = (p.stock || 0) > 0 ? "in_stock" : "out_of_stock";
+          if (!selectedStockStatuses.includes(status)) return false;
+        }
+
         if (
           selectedFlavors.length > 0 &&
           p.flavor &&
@@ -266,12 +347,18 @@ export default function CategoryPage({
           !selectedWeights.includes(p.weight)
         )
           return false;
+        if (
+          selectedVolumes.length > 0 &&
+          p.volume &&
+          !selectedVolumes.includes(p.volume)
+        )
+          return false;
         if (selectedAges.length > 0 && p.age && !selectedAges.includes(p.age))
           return false;
         if (
           selectedSizes.length > 0 &&
-          p.breedSize &&
-          !selectedSizes.includes(p.breedSize)
+          p.size &&
+          !selectedSizes.includes(p.size)
         )
           return false;
         if (
@@ -305,6 +392,8 @@ export default function CategoryPage({
       .sort((a, b) => {
         if (sortBy === "price-low") return a.price - b.price;
         if (sortBy === "price-high") return b.price - a.price;
+        if (sortBy === "weight-low") return parseWeightMeasure(a.weight || a.volume || a.size || '0') - parseWeightMeasure(b.weight || b.volume || b.size || '0');
+        if (sortBy === "weight-high") return parseWeightMeasure(b.weight || b.volume || b.size || '0') - parseWeightMeasure(a.weight || a.volume || a.size || '0');
         if (sortBy === "newest") return b.id.localeCompare(a.id);
         if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
         return b.sold - a.sold; // recommended / bestseller
@@ -329,11 +418,17 @@ export default function CategoryPage({
     selectedReptileSpecies,
     selectedTerrariumSizes,
     selectedWattages,
+    selectedProductTypes,
+    selectedStockStatuses,
+    selectedVolumes,
     sortBy,
   ]);
 
   const hasActiveFilters =
     selectedBrands.length > 0 ||
+    selectedProductTypes.length > 0 ||
+    selectedStockStatuses.length > 0 ||
+    selectedVolumes.length > 0 ||
     priceRange[0] > 0 ||
     priceRange[1] < 5000 ||
     selectedFlavors.length > 0 ||
@@ -393,27 +488,99 @@ export default function CategoryPage({
       )}
 
       {/* Brands */}
-      <FilterSection title={lang === "TR" ? "Marka" : "Brand"}>
+      {availableBrands.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Marka" : "Brand"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableBrands.map((b) => (
+              <label
+                key={b}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBrands.includes(b)}
+                  onChange={() => toggleFilter(setSelectedBrands, b)}
+                  className="hidden"
+                />
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBrands.includes(b) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                >
+                  {selectedBrands.includes(b) && (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <span className="text-sm text-foreground">{b}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Product Type */}
+      {availableProductTypes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Ürün Tipi" : "Product Type"}>
+          <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
+            {availableProductTypes.map((t) => {
+              // Convert product type ID to display name if possible
+              let displayName = t;
+              for (const c of CATEGORIES) {
+                const sub = c.subcategories.find(s => s.id === t);
+                if (sub) {
+                  displayName = sub.name[lang];
+                }
+              }
+
+              return (
+                <label
+                  key={t}
+                  className="flex items-center gap-2 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedProductTypes.includes(t)}
+                    onChange={() => toggleFilter(setSelectedProductTypes, t)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedProductTypes.includes(t) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                  >
+                    {selectedProductTypes.includes(t) && (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                  </div>
+                  <span className="text-sm text-foreground">{displayName}</span>
+                </label>
+              );
+            })}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Stock Status */}
+      <FilterSection title={lang === "TR" ? "Stok Durumu" : "Stock Status"}>
         <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2">
-          {availableBrands.map((b) => (
+          {[
+            { id: "in_stock", label: { EN: "In Stock", TR: "Stokta Var" } },
+            { id: "out_of_stock", label: { EN: "Out of Stock", TR: "Stokta Yok" } }
+          ].map((s) => (
             <label
-              key={b}
+              key={s.id}
               className="flex items-center gap-2 cursor-pointer group"
             >
               <input
                 type="checkbox"
-                checked={selectedBrands.includes(b)}
-                onChange={() => toggleFilter(setSelectedBrands, b)}
+                checked={selectedStockStatuses.includes(s.id)}
+                onChange={() => toggleFilter(setSelectedStockStatuses, s.id)}
                 className="hidden"
               />
               <div
-                className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedBrands.includes(b) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
+                className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${selectedStockStatuses.includes(s.id) ? "bg-brand-teal border-brand-teal text-white" : "border-input bg-card group-hover:border-brand-teal"}`}
               >
-                {selectedBrands.includes(b) && (
+                {selectedStockStatuses.includes(s.id) && (
                   <Check className="w-3.5 h-3.5" />
                 )}
               </div>
-              <span className="text-sm text-foreground">{b}</span>
+              <span className="text-sm text-foreground">{s.label[lang]}</span>
             </label>
           ))}
         </div>
@@ -883,13 +1050,30 @@ export default function CategoryPage({
 
       {/* Weights */}
       {availableWeights.length > 0 && (
-        <FilterSection title={lang === "TR" ? "Ağırlık" : "Package Weight"}>
+        <FilterSection title={lang === "TR" ? "Ağırlık" : "Weight"}>
           <div className="grid grid-cols-2 gap-2">
             {availableWeights.map((w) => (
               <button
                 key={w}
                 onClick={() => toggleFilter(setSelectedWeights, w)}
                 className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all ${selectedWeights.includes(w) ? "bg-brand-teal/10 border-brand-teal text-brand-teal" : "bg-card border-input text-muted-foreground hover:border-brand-teal/50"}`}
+              >
+                {w}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Volumes */}
+      {availableVolumes.length > 0 && (
+        <FilterSection title={lang === "TR" ? "Hacim" : "Volume"}>
+          <div className="grid grid-cols-2 gap-2">
+            {availableVolumes.map((w) => (
+              <button
+                key={w}
+                onClick={() => toggleFilter(setSelectedVolumes, w)}
+                className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all ${selectedVolumes.includes(w) ? "bg-brand-teal/10 border-brand-teal text-brand-teal" : "bg-card border-input text-muted-foreground hover:border-brand-teal/50"}`}
               >
                 {w}
               </button>
@@ -1013,6 +1197,12 @@ export default function CategoryPage({
                     </option>
                     <option value="price-high">
                       {lang === "TR" ? "Fiyat: Azalan" : "Price: High to Low"}
+                    </option>
+                    <option value="weight-low">
+                      {lang === "TR" ? "Ağırlık: Azdan Çoğa" : "Weight: Light to Heavy"}
+                    </option>
+                    <option value="weight-high">
+                      {lang === "TR" ? "Ağırlık: Çoktan Aza" : "Weight: Heavy to Light"}
                     </option>
                   </select>
                   <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />

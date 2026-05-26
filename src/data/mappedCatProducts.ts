@@ -41,7 +41,7 @@ export const MAPPED_CAT_PRODUCTS = catProducts.map((p) => {
   return {
     id: `${subCategory.replace('cat-', '')}/${slug}`,
     name: { EN: p.name, TR: p.name },
-    image: CAT_IMAGES[p.id % CAT_IMAGES.length],
+    image: undefined,
     price: numericalPrice,
     oldPrice: oldPrice,
     discount: discount,

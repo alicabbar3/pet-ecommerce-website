@@ -55,7 +55,7 @@ export const MAPPED_FISH_PRODUCTS = fishProducts.map((p) => {
   return {
     id: `${subCategory}/${slug}`,
     name: { EN: p.name, TR: p.name },
-    image: FISH_IMAGES[p.id % FISH_IMAGES.length],
+    image: undefined,
     price: numericalPrice,
     oldPrice: oldPrice,
     discount: discount,

@@ -66,7 +66,7 @@ export const MAPPED_BIRD_PRODUCTS = birdProducts.map((p) => {
   return {
     id: `${subCategory.replace('bird-', '')}/${slug}`,
     name: { EN: p.name, TR: p.name },
-    image: BIRD_IMAGES[p.id % BIRD_IMAGES.length],
+    image: undefined,
     price: numericalPrice,
     oldPrice: oldPrice,
     discount: discount,

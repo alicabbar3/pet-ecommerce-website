@@ -41,17 +41,17 @@ export default function VirtualTryOnModal({
     setTimeout(() => {
       setIsProcessing(false);
       // Generate a mock result image based on product type
-      let mockResult = product?.image || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=800&auto=format&fit=crop";
+      let mockResult = photo || product?.image || "/logo.png";
       
       const pName = product?.name.EN.toLowerCase() || "";
       if (pName.includes("aquarium") || pName.includes("tank")) {
-         mockResult = "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=800&auto=format&fit=crop";
+         mockResult = photo || product?.image || "/logo.png";
       } else if (pName.includes("cage") || pName.includes("bird")) {
-         mockResult = "https://images.unsplash.com/photo-1552728089-57168a6d21f8?q=80&w=800&auto=format&fit=crop"; 
+         mockResult = photo || product?.image || "/logo.png"; 
       } else if (pName.includes("bed") || pName.includes("nest")) {
-         mockResult = "https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=800&auto=format&fit=crop";
+         mockResult = photo || product?.image || "/logo.png";
       } else if (pName.includes("sweater") || pName.includes("clothing") || pName.includes("coat") || pName.includes("collar")) {
-         mockResult = "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop";
+         mockResult = photo || product?.image || "/logo.png";
       }
       setResultImage(mockResult);
       setStep(3);
