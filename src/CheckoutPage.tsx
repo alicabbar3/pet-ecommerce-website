@@ -45,6 +45,7 @@ export default function CheckoutPage({
 
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -67,31 +68,50 @@ export default function CheckoutPage({
   const orderTotal = finalTotal + shipping;
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!firstName.trim()) newErrors.firstName = lang === "TR" ? "Zorunlu" : "Required";
-    if (!lastName.trim()) newErrors.lastName = lang === "TR" ? "Zorunlu" : "Required";
-    if (!phone.trim()) newErrors.phone = lang === "TR" ? "Zorunlu" : "Required";
-    if (!address.trim()) newErrors.address = lang === "TR" ? "Zorunlu" : "Required";
-    if (!city) newErrors.city = lang === "TR" ? "Zorunlu" : "Required";
-    if (!district) newErrors.district = lang === "TR" ? "Zorunlu" : "Required";
-    if (!cardName.trim()) newErrors.cardName = lang === "TR" ? "Zorunlu" : "Required";
-    if (!cardNumber.trim()) newErrors.cardNumber = lang === "TR" ? "Zorunlu" : "Required";
-    if (!expiry.trim()) newErrors.expiry = lang === "TR" ? "Zorunlu" : "Required";
-    if (!cvv.trim()) newErrors.cvv = lang === "TR" ? "Zorunlu" : "Required";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
+      setIsSuccess(true);
       onProcessPayment();
-    } else {
-      // scroll to first error roughly
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-background pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-sans flex items-center justify-center">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          className="bg-card rounded-2xl p-8 max-w-md w-full shadow-lg text-center border border-border"
+        >
+          <div className="w-20 h-20 rounded-full bg-brand-teal/10 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-brand-teal" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-4">
+            {lang === "TR" ? "Siparişiniz Alındı!" : "Order Completed!"}
+          </h2>
+          <p className="text-muted-foreground text-sm mb-8">
+            {lang === "TR"
+              ? "Teşekkür ederiz. Siparişiniz başarıyla oluşturuldu ve en kısa sürede yola çıkacak."
+              : "Thank you. Your order has been successfully placed and will be shipped soon."}
+          </p>
+          <button
+            onClick={() => {
+              window.location.hash = "";
+            }}
+            className="w-full bg-brand-teal text-white rounded-xl py-4 font-semibold hover:bg-brand-teal-dark active:scale-[0.98] transition-all duration-300"
+          >
+            {lang === "TR" ? "Anasayfaya Dön" : "Return to Homepage"}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -122,7 +142,7 @@ export default function CheckoutPage({
                 <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Ad" : "First Name"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Ad" : "First Name"}
                     </label>
                     <input
                       type="text"
@@ -133,7 +153,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Soyad" : "Last Name"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Soyad" : "Last Name"}
                     </label>
                     <input
                       type="text"
@@ -144,7 +164,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Telefon Numarası" : "Phone Number"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Telefon Numarası" : "Phone Number"}
                     </label>
                     <input
                       type="tel"
@@ -156,7 +176,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "E-posta Adresi" : "Email Address"} <span className="text-muted-foreground font-normal">({lang === "TR" ? "İsteğe bağlı" : "Optional"})</span>
+                      {lang === "TR" ? "E-posta Adresi" : "Email Address"}
                     </label>
                     <input
                       type="email"
@@ -177,7 +197,7 @@ export default function CheckoutPage({
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-1.5">
-                        {lang === "TR" ? "İl" : "City"} <span className="text-red-500">*</span>
+                        {lang === "TR" ? "İl" : "City"}
                       </label>
                       <div className="relative">
                         <select
@@ -197,7 +217,7 @@ export default function CheckoutPage({
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-1.5">
-                        {lang === "TR" ? "İlçe" : "District"} <span className="text-red-500">*</span>
+                        {lang === "TR" ? "İlçe" : "District"}
                       </label>
                       <div className="relative">
                         <select
@@ -216,7 +236,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Açık Adres" : "Full Address"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Açık Adres" : "Full Address"}
                     </label>
                     <textarea
                       value={address}
@@ -227,7 +247,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Sipariş Notu" : "Order Note"} <span className="text-muted-foreground font-normal">({lang === "TR" ? "İsteğe bağlı" : "Optional"})</span>
+                      {lang === "TR" ? "Sipariş Notu" : "Order Note"}
                     </label>
                     <textarea
                       value={orderNote}
@@ -248,7 +268,7 @@ export default function CheckoutPage({
                 <div className="space-y-4 sm:space-y-6">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Kart Üzerindeki İsim" : "Name on Card"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Kart Üzerindeki İsim" : "Name on Card"}
                     </label>
                     <input
                       type="text"
@@ -259,7 +279,7 @@ export default function CheckoutPage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1.5">
-                      {lang === "TR" ? "Kart Numarası" : "Card Number"} <span className="text-red-500">*</span>
+                      {lang === "TR" ? "Kart Numarası" : "Card Number"}
                     </label>
                     <input
                       type="text"
@@ -277,7 +297,7 @@ export default function CheckoutPage({
                   <div className="grid grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-1.5">
-                        {lang === "TR" ? "Son Kullanma Tarihi" : "Expiry Date"} <span className="text-red-500">*</span>
+                        {lang === "TR" ? "Son Kullanma Tarihi" : "Expiry Date"}
                       </label>
                       <input
                         type="text"
@@ -297,7 +317,7 @@ export default function CheckoutPage({
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-1.5">
-                        CVV <span className="text-red-500">*</span>
+                        CVV
                       </label>
                       <input
                         type="text"
@@ -381,7 +401,7 @@ export default function CheckoutPage({
               {/* Promo Code Input */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-foreground mb-1.5">
-                  {lang === "TR" ? "Kupon Kodu" : "Coupon Code"} <span className="text-muted-foreground font-normal">({lang === "TR" ? "İsteğe bağlı" : "Optional"})</span>
+                  {lang === "TR" ? "Kupon Kodu" : "Coupon Code"}
                 </label>
                 <div className="flex gap-2">
                   <input

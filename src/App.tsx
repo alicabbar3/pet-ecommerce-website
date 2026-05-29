@@ -3873,63 +3873,6 @@ function CartModal({
   );
 }
 
-function CheckoutSuccessModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const { lang } = useLang();
-
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-brand-darker/60 backdrop-blur-md"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-card rounded-[32px] p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden"
-        >
-          {/* Confetti / Success Visuals */}
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50">
-            <div className="absolute top-10 left-10 w-2 h-2 bg-brand-teal rounded-full animate-ping" />
-            <div className="absolute top-20 right-12 w-3 h-3 bg-yellow-400 rounded-full animate-bounce" />
-            <div className="absolute bottom-20 left-20 w-2 h-2 bg-pink-400 rounded-full animate-pulse" />
-          </div>
-
-          <div className="w-20 h-20 rounded-full bg-brand-teal border-4 border-brand-teal-light flex items-center justify-center mx-auto mb-6 relative z-10">
-            <CheckCircle2 className="w-10 h-10 text-white" />
-          </div>
-
-          <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">
-            {lang === "TR" ? "Sipariş Alındı!" : "Order Received!"}
-          </h2>
-          <p className="text-muted-foreground text-sm mb-8 relative z-10">
-            {lang === "TR"
-              ? "Tebrikler! Siparişiniz başarıyla oluşturuldu. Dostunuz buna bayılacak! Kargo detayları e-posta adresinize gönderildi."
-              : "Great job! Your order has been placed successfully. Your companion will love this! Shipping details have been sent to your email."}
-          </p>
-
-          <button
-            onClick={onClose}
-            className="w-full bg-card border border-border text-foreground rounded-full py-4 font-semibold hover:border-brand-teal hover:text-brand-teal transition-all duration-300 relative z-10"
-          >
-            {t("Back to Catalog", lang)}
-          </button>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
 function AuthModal({
   mode,
   onClose,
@@ -3972,7 +3915,6 @@ function AuthModal({
       setPhone("");
       setRemember(false);
       setAgreedPrivacy(false);
-      setAgreedMarketing(false);
       setSuccess(false);
       setIsSubmitting(false);
       setShowPassword(false);
@@ -4739,7 +4681,6 @@ export default function App() {
   ]);
   const [isFoldersModalOpen, setIsFoldersModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [selectedPetsFilter, setSelectedPetsFilter] = useState<
     string[] | undefined
   >(undefined);
@@ -4961,8 +4902,6 @@ export default function App() {
   };
 
   const handleProcessPayment = () => {
-    setIsCheckoutOpen(false);
-    setIsSuccessOpen(true);
 
     // Process predictive consumption tracking based on cart
     let petsUpdated = false;
@@ -5032,11 +4971,6 @@ export default function App() {
 
     // In a real app, clear cart or process payment
     setCartItems([]);
-  };
-
-  const handleCloseSuccess = () => {
-    setIsSuccessOpen(false);
-    window.location.hash = "";
   };
 
   return (
@@ -5263,10 +5197,6 @@ export default function App() {
           onUpdateQuantity={handleUpdateQuantity}
           onClearCart={() => setCartItems([])}
           onCheckout={handleCheckout}
-        />
-        <CheckoutSuccessModal
-          isOpen={isSuccessOpen}
-          onClose={handleCloseSuccess}
         />
         <AuthModal
           mode={authMode}
